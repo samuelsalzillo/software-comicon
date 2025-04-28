@@ -29,7 +29,8 @@ logging.basicConfig(level=logging.DEBUG)
 sqlite_lock = Lock()
 SQLITE_DB_PATH = 'stand_db.db'  # Database local MySQLite in cui salveremo le queue
 BASE_URL = "http://localhost:2000"  # Bisogna cambiarlo con il sito delle queue si mercenari socs che andremo a creare
-
+BACKUP_INTERVAL = 120  # 2 minuti in secondi
+MAX_BACKUPS = 5
 
 def init_sqlite():
     logging.debug("[QUEUES] Acquisizione del lock per SQLite")
@@ -786,8 +787,6 @@ def crea_nuova_data():
     nuova_data = dt.now(pytz.timezone('Europe/Rome'))
     return nuova_data
 
-BACKUP_INTERVAL = 120  # 2 minuti in secondi
-MAX_BACKUPS = 5
 
 def backup_database_auto():
     try:

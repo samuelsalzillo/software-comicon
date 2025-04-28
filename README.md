@@ -100,6 +100,11 @@ pip install flask pytz mysql-connector
 - La logica di aggiornamento del tabellone d'attesa e la gestione delle code sono implementate nella classe `GameBackend` definita in `main.py`.
 - Il dizionario `player_names` in `GameBackend` viene utilizzato per memorizzare e recuperare i nomi dei giocatori associati ai loro ID.
 
+## Logica Backup Database
+
+- Ogni 2 minuti il progetto fa un backup automatico per un massimo di 5 backup prima di sovrascrivere il più "vecchio"
+- Si può andare a modificare il tempo (BACKUP_INTERVAL) ed il numero massimo di file (MAC_BACKUPS) da dentro il `app.py` (inizio del file)
+
 ## Conclusioni
 
 Seguendo questi passaggi potrai far partire il progetto in locale e testare tutte le funzionalità fornite dall'interfaccia web e dal backend.  
