@@ -1,0 +1,644 @@
+{% extends "layout.html" %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/controls_combined2.css') }}"
+/>
+<!-- Stili incorporati per form inline (identici a combined1) -->
+<style>
+  .control-section {
+    padding-bottom: 20px;
+  }
+  .inline-form-section {
+    padding: 20px;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    margin-top: 15px;
+    display: none;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  .inline-form-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    text-align: center;
+    color: #495057;
+    font-size: 1.25em;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 10px;
+    font-weight: 600;
+  }
+  .inline-form-section p {
+    font-size: 0.95em;
+    margin-bottom: 8px;
+    color: #495057;
+    line-height: 1.5;
+  }
+  .inline-form-section p strong {
+    color: #212529;
+    font-weight: 600;
+  }
+  .penalty-buttons {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .penalty-buttons button {
+    padding: 10px 5px;
+    font-size: 0.9em;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid #ced4da;
+    background-color: #fff;
+    color: #495057;
+    text-align: center;
+    transition: all 0.2s ease;
+    font-weight: 500;
+  }
+  .penalty-buttons button:hover {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  .penalty-buttons button:active {
+    transform: translateY(0px);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+  .penalty-buttons button.reset-penalty-button {
+    grid-column: 1 / -1;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+    font-weight: bold;
+    margin-top: 5px;
+  }
+  .penalty-buttons button.reset-penalty-button:hover {
+    background-color: #f1b0b7;
+    border-color: #eebcc1;
+  }
+  .manual-penalty-label {
+    margin-bottom: 8px;
+    margin-top: 5px;
+    font-weight: bold;
+    font-size: 0.95em;
+    color: #343a40;
+    display: block;
+  }
+  .time-input-group {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    background-color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    margin-bottom: 15px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.07);
+  }
+  .time-input-group .form-group {
+    flex: 1;
+    margin-bottom: 0;
+  }
+  .time-input-group input[type="number"] {
+    font-size: 1.15em;
+    text-align: center;
+    font-weight: 500;
+    border: none;
+    padding: 2px 0;
+    box-shadow: none;
+    background: none;
+    width: 55px;
+  }
+  .time-input-group input[type="number"]::-webkit-outer-spin-button,
+  .time-input-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .time-input-group span {
+    font-size: 1.2em;
+    color: #6c757d;
+    font-weight: bold;
+    padding-bottom: 0;
+    line-height: 1;
+  }
+  .inline-form-section .form-group {
+    margin-bottom: 12px;
+  }
+  .inline-form-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 0.9em;
+    color: #555;
+  }
+  .inline-form-section input[type="text"],
+  .inline-form-section input[type="tel"] {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 0.95em;
+  }
+  .inline-form-section .button-row {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .inline-form-section .button-row button {
+    flex: 1;
+    padding: 10px 12px;
+    font-size: 1em;
+    font-weight: 500;
+    border-radius: 6px;
+  }
+  .inline-form-section .btn-confirm-penalty,
+  .inline-form-section .btn-submit {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+  }
+  .inline-form-section .btn-confirm-penalty:hover,
+  .inline-form-section .btn-submit:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+  }
+  .inline-form-section .btn-secondary {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+  }
+  .inline-form-section .btn-secondary:hover {
+    background-color: #5a6268;
+    border-color: #545b62;
+  }
+  .inline-form-section .btn:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    border-color: #ccc;
+  }
+  .inline-message {
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+    text-align: center;
+    display: none;
+    font-size: 0.9em;
+  }
+  .inline-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+  }
+  .inline-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+  .standard-controls .game-info {
+    margin-bottom: 10px;
+  }
+  .standard-controls .control-panel {
+    margin-top: 10px;
+  }
+</style>
+{% endblock %} {% block content %}
+<h1>Controllo Piste 2 (Rosa/Bianco)</h1>
+
+<div class="shared-next-player">
+  <h2>Prossimo Giocatore</h2>
+  <div class="next-player-info"><span id="next-player2">-</span></div>
+  <!-- Bottone Next/Skip omesso come da richiesta precedente -->
+</div>
+
+<div class="control-container">
+  <!-- ==================== -->
+  <!-- Sezione Coppia 2 (ROSA) -->
+  <!-- ==================== -->
+  <div class="control-section couple-section2">
+    <h2>Coppia 2 (Rosa)</h2>
+    <div class="standard-controls" id="standard-controls-couple2">
+      <div class="game-info">
+        <div class="current-player">
+          Prenotazione: <span id="current-player-couple2">-</span>
+        </div>
+        <div class="game-timer">
+          Tempo: <span id="timer-couple2">00:00</span>
+        </div>
+      </div>
+      <div class="control-panel">
+        <div class="button-group">
+          <button
+            id="start-btn-couple2"
+            class="btn btn-start"
+            onclick="pressButton2('first_start2', 'couple2')"
+          >
+            START
+          </button>
+          <button
+            id="stop-btn-couple2"
+            class="btn btn-stop"
+            onclick="pressButton2('first_stop2', 'couple2')"
+          >
+            STOP
+          </button>
+        </div>
+        <div class="status">
+          Stato: <span id="status-couple2">ALFA2: - BRAVO2: -</span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="inline-form-section penalty-section"
+      id="penalty-section-couple2"
+    >
+      <h3>Penalità (Coppia 2)</h3>
+      <p>Giocatore: <strong id="penalty-player-display-couple2">-</strong></p>
+      <p>
+        Tempo Timer: <strong id="penalty-timer-display-couple2">00:00</strong>
+      </p>
+      <form id="penalty-form-couple2">
+        <input type="hidden" id="penalty-player-id-couple2" /><input
+          type="hidden"
+          id="penalty-player-name-couple2"
+        />
+        <input
+          type="hidden"
+          id="penalty-player-type-couple2"
+          value="couple2"
+        /><input type="hidden" id="penalty-timer-duration-couple2" />
+        <div class="penalty-buttons">
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="5"
+            data-target-suffix="couple2"
+            data-counter="0"
+            data-penalty-type="ostaggio"
+          >
+            Ostaggio (+5s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="5"
+            data-target-suffix="couple2"
+            data-counter="0"
+            data-penalty-type="piastra"
+          >
+            Piastra (+5s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="80"
+            data-target-suffix="couple2"
+            data-counter="0"
+            data-penalty-type="laser"
+          >
+            Laser (+80s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="50"
+            data-target-suffix="couple2"
+            data-counter="0"
+            data-penalty-type="fail"
+          >
+            Fail (+50s) (0)
+          </button>
+          <button
+            type="button"
+            class="reset-penalty-button"
+            data-target-suffix="couple2"
+          >
+            Reset Penalità
+          </button>
+        </div>
+        <label for="penalty_minutes_couple2" class="manual-penalty-label"
+          >Penalità Totale (Modificabile):</label
+        >
+        <div class="time-input-group">
+          <input
+            type="number"
+            id="penalty_minutes_couple2"
+            min="0"
+            value="0"
+            required
+            aria-label="Minuti penalità"
+          />
+          <span>:</span>
+          <input
+            type="number"
+            id="penalty_seconds_couple2"
+            min="0"
+            max="59"
+            value="0"
+            required
+            aria-label="Secondi penalità"
+          />
+        </div>
+        <div id="penalty-message-couple2" class="inline-message"></div>
+        <div class="button-row">
+          <button
+            type="submit"
+            class="btn btn-confirm-penalty"
+            id="submit-penalty-couple2"
+          >
+            Conferma Score
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeInlineForm2('couple2', 'penalty')"
+          >
+            Annulla
+          </button>
+        </div>
+      </form>
+    </div>
+    <div
+      class="inline-form-section qualification-section"
+      id="qualification-section-couple2"
+    >
+      <h3>Tempo Qualificante!</h3>
+      <p id="qualification-reason-text-couple2">Inserisci i dati:</p>
+      <form id="qualification-form-couple2">
+        <!-- ID Corretti per JS -->
+        <input type="hidden" id="modal-player-id-couple2" name="player_id" />
+        <input
+          type="hidden"
+          id="modal-player-name-couple2"
+          name="player_name"
+        />
+        <input
+          type="hidden"
+          id="modal-score-minutes-couple2"
+          name="score_minutes"
+        />
+        <input
+          type="hidden"
+          id="modal-player-type-couple2"
+          name="player_type"
+          value="couple"
+        />
+        <!-- Base type -->
+        <input
+          type="hidden"
+          id="modal-qualification-reason-couple2"
+          name="qualification_reason"
+        />
+        <div class="form-group">
+          <label for="first_name-couple2">Nome:</label
+          ><input type="text" id="first_name-couple2" required />
+        </div>
+        <div class="form-group">
+          <label for="last_name-couple2">Cognome:</label
+          ><input type="text" id="last_name-couple2" required />
+        </div>
+        <div class="form-group">
+          <label for="phone_number-couple2">Telefono:</label
+          ><input type="tel" id="phone_number-couple2" required />
+        </div>
+        <div id="modal-message-couple2" class="inline-message"></div>
+        <!-- ID Corretto -->
+        <div class="button-row">
+          <button type="submit" class="btn btn-submit">Salva Dati</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeInlineForm2('couple2', 'qualification')"
+          >
+            Chiudi
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Fine Sezione Coppia 2 -->
+
+  <!-- ====================== -->
+  <!-- Sezione Singolo 2 (BIANCO) -->
+  <!-- ====================== -->
+  <div class="control-section single-section2">
+    <h2>Singolo 2 (Bianco)</h2>
+    <div class="standard-controls" id="standard-controls-single2">
+      <!-- CONTROLLI STANDARD -->
+      <div class="game-info">
+        <div class="current-player">
+          Prenotazione: <span id="current-player-single2">-</span>
+        </div>
+        <div class="game-timer">
+          Tempo: <span id="timer-single2">00:00</span>
+        </div>
+      </div>
+      <div class="control-panel">
+        <div class="button-group">
+          <button
+            id="start-btn-single2"
+            class="btn btn-start"
+            onclick="pressButton2('second_start2', 'single2')"
+          >
+            START
+          </button>
+          <button
+            id="stop-btn-single2"
+            class="btn btn-stop"
+            onclick="pressButton2('second_stop2', 'single2')"
+          >
+            STOP
+          </button>
+        </div>
+        <div class="status">
+          Stato: <span id="status-single2">ALFA2: -</span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="inline-form-section penalty-section"
+      id="penalty-section-single2"
+    >
+      <h3>Penalità (Singolo 2)</h3>
+      <p>Giocatore: <strong id="penalty-player-display-single2">-</strong></p>
+      <p>
+        Tempo Timer: <strong id="penalty-timer-display-single2">00:00</strong>
+      </p>
+      <form id="penalty-form-single2">
+        <input type="hidden" id="penalty-player-id-single2" /><input
+          type="hidden"
+          id="penalty-player-name-single2"
+        />
+        <input
+          type="hidden"
+          id="penalty-player-type-single2"
+          value="single2"
+        /><input type="hidden" id="penalty-timer-duration-single2" />
+        <div class="penalty-buttons">
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="5"
+            data-target-suffix="single2"
+            data-counter="0"
+            data-penalty-type="ostaggio"
+          >
+            Ostaggio (+5s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="5"
+            data-target-suffix="single2"
+            data-counter="0"
+            data-penalty-type="piastra"
+          >
+            Piastra (+5s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="80"
+            data-target-suffix="single2"
+            data-counter="0"
+            data-penalty-type="laser"
+          >
+            Laser (+80s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="50"
+            data-target-suffix="single2"
+            data-counter="0"
+            data-penalty-type="fail"
+          >
+            Fail (+50s) (0)
+          </button>
+          <button
+            type="button"
+            class="reset-penalty-button"
+            data-target-suffix="single2"
+          >
+            Reset Penalità
+          </button>
+        </div>
+        <label for="penalty_minutes_single2" class="manual-penalty-label"
+          >Penalità Totale (Modificabile):</label
+        >
+        <div class="time-input-group">
+          <input
+            type="number"
+            id="penalty_minutes_single2"
+            min="0"
+            value="0"
+            required
+            aria-label="Minuti penalità"
+          />
+          <span>:</span>
+          <input
+            type="number"
+            id="penalty_seconds_single2"
+            min="0"
+            max="59"
+            value="0"
+            required
+            aria-label="Secondi penalità"
+          />
+        </div>
+        <div id="penalty-message-single2" class="inline-message"></div>
+        <div class="button-row">
+          <button
+            type="submit"
+            class="btn btn-confirm-penalty"
+            id="submit-penalty-single2"
+          >
+            Conferma Score
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeInlineForm2('single2', 'penalty')"
+          >
+            Annulla
+          </button>
+        </div>
+      </form>
+    </div>
+    <div
+      class="inline-form-section qualification-section"
+      id="qualification-section-single2"
+    >
+      <h3>Tempo Qualificante!</h3>
+      <p id="qualification-reason-text-single2">Inserisci i dati:</p>
+      <form id="qualification-form-single2">
+        <!-- ID Corretti per JS -->
+        <input type="hidden" id="modal-player-id-single2" name="player_id" />
+        <input
+          type="hidden"
+          id="modal-player-name-single2"
+          name="player_name"
+        />
+        <input
+          type="hidden"
+          id="modal-score-minutes-single2"
+          name="score_minutes"
+        />
+        <input
+          type="hidden"
+          id="modal-player-type-single2"
+          name="player_type"
+          value="single"
+        />
+        <!-- Base type -->
+        <input
+          type="hidden"
+          id="modal-qualification-reason-single2"
+          name="qualification_reason"
+        />
+        <div class="form-group">
+          <label for="first_name-single2">Nome:</label
+          ><input type="text" id="first_name-single2" required />
+        </div>
+        <div class="form-group">
+          <label for="last_name-single2">Cognome:</label
+          ><input type="text" id="last_name-single2" required />
+        </div>
+        <div class="form-group">
+          <label for="phone_number-single2">Telefono:</label
+          ><input type="tel" id="phone_number-single2" required />
+        </div>
+        <div id="modal-message-single2" class="inline-message"></div>
+        <!-- ID Corretto -->
+        <div class="button-row">
+          <button type="submit" class="btn btn-submit">Salva Dati</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeInlineForm2('single2', 'qualification')"
+          >
+            Chiudi
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!-- Fine Sezione Singolo 2 -->
+</div>
+<!-- Fine control-container -->
+
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/controls_combined2.js') }}"></script>
+{% endblock %}

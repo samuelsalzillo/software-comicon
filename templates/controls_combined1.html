@@ -1,0 +1,524 @@
+{% extends "layout.html" %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/controls_combined1.css') }}"
+/>
+<style>
+  /* ... (stili esistenti per .inline-form-section, etc.) ... */
+
+  /* Stili per i nuovi bottoni penalità */
+  .penalty-buttons {
+    display: grid; /* Usa grid per layout facile */
+    grid-template-columns: repeat(2, 1fr); /* Due colonne */
+    gap: 8px; /* Spazio tra bottoni */
+    margin-bottom: 15px; /* Spazio prima degli input manuali */
+  }
+  .penalty-buttons button {
+    padding: 8px 10px;
+    font-size: 0.85em; /* Testo più piccolo */
+    border-radius: 5px;
+    cursor: pointer;
+    border: 1px solid #ccc;
+    background-color: #e9ecef;
+    color: #495057;
+    text-align: center;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+  }
+  .penalty-buttons button:hover {
+    background-color: #dee2e6;
+    border-color: #adb5bd;
+  }
+  .penalty-buttons button.reset-penalty {
+    grid-column: 1 / -1; /* Occupa tutta la larghezza */
+    background-color: #f8d7da; /* Colore diverso per reset */
+    border-color: #f5c6cb;
+    color: #721c24;
+    font-weight: bold;
+    margin-top: 5px;
+  }
+  .penalty-buttons button.reset-penalty:hover {
+    background-color: #f1b0b7;
+  }
+
+  /* Rendi input manuali leggermente meno prominenti se vuoi */
+  /* .time-input-group { margin-top: 10px; } */
+</style>
+{% endblock %} {% block content %}
+<h1>Controllo Piste 1 (Giallo/Blu)</h1>
+
+<div class="shared-next-player">
+  <h2>Prossimo Giocatore</h2>
+  <div class="next-player-info"><span id="next-player">-</span></div>
+  <button
+    id="next-player-btn"
+    class="btn btn-next"
+    onclick="activateNextPlayer()"
+    disabled
+  >
+    Prossimo Giocatore
+  </button>
+</div>
+
+<div class="control-container">
+  <!-- ==================== -->
+  <!-- Sezione Coppia (GIALLO) -->
+  <!-- ==================== -->
+  <div class="control-section couple-section">
+    <h2>Coppia (Giallo)</h2>
+    <div class="standard-controls" id="standard-controls-couple">
+      <!-- CONTROLLI STANDARD -->
+      <!-- ... (contenuto invariato) ... -->
+      <div class="game-info">
+        <div class="current-player">
+          Prenotazione: <span id="current-player-couple">-</span>
+        </div>
+        <div class="game-timer">
+          Tempo: <span id="timer-couple">00:00</span>
+        </div>
+      </div>
+      <div class="control-panel">
+        <div class="button-group">
+          <button
+            id="start-btn-couple"
+            class="btn btn-start"
+            onclick="pressButton('first_start', 'couple')"
+          >
+            START
+          </button>
+          <button
+            id="stop-btn-couple"
+            class="btn btn-stop"
+            onclick="pressButton('first_stop', 'couple')"
+          >
+            STOP
+          </button>
+        </div>
+        <div class="status">
+          Stato: <span id="status-couple">ALFA: - BRAVO: -</span>
+        </div>
+      </div>
+    </div>
+    <div
+      class="inline-form-section penalty-section"
+      id="penalty-section-couple"
+    >
+      <!-- SEZIONE PENALITA' -->
+      <h3>Penalità (Coppia)</h3>
+      <p>Giocatore: <strong id="penalty-player-display-couple">-</strong></p>
+      <p>
+        Tempo Timer: <strong id="penalty-timer-display-couple">00:00</strong>
+      </p>
+      <form id="penalty-form-couple">
+        <input type="hidden" id="penalty-player-id-couple" /><input
+          type="hidden"
+          id="penalty-player-name-couple"
+        />
+        <input
+          type="hidden"
+          id="penalty-player-type-couple"
+          value="couple"
+        /><input type="hidden" id="penalty-timer-duration-couple" />
+
+        <!-- NUOVI BOTTONI PENALITA' -->
+        <div class="penalty-buttons">
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="5"
+            data-target-suffix="couple"
+            data-counter="0"
+            data-penalty-type="ostaggio"
+          >
+            Ostaggio (+5s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="5"
+            data-target-suffix="couple"
+            data-counter="0"
+            data-penalty-type="piastra"
+          >
+            Piastra (+5s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="80"
+            data-target-suffix="couple"
+            data-counter="0"
+            data-penalty-type="laser"
+          >
+            Laser (+80s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="50"
+            data-target-suffix="couple"
+            data-counter="0"
+            data-penalty-type="fail"
+          >
+            Fail (+50s) (0)
+          </button>
+          <button
+            type="button"
+            class="reset-penalty-button"
+            data-target-suffix="couple"
+          >
+            Reset Penalità
+          </button>
+        </div>
+
+        <p style="margin-bottom: 5px; margin-top: 15px; font-weight: bold">
+          Penalità Totale (Modificabile):
+        </p>
+        <div class="time-input-group">
+          <div class="form-group">
+            <label for="penalty_minutes_couple" class="sr-only">Minuti:</label
+            ><input
+              type="number"
+              id="penalty_minutes_couple"
+              min="0"
+              value="0"
+              required
+              placeholder="MM"
+            />
+          </div>
+          <span>:</span>
+          <div class="form-group">
+            <label for="penalty_seconds_couple" class="sr-only">Secondi:</label
+            ><input
+              type="number"
+              id="penalty_seconds_couple"
+              min="0"
+              max="59"
+              value="0"
+              required
+              placeholder="SS"
+            />
+          </div>
+        </div>
+        <div id="penalty-message-couple" class="inline-message"></div>
+        <div class="button-row">
+          <button
+            type="submit"
+            class="btn btn-confirm-penalty"
+            id="submit-penalty-couple"
+          >
+            Conferma Score
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeInlineForm('couple', 'penalty')"
+          >
+            Annulla
+          </button>
+        </div>
+      </form>
+    </div>
+    <div
+      class="inline-form-section qualification-section"
+      id="qualification-section-couple"
+    >
+      <h3>Tempo Qualificante!</h3>
+      <!-- ID Corretto per il testo del motivo -->
+      <p id="qualification-reason-text-couple">Inserisci i dati:</p>
+      <!-- ID Corretto per il form -->
+      <form id="qualification-form-couple">
+        <!-- ID Corretti per gli input hidden (modal-...) -->
+        <input type="hidden" id="modal-player-id-couple" name="player_id" />
+        <input type="hidden" id="modal-player-name-couple" name="player_name" />
+        <input
+          type="hidden"
+          id="modal-score-minutes-couple"
+          name="score_minutes"
+        />
+        <input
+          type="hidden"
+          id="modal-player-type-couple"
+          name="player_type"
+          value="couple"
+        />
+        <input
+          type="hidden"
+          id="modal-qualification-reason-couple"
+          name="qualification_reason"
+        />
+        <!-- ID Corretti per gli input visibili (corrispondenti alle label) -->
+        <div class="form-group">
+          <label for="first_name-couple">Nome:</label
+          ><input
+            type="text"
+            id="first_name-couple"
+            name="first_name-couple"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="last_name-couple">Cognome:</label
+          ><input
+            type="text"
+            id="last_name-couple"
+            name="last_name-couple"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="phone_number-couple">Telefono:</label
+          ><input
+            type="tel"
+            id="phone_number-couple"
+            name="phone_number-couple"
+            required
+          />
+        </div>
+        <!-- ID Corretto per il messaggio -->
+        <div id="modal-message-couple" class="inline-message"></div>
+        <div class="button-row">
+          <button type="submit" class="btn btn-submit">Salva Dati</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeInlineForm('couple', 'qualification')"
+          >
+            Chiudi
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== -->
+  <!-- Sezione Singolo (BLU) -->
+  <!-- ==================== -->
+  <div class="control-section single-section">
+    <h2>Singolo (Blu)</h2>
+    <div class="standard-controls" id="standard-controls-single">
+      <!-- CONTROLLI STANDARD -->
+      <!-- ... (contenuto invariato) ... -->
+      <div class="game-info">
+        <div class="current-player">
+          Prenotazione: <span id="current-player-single">-</span>
+        </div>
+        <div class="game-timer">
+          Tempo: <span id="timer-single">00:00</span>
+        </div>
+      </div>
+      <div class="control-panel">
+        <div class="button-group">
+          <button
+            id="start-btn-single"
+            class="btn btn-start"
+            onclick="pressButton('second_start', 'single')"
+          >
+            START
+          </button>
+          <button
+            id="stop-btn-single"
+            class="btn btn-stop"
+            onclick="pressButton('second_stop', 'single')"
+          >
+            STOP
+          </button>
+        </div>
+        <div class="status">Stato: <span id="status-single">ALFA: -</span></div>
+      </div>
+    </div>
+    <div
+      class="inline-form-section penalty-section"
+      id="penalty-section-single"
+    >
+      <!-- SEZIONE PENALITA' -->
+      <h3>Penalità (Singolo)</h3>
+      <p>Giocatore: <strong id="penalty-player-display-single">-</strong></p>
+      <p>
+        Tempo Timer: <strong id="penalty-timer-display-single">00:00</strong>
+      </p>
+      <form id="penalty-form-single">
+        <input type="hidden" id="penalty-player-id-single" /><input
+          type="hidden"
+          id="penalty-player-name-single"
+        />
+        <input
+          type="hidden"
+          id="penalty-player-type-single"
+          value="single"
+        /><input type="hidden" id="penalty-timer-duration-single" />
+
+        <!-- NUOVI BOTTONI PENALITA' -->
+        <div class="penalty-buttons">
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="5"
+            data-target-suffix="single"
+            data-counter="0"
+            data-penalty-type="ostaggio"
+          >
+            Ostaggio (+5s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="5"
+            data-target-suffix="single"
+            data-counter="0"
+            data-penalty-type="piastra"
+          >
+            Piastra (+5s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="80"
+            data-target-suffix="single"
+            data-counter="0"
+            data-penalty-type="laser"
+          >
+            Laser (+80s) (0)
+          </button>
+          <button
+            type="button"
+            class="penalty-add-button"
+            data-seconds="50"
+            data-target-suffix="single"
+            data-counter="0"
+            data-penalty-type="fail"
+          >
+            Fail (+50s) (0)
+          </button>
+          <button
+            type="button"
+            class="reset-penalty-button"
+            data-target-suffix="single"
+          >
+            Reset Penalità
+          </button>
+        </div>
+
+        <p style="margin-bottom: 5px; margin-top: 15px; font-weight: bold">
+          Penalità Totale (Modificabile):
+        </p>
+        <div class="time-input-group">
+          <div class="form-group">
+            <label for="penalty_minutes_single" class="sr-only">Minuti:</label
+            ><input
+              type="number"
+              id="penalty_minutes_single"
+              min="0"
+              value="0"
+              required
+              placeholder="MM"
+            />
+          </div>
+          <span>:</span>
+          <div class="form-group">
+            <label for="penalty_seconds_single" class="sr-only">Secondi:</label
+            ><input
+              type="number"
+              id="penalty_seconds_single"
+              min="0"
+              max="59"
+              value="0"
+              required
+              placeholder="SS"
+            />
+          </div>
+        </div>
+        <div id="penalty-message-single" class="inline-message"></div>
+        <div class="button-row">
+          <button
+            type="submit"
+            class="btn btn-confirm-penalty"
+            id="submit-penalty-single"
+          >
+            Conferma Score
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeInlineForm('single', 'penalty')"
+          >
+            Annulla
+          </button>
+        </div>
+      </form>
+    </div>
+    <!-- SEZIONE QUALIFICA INLINE (Singolo) -->
+    <div
+      class="inline-form-section qualification-section"
+      id="qualification-section-single"
+    >
+      <h3>Tempo Qualificante!</h3>
+      <!-- ID Corretto per il testo del motivo -->
+      <p id="qualification-reason-text-single">Inserisci i dati:</p>
+      <!-- ID Corretto per il form -->
+      <form id="qualification-form-single">
+        <!-- ID Corretti per gli input hidden (modal-...) -->
+        <input type="hidden" id="modal-player-id-single" name="player_id" />
+        <input type="hidden" id="modal-player-name-single" name="player_name" />
+        <input
+          type="hidden"
+          id="modal-score-minutes-single"
+          name="score_minutes"
+        />
+        <input
+          type="hidden"
+          id="modal-player-type-single"
+          name="player_type"
+          value="single"
+        />
+        <input
+          type="hidden"
+          id="modal-qualification-reason-single"
+          name="qualification_reason"
+        />
+        <!-- ID Corretti per gli input visibili (corrispondenti alle label) -->
+        <div class="form-group">
+          <label for="first_name-single">Nome:</label
+          ><input
+            type="text"
+            id="first_name-single"
+            name="first_name-single"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="last_name-single">Cognome:</label
+          ><input
+            type="text"
+            id="last_name-single"
+            name="last_name-single"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="phone_number-single">Telefono:</label
+          ><input
+            type="tel"
+            id="phone_number-single"
+            name="phone_number-single"
+            required
+          />
+        </div>
+        <!-- ID Corretto per il messaggio -->
+        <div id="modal-message-single" class="inline-message"></div>
+        <div class="button-row">
+          <button type="submit" class="btn btn-submit">Salva Dati</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            onclick="closeInlineForm('single', 'qualification')"
+          >
+            Chiudi
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/controls_combined1.js') }}"></script>
+{% endblock %}

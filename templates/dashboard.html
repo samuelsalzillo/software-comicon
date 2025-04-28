@@ -1,0 +1,283 @@
+{% extends "layout.html" %} {% block extra_css %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/dashboard.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/style.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/next-player.css') }}"
+/>
+{% endblock %} {% block content %}
+
+<div class="row" style="row-gap: 20px">
+  <div class="col-1"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="alfa-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/soldier.svg"
+        />
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: end;
+            justify-content: center;
+          "
+        >
+          <h3 class="m-0" style="text-align: center">ALFA</h3>
+        </div>
+
+        <p>Tempo rimanente: <span id="alfa-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-alfa">-</span>
+        </p>
+        <p>Durata: <span id="alfa-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="bravo-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/soldiers.svg"
+        />
+        <div style="display: flex; flex-direction: row; align-items: end">
+          <h3 class="m-0">Bravo</h3>
+        </div>
+        <p>Tempo rimanente: <span id="bravo-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-bravo">-</span>
+        </p>
+        <p>Durata: <span id="bravo-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-2"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="alfa2-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/soldier.svg"
+        />
+        <div style="display: flex; flex-direction: row; align-items: end">
+          <h3 class="m-0">ALFA2</h3>
+        </div>
+        <p>Tempo rimanente: <span id="alfa2-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-alfa2">-</span>
+        </p>
+        <p>Durata: <span id="alfa2-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="bravo2-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/soldiers.svg"
+        />
+        <div style="display: flex; flex-direction: row; align-items: end">
+          <h3 class="m-0">Bravo2</h3>
+        </div>
+        <p>Tempo rimanente: <span id="bravo2-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-bravo2">-</span>
+        </p>
+        <p>Durata: <span id="bravo2-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore ALFA/BRAVO:</div>
+        <div class="next-player-charlie" id="next-player-alfa-bravo-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerAlfaBravo()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore ALFA/BRAVO2:</div>
+        <div class="next-player-charlie" id="next-player-alfa-bravo2-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerAlfaBravo2()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="board">
+      <h2 style="color: white">Coda Coppie</h2>
+      <ul id="couples-board"></ul>
+    </div>
+  </div>
+
+  <div class="col-3">
+    <div class="board">
+      <h2>Coda Singoli</h2>
+      <ul id="singles-board"></ul>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="board">
+      <h2 style="color: white">Coda Coppie2</h2>
+      <ul id="couples2-board"></ul>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="board">
+      <h2>Coda Singoli</h2>
+      <ul id="singles2-board"></ul>
+    </div>
+  </div>
+  <div class="col-2"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="charlie-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/G&G.svg"
+        />
+        <h3 style="text-align: center">CHARLIE</h3>
+        <p>Tempo rimanente: <span id="charlie-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-charlie">-</span>
+        </p>
+        <p>Durata: <span id="charlie-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-3"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="delta-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/target_icon.svg"
+        />
+        <h3>DELTA</h3>
+        <p>Tempo rimanente: <span id="delta-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-delta">-</span>
+        </p>
+        <p>Durata: <span id="delta-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="echo-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/target_icon.svg"
+        />
+        <h3>ECHO</h3>
+        <p>Tempo rimanente: <span id="echo-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-echo">-</span>
+        </p>
+        <p>Durata: <span id="echo-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore G&G:</div>
+        <div class="next-player-charlie" id="next-charlie-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerCharlie()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore Statico:</div>
+        <div class="next-player-charlie" id="next-statico-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerStatico()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="boards-container">
+      <div class="board">
+        <h2>Coda G&G</h2>
+        <ul id="charlie-board"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="boards-container">
+      <div class="board">
+        <h2>Coda STATICO</h2>
+        <ul id="statico-board"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      <div class="skipped-container">
+        <div class="skipped-title">Giocatori Skippati</div>
+        <div class="skipped-buttons">
+          <div id="skipped-couples-buttons"></div>
+          <div id="skipped-singles-buttons"></div>
+          <div id="skipped-couples2-buttons"></div>
+          <div id="skipped-singles2-buttons"></div>
+          <div id="skipped-charlie-buttons"></div>
+          <div id="skipped-statico-buttons"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% endblock %} {% block scripts %}
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+  <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script> -->
+  {% endblock %}
+</div>

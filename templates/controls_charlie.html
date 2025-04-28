@@ -1,0 +1,328 @@
+<!-- controls_charlie.html -->
+{% extends "layout.html" %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/controls_charlie.css') }}"
+/>
+<!-- Aggiungi stili simili a quelli del modal combined -->
+<style>
+  /* Stili copiati e adattati da controls_combined1.css per i modal */
+  .modal {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 1000;
+    display: none; /* Inizia nascosta */
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px); /* Effetto blur sfondo */
+  }
+  .modal-content {
+    background-color: #fefefe;
+    padding: 25px 45px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 550px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+    position: relative;
+    border: 1px solid #ddd;
+    animation: fadeInModal 0.3s ease-out; /* Animazione entrata */
+  }
+
+  @keyframes fadeInModal {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .close-button {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 2.5em;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    line-height: 1;
+  }
+  .close-button:hover {
+    color: #555;
+  }
+
+  .modal-content h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: 600;
+  }
+  .modal-content p {
+    text-align: center;
+    color: #555;
+    margin-bottom: 25px;
+    font-size: 1.1em;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #444;
+    font-size: 0.95em;
+  }
+  .form-group input[type="text"],
+  .form-group input[type="tel"],
+  .form-group input[type="number"] /* Aggiunto per tempo */ {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1em;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  }
+  .form-group input:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+    outline: none;
+  }
+  /* Stili specifici per input tempo */
+  .time-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .time-input-group .form-group {
+    flex: 1;
+    margin-bottom: 0; /* Rimuovi margine basso qui */
+  }
+  .time-input-group span {
+    font-size: 1.2em;
+    color: #888;
+    padding-top: 25px; /* Allinea con input */
+  }
+
+  .btn-submit {
+    background-color: #5cb85c;
+    color: white;
+    padding: 14px 25px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1.15em;
+    margin-top: 15px;
+    font-weight: bold;
+    transition: background-color 0.2s ease;
+  }
+  .btn-submit:hover {
+    background-color: #4cae4c;
+  }
+  .btn-submit:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
+  .modal-message {
+    padding: 12px 15px;
+    margin-top: 20px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 500;
+    display: none; /* Inizia nascosto */
+    border-width: 1px;
+    border-style: solid;
+  }
+  .modal-message.success {
+    background-color: #dff0d8;
+    color: #3c763d;
+    border-color: #d6e9c6;
+  }
+  .modal-message.error {
+    background-color: #f2dede;
+    color: #a94442;
+    border-color: #ebccd1;
+  }
+</style>
+{% endblock %} {% block content %}
+<h1>Controllo G&G</h1>
+
+<!-- Info Gioco Esistenti -->
+<div class="game-info">
+  <div class="current-player">
+    Prenotazione in gioco: <span id="current-player">-</span>
+  </div>
+  <div class="game-timer">Tempo trascorso: <span id="timer">00:00</span></div>
+</div>
+
+<!-- Pannello Controllo Esistente -->
+<div class="control-panel">
+  <button
+    id="next-player-btn"
+    class="btn btn-next"
+    onclick="activateNextPlayer()"
+    disabled
+  >
+    Prossimo Giocatore
+  </button>
+  <div class="button-group">
+    <button
+      id="start-btn"
+      class="btn btn-start"
+      onclick="pressButton('charlie_start')"
+    >
+      START
+    </button>
+    <button
+      id="stop-btn"
+      class="btn btn-stop"
+      onclick="pressButton('charlie_stop')"
+    >
+      STOP
+    </button>
+  </div>
+  <div class="status">Stato: <span id="status">Inattivo</span></div>
+</div>
+<br />
+
+<!-- Prossimo Giocatore / Skip Esistenti -->
+<div class="col">
+  <div class="next-players-container">
+    <div class="next-player-card">
+      <div class="next-player-title">Prossimo Giocatore G&G:</div>
+      <div class="next-player-charlie" id="next-player">
+        Nessun Giocatore In Coda
+      </div>
+      <button class="skip-button" onclick="skipNextPlayerCharlie()">
+        SKIP <span class="skip-icon">>></span>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="skipped-container">
+  <div class="skipped-title">Giocatori Skippati</div>
+  <div class="skipped-buttons">
+    <div id="skipped-charlie-buttons"></div>
+  </div>
+</div>
+
+<!-- NUOVO: Manual Score Input Modal -->
+<div id="manual-score-modal" class="modal" style="display: none">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeManualScoreModal()">×</span>
+    <h2>Inserisci Tempo Ufficiale G&G</h2>
+    <p>Inserisci il tempo visualizzato sul display del poligono.</p>
+    <form id="manual-score-form">
+      <input type="hidden" id="manual-player-id" name="player_id" />
+      <input type="hidden" id="manual-player-name" name="player_name" />
+
+      <div class="time-input-group">
+        <div class="form-group">
+          <label for="score_minutes">Minuti:</label>
+          <input
+            type="number"
+            id="score_minutes"
+            name="minutes"
+            min="0"
+            max="59"
+            required
+            placeholder="MM"
+          />
+        </div>
+        <span>:</span>
+        <div class="form-group">
+          <label for="score_seconds">Secondi:</label>
+          <input
+            type="number"
+            id="score_seconds"
+            name="seconds"
+            min="0"
+            max="59"
+            required
+            placeholder="SS"
+          />
+        </div>
+        <span>.</span>
+        <div class="form-group">
+          <label for="score_milliseconds">Millisecondi:</label>
+          <input
+            type="number"
+            id="score_milliseconds"
+            name="milliseconds"
+            min="0"
+            max="999"
+            required
+            placeholder="mmm"
+          />
+        </div>
+      </div>
+
+      <div
+        id="manual-score-message"
+        class="modal-message"
+        style="display: none"
+      ></div>
+      <button type="submit" class="btn btn-submit" id="submit-manual-score-btn">
+        Salva Tempo e Verifica
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- NUOVO: Charlie Qualification Modal (simile a combined) -->
+<div id="charlie-qualification-modal" class="modal" style="display: none">
+  <div class="modal-content">
+    <span class="close-button" onclick="closeCharlieQualificationModal()"
+      >×</span
+    >
+    <h2>Congratulazioni! Tempo Qualificante G&G!</h2>
+    <p id="charlie-qualification-reason-text">
+      Inserisci i dati per essere ricontattato:
+    </p>
+    <form id="charlie-qualification-form">
+      <!-- Hidden fields per dati giocatore/score -->
+      <input type="hidden" id="qual-player-id" name="player_id" />
+      <input type="hidden" id="qual-player-name" name="player_name" />
+      <input type="hidden" id="qual-score-minutes" name="score_minutes" />
+      <input type="hidden" id="qual-player-type" name="player_type" />
+      <input
+        type="hidden"
+        id="qual-qualification-reason"
+        name="qualification_reason"
+      />
+      <!-- Campi visibili -->
+      <div class="form-group">
+        <label for="qual_first_name">Nome:</label>
+        <input type="text" id="qual_first_name" name="first_name" required />
+      </div>
+      <div class="form-group">
+        <label for="qual_last_name">Cognome:</label>
+        <input type="text" id="qual_last_name" name="last_name" required />
+      </div>
+      <div class="form-group">
+        <label for="qual_phone_number">Numero di Telefono:</label>
+        <input type="tel" id="qual_phone_number" name="phone_number" required />
+      </div>
+      <div
+        id="charlie-qualification-message"
+        class="modal-message"
+        style="display: none"
+      ></div>
+      <button type="submit" class="btn btn-submit">Salva Dati Contatto</button>
+    </form>
+  </div>
+</div>
+
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/controls_charlie.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="{{ url_for('static', filename='icons/logo.png') }}"
+    />
+    <title>Simulazione Code</title>
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/bootstrap.min.css') }}"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Roboto", sans-serif;
+      }
+
+      body {
+        background: #556959;
+
+        min-height: 100vh;
+      }
+
+      .navbar {
+        margin-bottom: 2rem;
+        position: relative;
+      }
+
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: #3ab1c8;
+        z-index: 999;
+        padding-top: 4rem;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .nav-links a {
+        color: white;
+        background: #3ab1c8;
+        font-size: 1.5rem;
+        text-decoration: none;
+        padding: 1rem;
+        text-align: center;
+        transition: background-color 0.3s;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .nav-links a:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+      }
+
+      .hamburger {
+        display: block;
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        z-index: 1000;
+        background: rgba(0, 0, 0, 0.5);
+        padding: 0.5rem;
+        border-radius: 4px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #f5a525;
+        margin-bottom: 30px;
+        font-size: 2.5em;
+      }
+
+      @media (min-width: 768px) {
+        .nav-links {
+          flex-direction: row;
+          position: static;
+          display: none;
+          padding-top: 0;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+
+        .nav-links.active {
+          display: flex;
+        }
+
+        .nav-links a {
+          font-size: 1.2rem;
+          padding: 0.8rem 1.2rem;
+          border-bottom: none;
+          border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-links a:last-child {
+          border-right: none;
+        }
+      }
+    </style>
+    {% block extra_css %}{% endblock %}
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <div class="hamburger" id="hamburger">
+        <svg>
+          <path
+            d="M3 12h18M3 6h18M3 18h18"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+          />
+        </svg>
+      </div>
+      <div class="nav-links" id="navLinks">
+        <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('controls_combined') }}" class="nav-link"
+          >Dinamico 1 (Giallo/Blu)</a
+        >
+        <a href="{{ url_for('controls_combined2') }}" class="nav-link"
+          >Dinamico 2 (Rosa/Bianco)</a
+        >
+        <a href="{{ url_for('controls_charlie') }}" class="nav-link"
+          >Controllo G&G (Verde)</a
+        >
+        <a href="{{ url_for('controls_statico') }}" class="nav-link"
+          >Controllo Statico (Rosso)</a
+        >
+        <a href="{{ url_for('controls_cassa') }}" class="nav-link">Cassa</a>
+        <a href="{{ url_for('scoring') }}" class="nav-link">Scoring</a>
+        <a href="{{ url_for('keypad') }}" class="nav-link">Tastierino 1</a>
+        <a href="{{ url_for('keypad2') }}" class="nav-link">Tastierino 2</a>
+      </div>
+    </nav>
+
+    <div class="" style="padding: 20px">{% block content %}{% endblock %}</div>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+
+    <script>
+      $(document).ready(function () {
+        $("#hamburger").click(function () {
+          $("#navLinks").toggleClass("active");
+          $(this).find("i").toggleClass("fa-bars fa-times");
+        });
+
+        // Chiudi il menu quando si clicca su un link
+        $("#navLinks a").click(function () {
+          $("#navLinks").removeClass("active");
+          $("#hamburger i").removeClass("fa-times").addClass("fa-bars");
+        });
+      });
+    </script>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

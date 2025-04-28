@@ -1,0 +1,469 @@
+{% extends "layout.html" %} {% block extra_css %}
+
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/controls_cassa.css') }}"
+/>
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/dashboard.css') }}"
+/>
+{% endblock %} {% block content %}
+<h1>Cassa</h1>
+
+<div class="button-group">
+  <!-- Coppia (Giallo) - Esistente -->
+  <div class="box-add control-panel">
+    <form id="queueForm-coppia">
+      <label for="playerTypeCoppia">Tipo:</label>
+      <!-- ID univoco -->
+      <select id="playerTypeCoppia" name="playerType" class="input-field">
+        <!-- ID univoco -->
+        <option value="couple">Coppia (Giallo)</option>
+      </select>
+      <label for="playerId-coppia">ID Giocatore:</label>
+      <input
+        type="text"
+        id="playerId-coppia"
+        name="playerId"
+        class="input-field"
+        required
+      />
+      <span id="error-coppia" class="error-message" style="color: red"></span>
+      <button type="submit" id="add-couple-btn" class="btn btn-yellow">
+        Aggiungi Coppia (Giallo)
+      </button>
+    </form>
+    <div class="status"></div>
+  </div>
+
+  <!-- Singolo (Blu) - Esistente -->
+  <div class="box-add control-panel">
+    <form id="queueForm-singolo">
+      <label for="playerTypeSingolo">Tipo:</label>
+      <!-- ID univoco -->
+      <select id="playerTypeSingolo" name="playerType" class="input-field">
+        <!-- ID univoco -->
+        <option value="single">Singolo (Blu)</option>
+      </select>
+      <label for="playerId-singolo">ID Giocatore:</label>
+      <input
+        type="text"
+        id="playerId-singolo"
+        name="playerId"
+        class="input-field"
+        required
+      />
+      <span id="error-singolo" class="error-message" style="color: red"></span>
+      <button type="submit" id="add-single-btn" class="btn btn-blue">
+        Aggiungi Singolo (Blu)
+      </button>
+    </form>
+    <div class="status"></div>
+  </div>
+
+  <!-- Coppia 2 (Rosa) - NUOVO -->
+  <div class="box-add control-panel">
+    <form id="queueForm-coppia2">
+      <label for="playerTypeCoppia2">Tipo:</label>
+      <!-- ID univoco -->
+      <select id="playerTypeCoppia2" name="playerType" class="input-field">
+        <!-- ID univoco -->
+        <option value="couple2">Coppia 2 (Rosa)</option>
+      </select>
+      <label for="playerId-coppia2">ID Giocatore:</label>
+      <input
+        type="text"
+        id="playerId-coppia2"
+        name="playerId"
+        class="input-field"
+        required
+      />
+      <span id="error-coppia2" class="error-message" style="color: red"></span>
+      <button type="submit" id="add-couple2-btn" class="btn btn-purple">
+        Aggiungi Coppia 2 (Rosa)
+      </button>
+      <!-- Nuova classe CSS -->
+    </form>
+    <div class="status"></div>
+  </div>
+
+  <!-- Singolo 2 (Bianco) - NUOVO -->
+  <div class="box-add control-panel">
+    <form id="queueForm-singolo2">
+      <label for="playerTypeSingolo2">Tipo:</label>
+      <!-- ID univoco -->
+      <select id="playerTypeSingolo2" name="playerType" class="input-field">
+        <!-- ID univoco -->
+        <option value="single2">Singolo 2 (Bianco)</option>
+      </select>
+      <label for="playerId-singolo2">ID Giocatore:</label>
+      <input
+        type="text"
+        id="playerId-singolo2"
+        name="playerId"
+        class="input-field"
+        required
+      />
+      <span id="error-singolo2" class="error-message" style="color: red"></span>
+      <button type="submit" id="add-single2-btn" class="btn btn-orange">
+        Aggiungi Singolo 2 (Bianco)
+      </button>
+      <!-- Nuova classe CSS -->
+    </form>
+    <div class="status"></div>
+  </div>
+
+  <!-- Charlie (Verde) - Esistente -->
+  <div class="box-add control-panel">
+    <form id="queueForm-charlie">
+      <label for="playerTypeCharlie">Tipo:</label>
+      <!-- ID univoco -->
+      <select id="playerTypeCharlie" name="playerType" class="input-field">
+        <!-- ID univoco -->
+        <option value="charlie">G&G (Verde)</option>
+      </select>
+      <label for="playerId-charlie">ID Giocatore:</label>
+      <input
+        type="text"
+        id="playerId-charlie"
+        name="playerId"
+        class="input-field"
+        required
+      />
+      <span id="error-charlie" class="error-message" style="color: red"></span>
+      <button type="submit" id="add-charlie-btn" class="btn btn-green">
+        Aggiungi G&G (Verde)
+      </button>
+    </form>
+    <div class="status"></div>
+  </div>
+
+  <!-- Statico (Rosso) - Esistente -->
+  <div class="box-add control-panel">
+    <form id="queueForm-statico">
+      <label for="playerTypeStatico">Tipo:</label>
+      <!-- ID univoco -->
+      <select id="playerTypeStatico" name="playerType" class="input-field">
+        <!-- ID univoco -->
+        <option value="statico">Statico (Rosso)</option>
+      </select>
+      <label for="playerId-statico">ID Giocatore:</label>
+      <input
+        type="text"
+        id="playerId-statico"
+        name="playerId"
+        class="input-field"
+        required
+      />
+      <span id="error-statico" class="error-message" style="color: red"></span>
+      <button type="submit" id="add-statico-btn" class="btn btn-red">
+        Aggiungi Statico (Rosso)
+      </button>
+    </form>
+    <div class="status"></div>
+  </div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<br /><br />
+
+<!-- Sezione Dashboard incorporata -->
+<div class="row big-box">
+  <div class="col-1"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="alfa-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/soldier.svg"
+        />
+        <div
+          style="
+            display: flex;
+            flex-direction: row;
+            align-items: end;
+            justify-content: center;
+          "
+        >
+          <h3 class="m-0" style="text-align: center">ALFA</h3>
+        </div>
+
+        <p>Tempo rimanente: <span id="alfa-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-alfa">-</span>
+        </p>
+        <p>Durata: <span id="alfa-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="bravo-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/soldiers.svg"
+        />
+        <div style="display: flex; flex-direction: row; align-items: end">
+          <h3 class="m-0">Bravo</h3>
+        </div>
+        <p>Tempo rimanente: <span id="bravo-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-bravo">-</span>
+        </p>
+        <p>Durata: <span id="bravo-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-2"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="alfa2-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/soldier.svg"
+        />
+        <div style="display: flex; flex-direction: row; align-items: end">
+          <h3 class="m-0">ALFA2</h3>
+        </div>
+        <p>Tempo rimanente: <span id="alfa2-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-alfa2">-</span>
+        </p>
+        <p>Durata: <span id="alfa2-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="bravo2-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/soldiers.svg"
+        />
+        <div style="display: flex; flex-direction: row; align-items: end">
+          <h3 class="m-0">Bravo2</h3>
+        </div>
+        <p>Tempo rimanente: <span id="bravo2-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-bravo2">-</span>
+        </p>
+        <p>Durata: <span id="bravo2-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore ALFA/BRAVO:</div>
+        <div class="next-player-charlie" id="next-player-alfa-bravo-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerAlfaBravo()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore ALFA/BRAVO2:</div>
+        <div class="next-player-charlie" id="next-player-alfa-bravo2-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerAlfaBravo2()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="board">
+      <h2 style="color: white">Coda Coppie</h2>
+      <ul id="couples-board"></ul>
+    </div>
+  </div>
+
+  <div class="col-3">
+    <div class="board">
+      <h2>Coda Singoli</h2>
+      <ul id="singles-board"></ul>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="board">
+      <h2 style="color: white">Coda Coppie2</h2>
+      <ul id="couples2-board"></ul>
+    </div>
+  </div>
+  <div class="col-3">
+    <div class="board">
+      <h2>Coda Singoli</h2>
+      <ul id="singles2-board"></ul>
+    </div>
+  </div>
+  <div class="col-2"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="charlie-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/G&G.svg"
+        />
+        <h3 style="text-align: center">CHARLIE</h3>
+        <p>Tempo rimanente: <span id="charlie-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-charlie">-</span>
+        </p>
+        <p>Durata: <span id="charlie-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-3"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="delta-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/target_icon.svg"
+        />
+        <h3>DELTA</h3>
+        <p>Tempo rimanente: <span id="delta-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-delta">-</span>
+        </p>
+        <p>Durata: <span id="delta-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="echo-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/target_icon.svg"
+        />
+        <h3>ECHO</h3>
+        <p>Tempo rimanente: <span id="echo-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-echo">-</span>
+        </p>
+        <p>Durata: <span id="echo-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore G&G:</div>
+        <div class="next-player-charlie" id="next-charlie-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerCharlie()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore Statico:</div>
+        <div class="next-player-charlie" id="next-statico-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerStatico()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="boards-container">
+      <div class="board">
+        <h2>Coda G&G</h2>
+        <ul id="charlie-board"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="boards-container">
+      <div class="board">
+        <h2>Coda STATICO</h2>
+        <ul id="statico-board"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-12">
+      <div class="skipped-container">
+        <div class="skipped-title">Giocatori Skippati</div>
+        <div class="skipped-buttons">
+          <div id="skipped-couples-buttons"></div>
+          <div id="skipped-singles-buttons"></div>
+          <div id="skipped-couples2-buttons"></div>
+          <!-- NUOVO -->
+          <div id="skipped-singles2-buttons"></div>
+          <!-- NUOVO -->
+          <div id="skipped-charlie-buttons"></div>
+          <div id="skipped-statico-buttons"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %} {% block scripts %}
+<script>
+  // Function to validate player ID
+  function validatePlayerId(inputId, errorMessageId) {
+    const inputField = document.getElementById(inputId);
+    const errorMessage = document.getElementById(errorMessageId);
+
+    inputField.addEventListener("input", () => {
+      const value = parseInt(inputField.value, 10);
+      if (isNaN(value) || value > 100) {
+        errorMessage.textContent =
+          "ID Giocatore deve essere un numero minore o uguale a 100.";
+      } else {
+        errorMessage.textContent = "";
+      }
+    });
+  }
+
+  // Attach validation to each form
+  document.addEventListener("DOMContentLoaded", () => {
+    validatePlayerId("playerId-coppia", "error-coppia");
+    validatePlayerId("playerId-singolo", "error-singolo");
+    validatePlayerId("playerId-coppia2", "error-coppia2");
+    validatePlayerId("playerId-singolo2", "error-singolo2");
+    validatePlayerId("playerId-charlie", "error-charlie");
+    validatePlayerId("playerId-statico", "error-statico");
+  });
+</script>
+<!-- Carica prima dashboard.js perché controls_cassa.js potrebbe dipendere da funzioni definite lì -->
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/controls_cassa.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "layout.html" %} {% block title %}Tastierino Metà Percorso{% endblock
+%} {# Aggiunto titolo come in keypad2.html #} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/keypad.css') }}"
+/>
+{# CSS è già lo stesso #} {% endblock %} {% block content %}
+<h1>Tastierino Metà Percorso</h1>
+{# Titolo originale mantenuto #}
+
+<div class="keypad-container">
+  {# Struttura del display del giocatore allineata a keypad2.html, mantenendo ID
+  e testo specifici #}
+  <div style="text-align: center; margin-bottom: 1rem; font-weight: bold">
+    Giocatore in ALFA: <span id="current-player-alfa-display">-</span> {# Testo
+    e ID originali mantenuti #}
+  </div>
+  <input type="password" class="keypad-display" id="keypad-display" readonly />
+  {# ID originale mantenuto #}
+  <div class="keypad">
+    {# Funzioni JS originali mantenute #}
+    <button class="key" onclick="addKey('1')">1</button>
+    <button class="key" onclick="addKey('2')">2</button>
+    <button class="key" onclick="addKey('3')">3</button>
+    <button class="key" onclick="addKey('4')">4</button>
+    <button class="key" onclick="addKey('5')">5</button>
+    <button class="key" onclick="addKey('6')">6</button>
+    <button class="key" onclick="addKey('7')">7</button>
+    <button class="key" onclick="addKey('8')">8</button>
+    <button class="key" onclick="addKey('9')">9</button>
+    <button class="key clear" onclick="clearKey()">C</button>
+    <button class="key" onclick="addKey('0')">0</button>
+    <button class="key enter" onclick="checkCode()">✓</button>
+  </div>
+  {# Aggiunto elemento per le notifiche, con ID specifico per questo keypad,
+  come in keypad2.html #}
+  <div
+    id="notification-keypad1"
+    class="notification"
+    style="margin-top: 1rem; text-align: center; color: green; display: none"
+  ></div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/keypad.js') }}"></script>
+{# File JS originale mantenuto #} {% endblock %}

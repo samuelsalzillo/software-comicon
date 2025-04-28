@@ -1,0 +1,408 @@
+.control-container {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 1rem;
+}
+
+.control-section {
+  flex: 1;
+  min-width: 400px;
+  max-width: 500px;
+}
+
+.couple-section {
+  background: #f5ebeb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.single-section {
+  background: #ebf5fb;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.control-panel {
+  background: white;
+  border-radius: 10px;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-info {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+.current-player {
+  margin-bottom: 1rem;
+  font-weight: bold;
+}
+
+.couple-section .current-player {
+  color: #1a237e; /* Colore per coppie */
+}
+
+.single-section .current-player {
+  color: #2772db; /* Colore per singoli */
+}
+
+.game-timer {
+  color: #2e7d32;
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 2rem;
+}
+
+.btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.couple-section .btn-start {
+  background: #ddc01d;
+  color: white;
+}
+
+.single-section .btn-start {
+  background: #2772db;
+  color: white;
+}
+
+.btn-stop {
+  background: #f44336;
+  color: white;
+}
+
+.couple-section .btn-next {
+  background: #4caf50;
+  color: white;
+}
+
+.single-section .btn-next {
+  background: #3ab1c8;
+  color: white;
+}
+
+.btn-next {
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.couple-section .btn-start:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.single-section .btn-start:hover:not(:disabled) {
+  background: #1976d2;
+}
+
+.btn-stop:hover:not(:disabled) {
+  background: #da190b;
+}
+
+.couple-section .btn-next:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.single-section .btn-next:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.status {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 1.2em;
+}
+
+@media (max-width: 900px) {
+  .control-container {
+    flex-direction: column;
+  }
+
+  .control-section {
+    min-width: 100%;
+  }
+}
+
+/* Aggiungi queste regole in cima al file esistente */
+.shared-next-player {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.next-player-info {
+  font-size: 1.5em;
+  margin: 1rem 0;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 5px;
+  min-height: 2em;
+}
+
+.modal {
+  /* position: fixed; left: 0; top: 0; width: 100%; height: 100%; */
+  background-color: rgba(0, 0, 0, 0.5);
+  /* z-index: 1000;  /* Inizia nascosta */
+  /* justify-content: center; align-items: center; */
+}
+.modal-content {
+  background-color: white;
+  padding: 20px 40px;
+  max-width: 500px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  position: relative;
+}
+.close-button {
+  position: absolute;
+  top: 10px;
+  right: 20px;
+  font-size: 2em;
+  font-weight: bold;
+  color: #aaa;
+  cursor: pointer;
+}
+.close-button:hover {
+  color: #333;
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+.form-group input[type="text"],
+.form-group input[type="tel"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+.btn-submit {
+  background-color: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  width: 100%;
+  font-size: 1.1em;
+  margin-top: 10px;
+}
+.btn-submit:hover {
+  background-color: #45a049;
+}
+
+.inline-form-section {
+  padding: 20px; /* Aumenta padding interno */
+  border: 1px solid #dee2e6; /* Bordo leggermente più morbido */
+  border-radius: 8px;
+  background-color: #f8f9fa; /* Sfondo leggermente grigio */
+  margin-top: 15px; /* Spazio sopra */
+  display: none; /* Nascosto di default */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05); /* Ombra interna leggera */
+}
+.inline-form-section h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  text-align: center;
+  color: #495057; /* Colore testo più scuro */
+  font-size: 1.2em; /* Dimensione leggermente ridotta */
+  border-bottom: 1px solid #e9ecef; /* Linea separatrice */
+  padding-bottom: 10px;
+}
+.inline-form-section p {
+  font-size: 0.95em;
+  margin-bottom: 8px; /* Spazio ridotto */
+  color: #495057;
+}
+.inline-form-section p strong {
+  color: #212529; /* Nero più scuro */
+  font-weight: 600; /* Leggermente più bold */
+}
+
+/* Stili per i bottoni penalità rapidi */
+.penalty-buttons {
+  display: grid;
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(110px, 1fr)
+  ); /* Colonne responsive */
+  gap: 10px; /* Spazio tra bottoni */
+  margin-bottom: 20px; /* Spazio sotto i bottoni */
+}
+.penalty-buttons button {
+  padding: 10px 5px; /* Più padding verticale */
+  font-size: 0.85em;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #ced4da; /* Bordo standard */
+  background-color: #fff; /* Sfondo bianco */
+  color: #495057;
+  text-align: center;
+  transition: all 0.2s ease; /* Transizione per hover */
+  font-weight: 500;
+}
+.penalty-buttons button:hover {
+  background-color: #e9ecef; /* Grigio chiaro su hover */
+  border-color: #adb5bd;
+  transform: translateY(-2px); /* Effetto leggero "lift" */
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.07);
+}
+.penalty-buttons button:active {
+  transform: translateY(0px); /* Rimuovi lift su click */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Bottone Reset Penalità */
+.penalty-buttons button.reset-penalty-button {
+  grid-column: 1 / -1; /* Occupa tutta la larghezza */
+  background-color: #f8d7da; /* Rosso chiaro */
+  border-color: #f5c6cb;
+  color: #721c24; /* Rosso scuro */
+  font-weight: bold;
+  margin-top: 5px; /* Spazio sopra */
+}
+.penalty-buttons button.reset-penalty-button:hover {
+  background-color: #f1b0b7;
+  border-color: #eebcc1;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.07);
+}
+
+/* Etichetta per input manuali */
+.manual-penalty-label {
+  margin-bottom: 8px;
+  margin-top: 0px; /* Riduci spazio sopra se necessario */
+  font-weight: bold;
+  font-size: 0.95em; /* Dimensione etichetta */
+  color: #343a40;
+  display: block; /* Assicura che vada a capo */
+}
+
+/* Gruppo input MM:SS */
+.time-input-group {
+  display: flex;
+  gap: 5px; /* Spazio ridotto tra elementi */
+  align-items: center;
+  background-color: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  margin-bottom: 15px; /* Spazio sotto */
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.07); /* Ombra interna input */
+}
+.time-input-group .form-group {
+  flex: 1;
+  margin-bottom: 0;
+}
+/* Nasconde etichette se usi placeholder */
+/* .time-input-group label { display: none; } */
+
+.time-input-group input[type="number"] {
+  font-size: 1.1em; /* Numeri più grandi */
+  text-align: center;
+  font-weight: 500;
+  border: none; /* Nessun bordo individuale */
+  padding: 2px 0; /* Padding verticale ridotto */
+  box-shadow: none;
+  background: none;
+  width: 50px; /* Larghezza fissa per allineamento */
+}
+.time-input-group input[type="number"]::-webkit-outer-spin-button,
+.time-input-group input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none; /* Nasconde freccette Chrome/Safari */
+  margin: 0;
+}
+
+.time-input-group span {
+  /* Stile due punti ':' */
+  font-size: 1.2em;
+  color: #6c757d;
+  font-weight: bold;
+  padding-bottom: 0;
+  line-height: 1;
+}
+
+/* Stile riga bottoni Conferma/Annulla */
+.inline-form-section .button-row {
+  margin-top: 20px;
+  display: flex;
+  justify-content: space-between; /* Spazio tra i bottoni */
+  gap: 10px;
+}
+.inline-form-section .button-row button {
+  flex: 1; /* Occupa spazio uguale */
+  padding: 10px 12px;
+  font-size: 1em;
+  font-weight: 500;
+}
+.inline-form-section .btn-confirm-penalty {
+  /* Verde */
+  background-color: #28a745;
+  border-color: #28a745;
+}
+.inline-form-section .btn-confirm-penalty:hover {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+.inline-form-section .btn-secondary {
+  /* Grigio */
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+.inline-form-section .btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+.modal-message {
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+  text-align: center;
+  display: none; /* Inizia nascosto */
+}
+.modal-message.success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+.modal-message.error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}

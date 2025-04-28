@@ -1,0 +1,83 @@
+{% extends "layout.html" %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/controls_single.css') }}"
+/>
+{% endblock %} {% block content %}
+<h1>Controllo Singolo</h1>
+
+<div class="game-info">
+  <div class="current-player">
+    Prenotazione in gioco: <span id="current-player">-</span>
+  </div>
+  <div class="next-player">
+    Prossimo giocatore: <span id="next-player">-</span>
+  </div>
+  <div class="game-timer">Tempo trascorso: <span id="timer">00:00</span></div>
+</div>
+
+<div class="control-panel">
+  <button
+    id="next-player-btn"
+    class="btn btn-next"
+    onclick="activateNextPlayer()"
+    disabled
+  >
+    Prossimo Giocatore
+  </button>
+  <div class="button-group">
+    <button
+      id="start-btn"
+      class="btn btn-start"
+      onclick="pressButton('second_start')"
+    >
+      START
+    </button>
+    <button
+      id="stop-btn"
+      class="btn btn-stop"
+      onclick="pressButton('second_stop')"
+    >
+      STOP
+    </button>
+  </div>
+  <div class="status">Stato: <span id="status">Inattivo</span></div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/controls_single.js') }}"></script>
+<script>
+  function pressButton(button) {
+    $.ajax({
+      url: "/button_press",
+      type: "POST",
+      contentType: "application/json",
+      data: JSON.stringify({ button: button }),
+      success: function (response) {
+        if (!response.success) {
+          alert(response.error);
+          return;
+        }
+
+        if (button === "second_start") {
+          startTime = new Date();
+          isGameActive = true;
+          timerInterval = setInterval(updateTimer, 1000);
+          $("#next-player-btn").prop("disabled", true);
+          $("#start-btn").prop("disabled", true);
+          $("#stop-btn").prop("disabled", false);
+          $("#current-player").text(response.current_player_alfa["id"]); // Aggiorna il giocatore corrente
+        } else if (button === "second_stop" && isGameActive) {
+          isGameActive = false;
+          clearInterval(timerInterval);
+          $("#next-player-btn").prop("disabled", false);
+          $("#start-btn, #stop-btn").prop("disabled", true);
+          $("#current-player").text("-"); // Resetta il giocatore corrente
+        }
+
+        updateNextPlayer();
+        updateAvailability();
+      },
+    });
+  }
+</script>
+{% endblock %}

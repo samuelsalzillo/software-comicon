@@ -1,0 +1,290 @@
+.control-panel {
+  background: #00000080;
+  /* fourth-color */
+  border-radius: 10px;
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  padding: 2rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.game-info {
+  background: white;
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+.current-player {
+  margin-bottom: 1rem;
+  color: #070f4e;
+  /* first-color */
+  font-weight: bold;
+}
+
+.game-timer {
+  color: #2e7d32;
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 2rem;
+}
+
+.box-add {
+  justify-content: center;
+  gap: 20px;
+}
+
+.btn {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 5px;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.btn-start {
+  background: #4caf50;
+  color: white;
+}
+
+.btn-stop {
+  background: #f44336;
+  color: white;
+}
+
+.btn-next {
+  background: #4caf50;
+  color: white;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.btn-add {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.btn-yellow {
+  background: #ffeb3b;
+  color: black;
+  width: 100%;
+}
+
+.btn-blue {
+  background: #2772db;
+  /* second-color */
+  color: white;
+  width: 100%;
+}
+
+.btn-red {
+  background: #f44336;
+  color: white;
+  width: 100%;
+}
+
+.btn-green {
+  background: #4caf50;
+  color: white;
+  width: 100%;
+}
+
+.btn-start:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.btn-stop:hover:not(:disabled) {
+  background: #da190b;
+}
+
+.btn-next:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.btn-add:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1em;
+}
+
+.status {
+  text-align: center;
+  margin-top: 2rem;
+  font-size: 1.2em;
+}
+
+.notification {
+  text-align: center;
+  margin-top: 1rem;
+  font-size: 1.2em;
+  color: green;
+}
+
+.skipped-button.statico {
+  border-left: 3px solid #f44336;
+  /* Rosso */
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-yellow {
+  background: #ffeb3b;
+  color: black;
+  width: 100%;
+}
+
+.btn-blue {
+  background: #2772db;
+  /* second-color */
+  color: white;
+  width: 100%;
+}
+
+.btn-red {
+  background: #f44336;
+  color: white;
+  width: 100%;
+}
+
+.btn-green {
+  background: #4caf50;
+  color: white;
+  width: 100%;
+}
+
+/* NUOVI STILI */
+.btn-purple {
+  background: #da26f2;
+  /* Viola */
+  color: white;
+  width: 100%;
+}
+
+.btn-orange {
+  background: #ffffff;
+  /* Arancione */
+  color: rgb(0, 0, 0);
+  width: 100%;
+}
+
+.btn-purple:hover:not(:disabled) {
+  background: #da26f2;
+}
+
+.btn-orange:hover:not(:disabled) {
+  background: #7e7d7c;
+}
+
+/* ... resto degli stili ... */
+
+.skipped-button.couple2 {
+  /* Stile per bottoni skippati couple2 */
+  background-color: #bc20d1;
+  /* Viola */
+  color: white;
+}
+
+.skipped-button.single2 {
+  /* Stile per bottoni skippati single2 */
+  background-color: #ffffff;
+  /* Arancione */
+  color: rgb(0, 0, 0);
+}
+
+.next-player {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 2.5em; /* Mantiene la stessa dimensione del testo di "Nessun Giocatore in coda" */
+}
+#playerId-singolo2 {
+  color: #000000 !important; /* Mantiene la stessa dimensione del testo di "Nessun Giocatore in coda" */
+}
+
+.next-player.couple {
+  color: #ffd700; /* Giallo */
+}
+
+.next-player.single {
+  color: #0000ff; /* Blu */
+}
+
+.next-player.couple2 {
+  color: #ff69b4; /* Rosa */
+}
+
+.next-player.single2 {
+  color: #ffffff; /* Bianco */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Aggiunge ombra per migliorare la leggibilità */
+}
+
+.next-player.charlie {
+  color: #00ff00; /* Verde */
+}
+
+.next-player.statico {
+  color: #ff0000; /* Rosso */
+}
+
+/* Stili per i pulsanti di aggiunta */
+.btn-yellow {
+  background: #ffd700;
+  color: black;
+  width: 100%;
+}
+
+.btn-blue {
+  background: #0000ff;
+  color: white;
+  width: 100%;
+}
+
+.btn-pink {
+  background: #ff69b4;
+  color: white;
+  width: 100%;
+}
+
+.btn-white {
+  background: #ffffff;
+  color: black;
+  width: 100%;
+}
+
+.btn-green {
+  background: #00ff00;
+  color: black;
+  width: 100%;
+}
+
+.btn-red {
+  background: #ff0000;
+  color: white;
+  width: 100%;
+}

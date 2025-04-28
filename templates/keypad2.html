@@ -1,0 +1,43 @@
+{% extends "layout.html" %} {% block title %}Keypad Metà Percorso 2{% endblock
+%} {# Titolo modificato #} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/keypad.css') }}"
+/>
+{# Riutilizziamo lo stesso CSS #} {% endblock %} {% block content %}
+<h1>Tastierino Metà Percorso 2</h1>
+{# Titolo modificato #}
+
+<div class="keypad-container">
+  {# Aggiungiamo un display per vedere chi c'è in Alfa2 (utile per
+  debug/operatore) #}
+  <div style="text-align: center; margin-bottom: 1rem; font-weight: bold">
+    Giocatore in ALFA 2: <span id="current-player-alfa2-display">-</span>
+  </div>
+  <input type="password" class="keypad-display" id="keypad-display2" readonly />
+  {# ID Display modificato #}
+  <div class="keypad">
+    <button class="key" onclick="addKey2('1')">1</button> {# Chiama addKey2 #}
+    <button class="key" onclick="addKey2('2')">2</button> {# Chiama addKey2 #}
+    <button class="key" onclick="addKey2('3')">3</button> {# Chiama addKey2 #}
+    <button class="key" onclick="addKey2('4')">4</button> {# Chiama addKey2 #}
+    <button class="key" onclick="addKey2('5')">5</button> {# Chiama addKey2 #}
+    <button class="key" onclick="addKey2('6')">6</button> {# Chiama addKey2 #}
+    <button class="key" onclick="addKey2('7')">7</button> {# Chiama addKey2 #}
+    <button class="key" onclick="addKey2('8')">8</button> {# Chiama addKey2 #}
+    <button class="key" onclick="addKey2('9')">9</button> {# Chiama addKey2 #}
+    <button class="key clear" onclick="clearKey2()">C</button> {# Chiama
+    clearKey2 #} <button class="key" onclick="addKey2('0')">0</button> {# Chiama
+    addKey2 #} <button class="key enter" onclick="checkCode2()">✓</button> {#
+    Chiama checkCode2 #}
+  </div>
+  {# Aggiungiamo un elemento per le notifiche specifiche di questo keypad #}
+  <div
+    id="notification-keypad2"
+    class="notification"
+    style="margin-top: 1rem; text-align: center; color: green; display: none"
+  ></div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/keypad2.js') }}"></script>
+{# Nuovo file JS #} {% endblock %}

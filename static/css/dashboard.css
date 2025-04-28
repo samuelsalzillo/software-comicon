@@ -1,0 +1,507 @@
+html {
+  font-size: calc(100% - 5px);
+}
+
+.status-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.main-box {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 20px;
+  width: 100%;
+}
+
+html,
+body {
+  background-color: #556959 !important;
+}
+
+html,
+body,
+.container {
+  width: 100%;
+  padding: 0px;
+}
+
+.big-box {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  row-gap: 20px;
+}
+
+#main-box1 {
+}
+
+#main-box2 {
+  height: 260px;
+}
+
+#main-box3 {
+  height: 450px;
+}
+
+.status-box {
+  height: 100%;
+  aspect-ratio: 1/1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  /* fourth-color */
+  border-radius: 100%;
+  padding-top: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-box.occupied {
+  color: #ffffff;
+  background: #00000080;
+  border: 5px solid #ef5350;
+}
+
+.status-box.free {
+  color: #ffffff;
+  background: #00000080;
+  border: 5px solid #66bb6a;
+}
+
+.board {
+  overflow-y: auto;
+  background: #00000080;
+  /* fourth-color */
+  border: 1px solid #ffffff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  height: 250px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 0.9em;
+}
+
+.board h2 {
+  color: #ffffff;
+  /* first-color */
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.board ul {
+  list-style: none;
+  color: #ffffff;
+  padding: 0;
+}
+
+.board li {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  font-size: 1.1em;
+}
+
+.queue-list {
+  list-style: none;
+  padding: 0;
+}
+
+.queue-item {
+  padding: 10px;
+  margin: 5px 0;
+  background: #f8f9fa;
+  border-radius: 5px;
+  border-left: 4px solid #ffc107;
+  /* Colore per Charlie */
+}
+
+.card {
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  padding: 1rem;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+/* Stili specifici per le card Charlie */
+.border-warning {
+  border-color: #ffc107 !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+}
+
+.text-warning {
+  color: #ffc107 !important;
+}
+
+.btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #000;
+}
+
+.btn-warning:hover {
+  background-color: #e0a800;
+  border-color: #d39e00;
+  color: #000;
+}
+
+.next-player-card {
+  background: #3ab1c8;
+  /* third-color */
+  border-radius: 10px;
+  padding: 20px;
+  margin: 30px auto;
+  width: 600px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.next-player-card.highlight {
+  background: #e8f5e9;
+  border: 2px solid #66bb6a;
+  transform: scale(1.02);
+}
+
+.next-player-title {
+  color: #ffffff;
+  /* first-color */
+  font-size: 1.2em;
+  margin-bottom: 10px;
+}
+
+.next-player-charlie {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #000000;
+  margin: 15px 0;
+}
+
+.next-player-alfa-bravo {
+  font-size: 2.5em;
+  font-weight: bold;
+  color: #2196f3;
+  margin: 15px 0;
+}
+
+.next-player-time {
+  font-size: 1.3em;
+  color: #666;
+}
+
+.hidden {
+  display: none;
+}
+
+.skip-button {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  background: #ffd700;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 5px 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.3s;
+}
+
+.skip-button:hover {
+  background: #f5f5f5;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skip-icon {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.skipped-section {
+  margin: 20px auto;
+  max-width: 800px;
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skipped-title {
+  color: white;
+  /* first-color */
+  font-size: 1.2em;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.skipped-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.skipped-item {
+  background: #f5f5f5;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 8px 15px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.skipped-item:hover {
+  background: #e0e0e0;
+  transform: scale(1.05);
+}
+
+.skipped-item.couple {
+  border-left: 4px solid #2196f3;
+}
+
+.skipped-item.single {
+  border-left: 4px solid #4caf50;
+}
+
+/* Aggiungi questi stili per i pulsanti skippati */
+.skipped-container {
+  overflow-y: auto;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  background: #00000080;
+  /* fourth-color */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ffffff;
+}
+
+.skipped-title {
+  color: #ffffff;
+  /* first-color */
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+.skipped-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  height: 100%;
+  gap: 50px;
+  justify-content: space-between;
+}
+
+.skipped-button {
+  padding: 50px 150px;
+  border-radius: 15px;
+  border: 1px solid #ddd;
+  background: #f8f9fa;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 2em;
+}
+
+.skipped-button:hover {
+  background: #e9ecef;
+  transform: scale(1.05);
+}
+.skipped-button.couple2 {
+  /* Stile per bottoni skippati couple2 */
+  background-color: #bc20d1;
+  /* Viola */
+  color: white;
+}
+
+.skipped-button.single2 {
+  /* Stile per bottoni skippati single2 */
+  background-color: #ffffff;
+  /* Arancione */
+  color: rgb(0, 0, 0);
+}
+
+.skipped-button.couple {
+  border-left: 3px solid #007bff;
+}
+
+.skipped-button.single {
+  border-left: 3px solid #28a745;
+}
+
+.skipped-button.charlie {
+  border-left: 3px solid #ffc107;
+}
+
+/* Stili per le card dei prossimi giocatori */
+.next-players-container {
+  height: 100%;
+  display: flex;
+  gap: 20px;
+}
+
+.next-player-card {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  background: #00000080;
+  border: 1px solid #ffffff;
+  border-radius: 20px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.skipped-button {
+  margin: 5px;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.skipped-button.couple {
+  background-color: #ffd700;
+  /* Giallo */
+
+  color: black;
+}
+
+.skipped-button.single {
+  background-color: #2196f3;
+  /* Blu */
+  color: white;
+}
+
+.skipped-button.charlie {
+  background-color: #4caf50;
+  /* Verde */
+  color: white;
+}
+
+.skipped-button.statico {
+  border-left: 3px solid #f44336;
+  /* Rosso */
+  background-color: #f44336;
+  color: white;
+}
+
+.player-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.trash-icon {
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  color: #e53935;
+  /* Red color that harmonizes with the existing colors */
+}
+
+.soldier-icon {
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  color: white;
+  /* Red color that harmonizes with the existing colors */
+}
+
+.trash-button {
+  border-width: 0;
+  height: 24px;
+  background: none;
+}
+
+.row {
+  align-items: flex-start;
+  /* Ensures rows only take the height of their content */
+}
+
+.next-player {
+  padding: 5px 10px;
+  font-weight: bold;
+  border-radius: 4px;
+  font-size: 2.5em; /* Mantiene la stessa dimensione del testo di "Nessun Giocatore in coda" */
+}
+
+.next-player.couple {
+  color: #ffd700; /* Giallo */
+}
+
+.next-player.single {
+  color: #0000ff; /* Blu */
+}
+
+.next-player.couple2 {
+  color: #ff69b4; /* Rosa */
+}
+
+.next-player.single2 {
+  color: #ffffff; /* Bianco */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Aggiunge ombra per migliorare la leggibilità */
+}
+
+.next-player.charlie {
+  color: #00ff00; /* Verde */
+}
+
+.next-player.statico {
+  color: #ff0000; /* Rosso */
+}
+
+/* Stili per i pulsanti di aggiunta */
+.btn-yellow {
+  background: #ffd700;
+  color: black;
+  width: 100%;
+}
+
+.btn-blue {
+  background: #0000ff;
+  color: white;
+  width: 100%;
+}
+
+.btn-pink {
+  background: #ff69b4;
+  color: white;
+  width: 100%;
+}
+
+.btn-white {
+  background: #ffffff;
+  color: black;
+  width: 100%;
+}
+
+.btn-green {
+  background: #00ff00;
+  color: black;
+  width: 100%;
+}
+
+.btn-red {
+  background: #ff0000;
+  color: white;
+  width: 100%;
+}
