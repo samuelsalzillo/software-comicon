@@ -143,6 +143,12 @@ Le regole principali sono:
 - ❌ Evitare PR che rompono visibilmente il progetto con commenti tipo "aggiustiamo dopo".
 - **Pena:** 1 colpo di pistola elettrica + l'obbligo di portare il caffè per una settimana.
 
+### Articolo 6 - Esecuzione della pena
+
+- Se si viene colpiti nel posto sbagliato la pena viene scontata tutta
+- l'esecutore é soggetto alla pena a cui era destinata l'altra persona
+- L'esecutore deve essere l'artefice dell'ultima versione funzionante.
+
 ---
 
 Se vuoi posso anche crearti una versione ancora più teatrale, tipo un "tribunale del codice" con "giudici elettrici" e "pena capitale (solo vibrazioni)"!  
