@@ -45,14 +45,14 @@
     class="col-2"
     style="border-radius: 30px 30px 0px 0px; height: 170px; padding: 10px"
   >
-    <div style="background-color: yellow; height: 100%; width: 100%"></div>
+    <div style="background-color: #f29f05; height: 100%; width: 100%"></div>
   </div>
 
   <div
     class="col-2"
     style="border-radius: 30px 30px 0px 0px; height: 130px; padding: 10px"
   >
-    <div style="background-color: green; height: 100%; width: 100%"></div>
+    <div style="background-color: #8fbf60; height: 100%; width: 100%"></div>
   </div>
   <div class="col-3"></div>
   <div class="col-3">
@@ -126,23 +126,22 @@
             if (player[0].startsWith("ROSSO")) {
               playerInfo.style.backgroundColor = "red";
             } else if (player[0].startsWith("GIALLO")) {
-              playerInfo.style.backgroundColor = "yellow";
+              playerInfo.style.backgroundColor = "#F29F05";
             } else if (player[0].startsWith("BLU")) {
-              playerInfo.style.backgroundColor = "bl)ue";
+              playerInfo.style.backgroundColor = "#1F598C";
             } else if (player[0].startsWith("VERDE")) {
-              playerInfo.style.backgroundColor = "green";
+              playerInfo.style.backgroundColor = "#8FBF60";
             } else if (player[0].startsWith("ROSA")) {
-              playerInfo.style.backgroundColor = "pink";
+              playerInfo.style.backgroundColor = "#D95276";
             } else if (player[0].startsWith("BIANCO")) {
               playerInfo.style.backgroundColor = "white";
             } else {
               playerInfo.style.backgroundColor = "gray"; // Default color
             }
             // style color black if player[o].startsWith("BIANCO") or startsWith("ROSA")
-            playerInfo.style.color =
-              player[0].startsWith("BIANCO") || player[0].startsWith("ROSA")
-                ? "black"
-                : "white";
+            playerInfo.style.color = player[0].startsWith("BIANCO")
+              ? "black"
+              : "white";
             playerInfo.style.padding = "5px";
             playerInfo.style.borderRadius = "5px";
 

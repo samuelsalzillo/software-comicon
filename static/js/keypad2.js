@@ -126,7 +126,7 @@ function showKeypad2Notification(message, isError = false) {
   const notificationElement = document.getElementById("notification-keypad2");
   if (notificationElement) {
     notificationElement.textContent = message;
-    notificationElement.style.color = isError ? "red" : "green";
+    notificationElement.style.color = isError ? "red" : "#8FBF60";
     notificationElement.style.display = "block"; // Mostra
     // Nasconde dopo 3 secondi
     setTimeout(() => {

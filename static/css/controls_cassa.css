@@ -85,13 +85,13 @@
 }
 
 .btn-yellow {
-  background: #ffeb3b;
+  background: #f29f05;
   color: black;
   width: 100%;
 }
 
 .btn-blue {
-  background: #2772db;
+  background: #1f598c;
   /* second-color */
   color: white;
   width: 100%;
@@ -104,13 +104,13 @@
 }
 
 .btn-green {
-  background: #4caf50;
+  background: #8fbf60;
   color: white;
   width: 100%;
 }
 
 .btn-start:hover:not(:disabled) {
-  background: #45a049;
+  background: #8fbf60;
 }
 
 .btn-stop:hover:not(:disabled) {
@@ -155,13 +155,13 @@
 }
 
 .btn-yellow {
-  background: #ffeb3b;
+  background: #f29f05;
   color: black;
   width: 100%;
 }
 
 .btn-blue {
-  background: #2772db;
+  background: #1f598c;
   /* second-color */
   color: white;
   width: 100%;
@@ -174,7 +174,7 @@
 }
 
 .btn-green {
-  background: #4caf50;
+  background: #8fbf60;
   color: white;
   width: 100%;
 }
@@ -254,19 +254,19 @@
 
 /* Stili per i pulsanti di aggiunta */
 .btn-yellow {
-  background: #ffd700;
+  background: #f29f05;
   color: black;
   width: 100%;
 }
 
 .btn-blue {
-  background: #0000ff;
+  background: #1f598c;
   color: white;
   width: 100%;
 }
 
 .btn-pink {
-  background: #ff69b4;
+  background: #d95276;
   color: white;
   width: 100%;
 }
@@ -278,7 +278,7 @@
 }
 
 .btn-green {
-  background: #00ff00;
+  background: #8fbf60;
   color: black;
   width: 100%;
 }

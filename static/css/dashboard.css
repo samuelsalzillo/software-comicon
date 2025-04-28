@@ -471,19 +471,19 @@ body,
 
 /* Stili per i pulsanti di aggiunta */
 .btn-yellow {
-  background: #ffd700;
+  background: #f29f05;
   color: black;
   width: 100%;
 }
 
 .btn-blue {
-  background: #0000ff;
+  background: #1f598c;
   color: white;
   width: 100%;
 }
 
 .btn-pink {
-  background: #ff69b4;
+  background: #d95276;
   color: white;
   width: 100%;
 }
@@ -495,7 +495,7 @@ body,
 }
 
 .btn-green {
-  background: #00ff00;
+  background: #8fbf60;
   color: black;
   width: 100%;
 }
