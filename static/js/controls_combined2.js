@@ -320,7 +320,7 @@ function submitQualificationForm2(typeSuffix) {
     last_name: $(`#last_name-${typeSuffix}`).val().trim(),
     phone_number: $(`#phone_number-${typeSuffix}`).val().trim(),
     score_minutes: $(`#modal-score-minutes-${typeSuffix}`).val(),
-    player_type: baseType,
+    player_type: typeSuffix,
     qualification_reason: $(`#modal-qualification-reason-${typeSuffix}`).val(),
   };
   if (!formData.first_name || !formData.last_name || !formData.phone_number) {

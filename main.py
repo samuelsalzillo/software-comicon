@@ -588,10 +588,11 @@ class GameBackend:
             self.T_charlie = self.default_T_charlie
             logging.debug(f"Using default T_charlie: {self.T_charlie:.4f} (timer records: {len(self.charlie_timer_history)})")
 
-        # Media T_statico - Basata sui tempi registrati per Statico (statico_history) - INVARIATA
+        # Media T_statico - Basata sui tempi registrati per Statico (statico_history)
         if len(self.statico_history) >= min_games_for_avg:
-            self.T_statico = sum(self.statico_history) / len(self.statico_history)
-            logging.debug(f"Calculated T_statico from {len(self.statico_history)} records: {self.T_statico:.4f}")
+            statico_times = [time for _, time in self.statico_history]  # Extract only the game_time values
+            self.T_statico = sum(statico_times) / len(statico_times)
+            logging.debug(f"Calculated T_statico from {len(statico_times)} records: {self.T_statico:.4f}")
         else:
             self.T_statico = self.default_T_statico
             logging.debug(f"Using default T_statico: {self.T_statico:.4f} (records: {len(self.statico_history)})")
