@@ -116,7 +116,7 @@ Le regole principali sono:
 
 ### Articolo 1 - Nominazione Branch
 
-- I branch devono avere nomi chiari e descrittivi (esempio: `feature/aggiunta-gestione-code`).
+- I branch devono avere nomi chiari e descrittivi (esempio: `feature/aggiunta-gestione-code`, `feat-100`).
 - ❌ Vietati nomi tipo `pippo`, `prova`, `temp`, `aaaaaaaaa`.
 - **Pena:** 1 colpo di pistola elettrica sulla mano destra (se mancino, sulla sinistra).
 
