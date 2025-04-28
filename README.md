@@ -60,8 +60,6 @@ pip install flask pytz mysql-connector
 
    Da qui potrai accedere alla dashboard e alle altre pagine di controllo (es. `/controls/cassa`, `/controls/couple`, `/controls/single`, `/controls/charlie`).
 
-
-
 ## Rotte Principali
 
 - `/`  
@@ -108,3 +106,44 @@ Seguendo questi passaggi potrai far partire il progetto in locale e testare tutt
 Se dovessi riscontrare problemi, controlla attentamente la configurazione dell'ambiente e i log generati dal server.
 
 Buon lavoro!
+
+## Codice di Condotta per il Repository 🚨
+
+Questo progetto adotta un _rigido ma amichevole_ codice di condotta per il mantenimento dell'ordine, della sanità mentale e della pace universale nei commit e nei branch.
+
+**Violazioni delle Best Practice verranno punite con una pistola elettrica non offensiva.**  
+Le regole principali sono:
+
+### Articolo 1 - Nominazione Branch
+
+- I branch devono avere nomi chiari e descrittivi (esempio: `feature/aggiunta-gestione-code`).
+- ❌ Vietati nomi tipo `pippo`, `prova`, `temp`, `aaaaaaaaa`.
+- **Pena:** 1 colpo di pistola elettrica sulla mano destra (se mancino, sulla sinistra).
+
+### Articolo 2 - Scrittura dei Commit
+
+- I messaggi di commit devono descrivere cosa è cambiato, in modo breve ma comprensibile.
+- ❌ Vietati commit tipo `fix`, `update`, `wip`, `non_so`, `ultima versione`.
+- **Pena:** 2 colpi di pistola elettrica sui piedi (entrambi).
+
+### Articolo 3 - Gestione del Branch `main`
+
+- Mai, MAI, fare push direttamente su `main` senza passare da una pull request (PR).
+- Ogni PR deve avere almeno un review positivo (anche finto, ma non lo dite a nessuno).
+- **Pena:** 1 colpo di pistola elettrica sulla fronte (modalità "vibrazione gentile").
+
+### Articolo 4 - Pull Request
+
+- Ogni pull request deve avere un titolo comprensibile e una breve descrizione di cosa viene introdotto o corretto.
+- **Pena:** In caso contrario, si riceve una _scarica elettrostatica casuale_ a orari non specificati.
+
+### Articolo 5 - Test e Debugging
+
+- Prima di effettuare una PR, lanciare i test o almeno provare a capire se il codice compila.
+- ❌ Evitare PR che rompono visibilmente il progetto con commenti tipo "aggiustiamo dopo".
+- **Pena:** 1 colpo di pistola elettrica + l'obbligo di portare il caffè per una settimana.
+
+---
+
+Se vuoi posso anche crearti una versione ancora più teatrale, tipo un "tribunale del codice" con "giudici elettrici" e "pena capitale (solo vibrazioni)"!  
+Vuoi che ti preparo anche una variante ancora più "extra"? 🚀
