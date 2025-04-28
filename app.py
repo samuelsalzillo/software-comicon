@@ -10,6 +10,11 @@ import logging
 import sqlite3
 import time
 import subprocess
+import shutil
+import os
+from datetime import datetime as dt
+from threading import Timer
+import glob
 from io import BytesIO
 from threading import Thread
 from threading import Lock
@@ -776,6 +781,65 @@ def statico_stop():
             return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Statico.")
     return jsonify(success=False, error="Nessun giocatore Statico in pista.")
 
+def crea_nuova_data():
+    # Crea una nuova istanza datetime indipendente
+    nuova_data = dt.now(pytz.timezone('Europe/Rome'))
+    return nuova_data
+
+BACKUP_INTERVAL = 120  # 2 minuti in secondi
+MAX_BACKUPS = 5
+
+def backup_database_auto():
+    try:
+        # Crea la cartella backup se non esiste
+        backup_dir = 'backup'
+        if not os.path.exists(backup_dir):
+            os.makedirs(backup_dir)
+        
+        # Crea un nome per il file di backup con data/ora
+        timestamp = dt.now().strftime("%Y%m%d_%H%M%S")
+        backup_filename = f"stand_db_backup_{timestamp}.db"
+        backup_path = os.path.join(backup_dir, backup_filename)
+        
+        # Effettua il backup
+        shutil.copy2(SQLITE_DB_PATH, backup_path)
+        logging.info(f"Backup automatico creato: {backup_filename}")
+        
+        # Gestione dei backup vecchi
+        backup_files = glob.glob(os.path.join(backup_dir, 'stand_db_backup_*.db'))
+        backup_files.sort(key=os.path.getmtime)  # Ordina per data di modifica (più vecchio prima)
+        
+        # Elimina i backup più vecchi se superiamo il massimo
+        while len(backup_files) > MAX_BACKUPS:
+            oldest_backup = backup_files.pop(0)
+            os.remove(oldest_backup)
+            logging.info(f"Rimosso backup vecchio: {os.path.basename(oldest_backup)}")
+            
+    except Exception as e:
+        logging.error(f"Errore durante il backup automatico: {e}")
+    finally:
+        # Programma il prossimo backup
+        Timer(BACKUP_INTERVAL, backup_database_auto).start()
+
+@app.route('/backup_database', methods=['GET'])
+def backup_database():
+    try:
+        # Crea la cartella backup se non esiste
+        backup_dir = 'backup'
+        if not os.path.exists(backup_dir):
+            os.makedirs(backup_dir)
+        
+        # Crea un nome per il file di backup con data/ora
+        timestamp = dt.now().strftime("%Y%m%d_%H%M%S")  # Usa dt invece di datetime.datetime
+        backup_filename = f"stand_db_backup_{timestamp}.db"
+        backup_path = os.path.join(backup_dir, backup_filename)
+        
+        # Effettua il backup
+        shutil.copy2(SQLITE_DB_PATH, backup_path)
+        
+        return jsonify(success=True, message=f"Backup creato con successo: {backup_filename}")
+    except Exception as e:
+        return jsonify(success=False, error=f"Errore durante il backup: {str(e)}"), 500
 
 @app.route('/')
 def index():
@@ -1779,7 +1843,7 @@ def execute_with_retry(cursor, query, params=(), retries=5, delay=0.1):
 
 if __name__ == '__main__':
     app.secret_key = os.urandom(12)
-
+    backup_database_auto()  # Avvia il ciclo di backup automatico   
     log = logging.getLogger('werkzeug')
     # log.setLevel(logging.ERROR)
     # Esegui Flask con il riavvio automatico disabilitato
