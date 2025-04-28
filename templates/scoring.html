@@ -98,7 +98,11 @@
           if (index < 3) {
             rank.style.color = "gold";
           } else {
-            rank.style.color = "white";
+            if (player[0].startsWith("BIANCO")) {
+              rank.style.color = "black";
+            } else {
+              rank.style.color = "white";
+            }
           }
 
           const playerInfo = document.createElement("b");
@@ -108,13 +112,13 @@
           } else if (player[0].startsWith("GIALLO")) {
             playerInfo.style.backgroundColor = "yellow";
           } else if (player[0].startsWith("BLU")) {
-            playerInfo.style.backgroundColor = "blue";
+            playerInfo.style.backgroundColor = "bl)ue";
           } else if (player[0].startsWith("VERDE")) {
             playerInfo.style.backgroundColor = "green";
           } else if (player[0].startsWith("ROSA")) {
             playerInfo.style.backgroundColor = "purple";
           } else if (player[0].startsWith("BIANCO")) {
-            playerInfo.style.backgroundColor = "white";
+            playerInfo.style.backgroundColor = "gray";
           } else {
             playerInfo.style.backgroundColor = "gray"; // Default color
           }
