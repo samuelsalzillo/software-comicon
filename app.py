@@ -68,7 +68,7 @@ def init_scoring_table():
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS scoring (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie', 'statico')) NOT NULL,
+                player_type TEXT CHECK(player_type IN ('couple', 'single','single2','couple2' , 'charlie', 'statico')) NOT NULL,
                 player_id TEXT NOT NULL,
                 player_name TEXT NOT NULL,
                 score REAL NOT NULL,
@@ -534,7 +534,7 @@ def save_queues_to_db():
             for player_id, score in backend.single_history2:
                 cursor.execute(
                     "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('single2', player_id, backend.get_player_name(player_id), score)
+                    ('single', player_id, backend.get_player_name(player_id), score)
                 )
             for player_id, score in backend.charlie_history:
                 cursor.execute(
@@ -1373,7 +1373,8 @@ def submit_combined_score():
                 conn = sqlite3.connect(SQLITE_DB_PATH)
                 cursor = conn.cursor()
                 # Inserisci il record specifico del timer
-                cursor.execute(
+                execute_with_retry(
+                    cursor,
                     "INSERT INTO average_times (player_type, timer_duration_minutes, recorded_at) VALUES (?, ?, ?)",
                     (player_type, timer_duration, now)
                 )
@@ -1394,7 +1395,8 @@ def submit_combined_score():
                 cursor = conn.cursor()
                 # Determina il player_type corretto per la tabella scoring ('couple' o 'single')
                 scoring_player_type = 'couple' if player_type in ('couple', 'couple2') else 'single'
-                cursor.execute(
+                execute_with_retry(
+                    cursor,
                     "INSERT INTO scoring (player_type, player_id, player_name, score, created_at) VALUES (?, ?, ?, ?, ?)",
                     (scoring_player_type, player_id, player_name, official_score, now)
                 )
@@ -1506,7 +1508,7 @@ def submit_charlie_score():
 
         # 2. Aggiungi alla history ufficiale per leaderboard in-memory (se get_leaderboard la usa)
         backend.charlie_history.append(manual_score_minutes)
-        logging.debug(f"Added manual score to backend.charlie_history (new size: {len(backend.charlie_history)})")
+        logging.debug(f"Added manual score to backend.charlie_history (new size: {len(backend.charlie_timer_history)})")
 
         # 3. Controlla la qualifica
         is_qualified, reason = backend.check_qualification(manual_score_minutes, 'charlie')
@@ -1565,7 +1567,7 @@ def save_contact_info():
     last_name = data.get('last_name')         # Cognome contatto
     phone_number = data.get('phone_number')   # Telefono contatto
     score_minutes_str = data.get('score_minutes') # Punteggio che ha qualificato
-    player_type = data.get('player_type')       # couple / single
+    player_type = data.get('player_type')       # couple / single / couple2 / single2
     qualification_reason = data.get('qualification_reason') # best_today / top_3_overall
 
     if not all([player_id, player_name, first_name, last_name, phone_number,
@@ -1579,19 +1581,32 @@ def save_contact_info():
         qualification_date = backend.get_current_time().strftime('%Y-%m-%d')
         timestamp = backend.get_current_time()
 
-        with sqlite_lock:
+        # Normalize player_type to match the allowed values in the database
+        normalized_player_type = player_type.lower()
+        if normalized_player_type in ('couple2', 'single2'):
+            normalized_player_type = normalized_player_type[:-1]  # Rimuove il "2"
+
+        if normalized_player_type not in ('couple', 'single',        'charlie'):
+            logging.error(f"Invalid player_type: {normalized_player_type}")
+            return jsonify(success=False, message="Tipo giocatore non valido."), 400
+
+        with sqlite_lock:  # Ensure the lock is used to serialize database access
             conn = sqlite3.connect(SQLITE_DB_PATH)
             cursor = conn.cursor()
             logging.info(f"[CONTACT SAVE] ID={player_id}, Contact={first_name} {last_name}, Phone={phone_number}, Score={score_formatted}, Reason={qualification_reason}")
-            cursor.execute("""
+            execute_with_retry(
+                cursor,
+                """
                 INSERT INTO qualified_players
                 (player_id, player_name, first_name, last_name, phone_number, score_minutes, score_formatted, player_type, qualification_reason, qualification_date, created_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                player_id, player_name, first_name, last_name, phone_number,
-                score_float, score_formatted, player_type, qualification_reason,
-                qualification_date, timestamp
-            ))
+                """,
+                (
+                    player_id, player_name, first_name, last_name, phone_number,
+                    score_float, score_formatted, normalized_player_type, qualification_reason,
+                    qualification_date, timestamp
+                )
+            )
             conn.commit()
             conn.close()
         logging.info("[CONTACT SAVE] Success.")
@@ -1743,6 +1758,23 @@ def delete_player():
         return jsonify(success=True)
     return jsonify(success=False, error="Player ID is required"), 400
 
+
+def execute_with_retry(cursor, query, params=(), retries=5, delay=0.1):
+    """
+    Executes a database query with retry logic to handle 'database is locked' errors.
+    """
+    for attempt in range(retries):
+        try:
+            cursor.execute(query, params)
+            return
+        except sqlite3.OperationalError as e:
+            if "database is locked" in str(e).lower():
+                if attempt < retries - 1:
+                    time.sleep(delay)  # Wait before retrying
+                else:
+                    raise
+            else:
+                raise
 
 
 if __name__ == '__main__':
