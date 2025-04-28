@@ -299,7 +299,7 @@ function addPlayer(type, id, name, endpoint, inputSelector) {
 function showNotification(message, isError = false) {
   const notification = $("#notification");
   notification.text(message);
-  notification.css("color", isError ? "red" : "green");
+  notification.css("color", isError ? "#F23207" : "green");
   // Usa fadeOut e fadeIn per un effetto più gradevole
   notification.fadeIn().delay(3000).fadeOut();
 }

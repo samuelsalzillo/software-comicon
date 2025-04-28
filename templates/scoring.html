@@ -33,28 +33,111 @@
 {% endblock %} {% block content %}
 <h1>Classifiche</h1>
 
-<div class="row" style="align-items: baseline">
-  <div class="col-3"></div>
+<div class="row" style="align-items: baseline; row-gap: 20px">
   <div
-    class="col-2"
-    style="border-radius: 30px 30px 0px 0px; height: 100px; padding: 10px"
+    class="col-3"
+    style="display: flex; align-items: baseline; justify-content: space-around"
   >
-    <div style="background-color: purple; height: 100%; width: 100%"></div>
-  </div>
-  <div
-    class="col-2"
-    style="border-radius: 30px 30px 0px 0px; height: 170px; padding: 10px"
-  >
-    <div style="background-color: yellow; height: 100%; width: 100%"></div>
-  </div>
+    <div
+      style="
+        background-color: #0bd9d9;
+        height: 140px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
 
+    <div
+      style="
+        background-color: #f23207;
+        height: 200px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
+
+    <div
+      style="
+        background-color: #1fa60a;
+        height: 110px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
+  </div>
   <div
-    class="col-2"
-    style="border-radius: 30px 30px 0px 0px; height: 130px; padding: 10px"
+    class="col-3"
+    style="display: flex; align-items: baseline; justify-content: space-around"
   >
-    <div style="background-color: green; height: 100%; width: 100%"></div>
+    <div
+      style="
+        background-color: #0bd9d9;
+        height: 140px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
+
+    <div
+      style="
+        background-color: #f23207;
+        height: 200px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
+
+    <div
+      style="
+        background-color: #1fa60a;
+        height: 110px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
+  </div>
+  <div
+    class="col-3"
+    style="display: flex; align-items: baseline; justify-content: space-around"
+  >
+    <div
+      style="
+        background-color: #0bd9d9;
+        height: 140px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
+
+    <div
+      style="
+        background-color: #f23207;
+        height: 200px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
+
+    <div
+      style="
+        background-color: #1fa60a;
+        height: 110px;
+        width: 30%;
+        border-radius: 30px 30px 0px 0px;
+        border: 3px solid white;
+      "
+    ></div>
   </div>
   <div class="col-3"></div>
+
   <div class="col-3">
     <div class="leaderboard">
       <h2>Classifica Coppie</h2>
@@ -74,12 +157,14 @@
       <ul id="charlie-leaderboard"></ul>
     </div>
   </div>
-  <div class="col-3">
+  <!--<div class="col-3">
+   
     <div class="leaderboard">
       <h2>Classifica Statico</h2>
       <ul id="statico-leaderboard"></ul>
     </div>
   </div>
+  -->
 
   {% endblock %} {% block scripts %}
   <script>
@@ -96,14 +181,14 @@
           const charlieLeaderboard = document.getElementById(
             "charlie-leaderboard"
           );
-          const staticoLeaderboard = document.getElementById(
-            "statico-leaderboard"
-          );
+          // const staticoLeaderboard = document.getElementById(
+          //   "statico-leaderboard"
+          // );
 
           couplesLeaderboard.innerHTML = "";
           singlesLeaderboard.innerHTML = "";
           charlieLeaderboard.innerHTML = "";
-          staticoLeaderboard.innerHTML = "";
+          // staticoLeaderboard.innerHTML = "";
 
           function createPlayerDiv(player, index) {
             const div = document.createElement("div");
@@ -124,11 +209,11 @@
             const playerInfo = document.createElement("b");
             playerInfo.textContent = `${player[0]} - ${player[1]}`;
             if (player[0].startsWith("ROSSO")) {
-              playerInfo.style.backgroundColor = "red";
+              playerInfo.style.backgroundColor = "#F23207";
             } else if (player[0].startsWith("GIALLO")) {
               playerInfo.style.backgroundColor = "yellow";
             } else if (player[0].startsWith("BLU")) {
-              playerInfo.style.backgroundColor = "bl)ue";
+              playerInfo.style.backgroundColor = "#0BD9D9";
             } else if (player[0].startsWith("VERDE")) {
               playerInfo.style.backgroundColor = "green";
             } else if (player[0].startsWith("ROSA")) {
@@ -164,9 +249,9 @@
             charlieLeaderboard.appendChild(createPlayerDiv(player, index));
           });
 
-          data.statico.forEach((player, index) => {
-            staticoLeaderboard.appendChild(createPlayerDiv(player, index));
-          });
+          // data.statico.forEach((player, index) => {
+          //   staticoLeaderboard.appendChild(createPlayerDiv(player, index));
+          // });
         })
         .catch((error) =>
           console.error(
