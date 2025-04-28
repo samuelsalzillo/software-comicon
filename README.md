@@ -144,6 +144,3 @@ Le regole principali sono:
 - **Pena:** 1 colpo di pistola elettrica + l'obbligo di portare il caffè per una settimana.
 
 ---
-
-Se vuoi posso anche crearti una versione ancora più teatrale, tipo un "tribunale del codice" con "giudici elettrici" e "pena capitale (solo vibrazioni)"!  
-Vuoi che ti preparo anche una variante ancora più "extra"? 🚀
