@@ -1507,7 +1507,7 @@ def submit_charlie_score():
             return jsonify(success=False, qualified=False, reason=None, error=f"Errore generico salvataggio punteggio: {e}"), 500
 
         # 2. Aggiungi alla history ufficiale per leaderboard in-memory (se get_leaderboard la usa)
-        backend.charlie_history.append(manual_score_minutes)
+        backend.charlie_history.append((player_id, manual_score_minutes))
         logging.debug(f"Added manual score to backend.charlie_history (new size: {len(backend.charlie_timer_history)})")
 
         # 3. Controlla la qualifica

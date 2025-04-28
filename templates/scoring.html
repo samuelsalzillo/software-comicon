@@ -3,15 +3,14 @@
   .leaderboard-container {
     display: flex;
     justify-content: center;
-    gap: 30px;
     margin-top: 20px;
   }
 
   .leaderboard {
     background: #00000080;
     border-radius: 10px;
-    padding: 20px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
   }
 
   .leaderboard h2 {
@@ -34,7 +33,28 @@
 {% endblock %} {% block content %}
 <h1>Classifiche</h1>
 
-<div class="row">
+<div class="row" style="align-items: baseline">
+  <div class="col-3"></div>
+  <div
+    class="col-2"
+    style="border-radius: 30px 30px 0px 0px; height: 100px; padding: 10px"
+  >
+    <div style="background-color: purple; height: 100%; width: 100%"></div>
+  </div>
+  <div
+    class="col-2"
+    style="border-radius: 30px 30px 0px 0px; height: 170px; padding: 10px"
+  >
+    <div style="background-color: yellow; height: 100%; width: 100%"></div>
+  </div>
+
+  <div
+    class="col-2"
+    style="border-radius: 30px 30px 0px 0px; height: 130px; padding: 10px"
+  >
+    <div style="background-color: green; height: 100%; width: 100%"></div>
+  </div>
+  <div class="col-3"></div>
   <div class="col-3">
     <div class="leaderboard">
       <h2>Classifica Coppie</h2>
@@ -60,103 +80,107 @@
       <ul id="statico-leaderboard"></ul>
     </div>
   </div>
-</div>
-{% endblock %} {% block scripts %}
-<script>
-  function updateLeaderboard() {
-    fetch("/get_scores")
-      .then((response) => response.json())
-      .then((data) => {
-        const couplesLeaderboard = document.getElementById(
-          "couples-leaderboard"
-        );
-        const singlesLeaderboard = document.getElementById(
-          "singles-leaderboard"
-        );
-        const charlieLeaderboard = document.getElementById(
-          "charlie-leaderboard"
-        );
-        const staticoLeaderboard = document.getElementById(
-          "statico-leaderboard"
-        );
 
-        couplesLeaderboard.innerHTML = "";
-        singlesLeaderboard.innerHTML = "";
-        charlieLeaderboard.innerHTML = "";
-        staticoLeaderboard.innerHTML = "";
+  {% endblock %} {% block scripts %}
+  <script>
+    function updateLeaderboard() {
+      fetch("/get_scores")
+        .then((response) => response.json())
+        .then((data) => {
+          const couplesLeaderboard = document.getElementById(
+            "couples-leaderboard"
+          );
+          const singlesLeaderboard = document.getElementById(
+            "singles-leaderboard"
+          );
+          const charlieLeaderboard = document.getElementById(
+            "charlie-leaderboard"
+          );
+          const staticoLeaderboard = document.getElementById(
+            "statico-leaderboard"
+          );
 
-        function createPlayerDiv(player, index) {
-          const div = document.createElement("div");
-          div.style.display = "flex";
-          div.style.alignItems = "center";
+          couplesLeaderboard.innerHTML = "";
+          singlesLeaderboard.innerHTML = "";
+          charlieLeaderboard.innerHTML = "";
+          staticoLeaderboard.innerHTML = "";
 
-          const rank = document.createElement("h3");
-          rank.textContent = `${index + 1}.`;
-          rank.style.marginRight = "10px";
+          function createPlayerDiv(player, index) {
+            const div = document.createElement("div");
+            div.style.display = "flex";
+            div.style.alignItems = "center";
 
-          // Apply gold color to the first three ranks
-          if (index < 3) {
-            rank.style.color = "gold";
-          } else {
-            if (player[0].startsWith("BIANCO")) {
-              rank.style.color = "black";
+            const rank = document.createElement("h3");
+            rank.textContent = `${index + 1}.`;
+            rank.style.marginRight = "10px";
+
+            // Apply gold color to the first three ranks
+            if (index < 3) {
+              rank.style.color = "gold";
             } else {
               rank.style.color = "white";
             }
+
+            const playerInfo = document.createElement("b");
+            playerInfo.textContent = `${player[0]} - ${player[1]}`;
+            if (player[0].startsWith("ROSSO")) {
+              playerInfo.style.backgroundColor = "red";
+            } else if (player[0].startsWith("GIALLO")) {
+              playerInfo.style.backgroundColor = "yellow";
+            } else if (player[0].startsWith("BLU")) {
+              playerInfo.style.backgroundColor = "bl)ue";
+            } else if (player[0].startsWith("VERDE")) {
+              playerInfo.style.backgroundColor = "green";
+            } else if (player[0].startsWith("ROSA")) {
+              playerInfo.style.backgroundColor = "pink";
+            } else if (player[0].startsWith("BIANCO")) {
+              playerInfo.style.backgroundColor = "white";
+            } else {
+              playerInfo.style.backgroundColor = "gray"; // Default color
+            }
+            // style color black if player[o].startsWith("BIANCO") or startsWith("ROSA")
+            playerInfo.style.color =
+              player[0].startsWith("BIANCO") || player[0].startsWith("ROSA")
+                ? "black"
+                : "white";
+            playerInfo.style.padding = "5px";
+            playerInfo.style.borderRadius = "5px";
+
+            div.appendChild(rank);
+            div.appendChild(playerInfo);
+            div.style.marginBottom = "5px";
+            return div;
           }
 
-          const playerInfo = document.createElement("b");
-          playerInfo.textContent = `${player[0]} - ${player[1]}`;
-          if (player[0].startsWith("ROSSO")) {
-            playerInfo.style.backgroundColor = "red";
-          } else if (player[0].startsWith("GIALLO")) {
-            playerInfo.style.backgroundColor = "yellow";
-          } else if (player[0].startsWith("BLU")) {
-            playerInfo.style.backgroundColor = "bl)ue";
-          } else if (player[0].startsWith("VERDE")) {
-            playerInfo.style.backgroundColor = "green";
-          } else if (player[0].startsWith("ROSA")) {
-            playerInfo.style.backgroundColor = "purple";
-          } else if (player[0].startsWith("BIANCO")) {
-            playerInfo.style.backgroundColor = "gray";
-          } else {
-            playerInfo.style.backgroundColor = "gray"; // Default color
-          }
-          playerInfo.style.color = "white";
-          playerInfo.style.padding = "5px";
-          playerInfo.style.borderRadius = "5px";
+          data.couples.forEach((player, index) => {
+            couplesLeaderboard.appendChild(createPlayerDiv(player, index));
+          });
 
-          div.appendChild(rank);
-          div.appendChild(playerInfo);
-          div.style.marginBottom = "5px";
-          return div;
-        }
+          data.singles.forEach((player, index) => {
+            singlesLeaderboard.appendChild(createPlayerDiv(player, index));
+          });
 
-        data.couples.forEach((player, index) => {
-          couplesLeaderboard.appendChild(createPlayerDiv(player, index));
-        });
+          data.charlie.forEach((player, index) => {
+            charlieLeaderboard.appendChild(createPlayerDiv(player, index));
+          });
 
-        data.singles.forEach((player, index) => {
-          singlesLeaderboard.appendChild(createPlayerDiv(player, index));
-        });
+          data.statico.forEach((player, index) => {
+            staticoLeaderboard.appendChild(createPlayerDiv(player, index));
+          });
+        })
+        .catch((error) =>
+          console.error(
+            "Errore durante l'aggiornamento della classifica:",
+            error
+          )
+        );
+    }
 
-        data.charlie.forEach((player, index) => {
-          charlieLeaderboard.appendChild(createPlayerDiv(player, index));
-        });
+    // Aggiorna la classifica ogni secondo
+    setInterval(updateLeaderboard, 1000);
 
-        data.statico.forEach((player, index) => {
-          staticoLeaderboard.appendChild(createPlayerDiv(player, index));
-        });
-      })
-      .catch((error) =>
-        console.error("Errore durante l'aggiornamento della classifica:", error)
-      );
-  }
-
-  // Aggiorna la classifica ogni secondo
-  setInterval(updateLeaderboard, 1000);
-
-  // Aggiorna la classifica all'avvio della pagina
-  document.addEventListener("DOMContentLoaded", updateLeaderboard);
-</script>
-{% endblock %}
+    // Aggiorna la classifica all'avvio della pagina
+    document.addEventListener("DOMContentLoaded", updateLeaderboard);
+  </script>
+  {% endblock %}
+</div>
