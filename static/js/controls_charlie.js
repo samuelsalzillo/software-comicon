@@ -225,6 +225,7 @@ function pressButton(button) {
         console.log("Start response:", response);
         if (response.success && response.current_player_charlie) {
           startTime = new Date();
+          localStorage.setItem("startTimeCharlie", startTime.toISOString());
           isGameActive = true;
           timerInterval = setInterval(updateTimer, 1000); // Avvia timer JS
 
@@ -569,6 +570,25 @@ $(document).ready(function () {
   console.log("Charlie Controls Ready");
   activateNextPlayer(); // Stato iniziale UI
   updateSkipped(); // Carica skippati iniziali
+
+  fetch("/simulate")
+    .then((r) => r.json())
+    .then((data) => {
+      const savedStartTimeCouple2 = localStorage.getItem("startTimeCharlie");
+
+      if (savedStartTimeCouple2 && data.current_player_charlie) {
+        startTime = new Date(savedStartTimeCouple2);
+        isGameActive = true;
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => updateTimer("couple2"), 1000);
+        updateTrackStatus(data);
+      } else {
+        localStorage.removeItem("startTime");
+      }
+    })
+    .catch((e) => {
+      console.error("Errore nel ripristino stato timer:", e);
+    });
 
   // Listener per chiudere i modal (oltre ai bottoni nel form)
   $(".close-button").on("click", function () {

@@ -4,6 +4,95 @@ let startTimeDelta;
 let startTimeEcho;
 let isGameActiveDelta = false;
 let isGameActiveEcho = false;
+let pageLoadTime;
+
+// Funzione per salvare lo stato del gioco
+function saveGameState() {
+  const gameState = {
+    isGameActiveDelta,
+    isGameActiveEcho,
+    startTimeDelta: startTimeDelta ? startTimeDelta.getTime() : null,
+    startTimeEcho: startTimeEcho ? startTimeEcho.getTime() : null,
+    currentPlayerDelta: $("#current-player-delta").text(),
+    currentPlayerEcho: $("#current-player-echo").text(),
+    pageLoadTime: pageLoadTime, // Salva il timestamp di quando la pagina è stata caricata
+  };
+  localStorage.setItem("gameState", JSON.stringify(gameState));
+}
+
+// Funzione per verificare se il server è stato riavviato
+function checkServerRestart(serverData) {
+  // Se c'è un timer attivo per DELTA ma il server dice che la pista è libera
+  if (isGameActiveDelta && serverData.delta_status === "Libera") {
+    console.log(
+      "Rilevato riavvio del server: pista DELTA attiva localmente ma libera sul server"
+    );
+    return true;
+  }
+
+  // Se c'è un timer attivo per ECHO ma il server dice che la pista è libera
+  if (isGameActiveEcho && serverData.echo_status === "Libera") {
+    console.log(
+      "Rilevato riavvio del server: pista ECHO attiva localmente ma libera sul server"
+    );
+    return true;
+  }
+
+  return false;
+}
+
+// Funzione per caricare lo stato del gioco
+function loadGameState() {
+  const savedState = localStorage.getItem("gameState");
+  if (savedState) {
+    const gameState = JSON.parse(savedState);
+
+    // Se necessario, può essere utilizzato per verifiche aggiuntive
+    const savedPageLoadTime = gameState.pageLoadTime;
+
+    isGameActiveDelta = gameState.isGameActiveDelta;
+    isGameActiveEcho = gameState.isGameActiveEcho;
+
+    if (gameState.startTimeDelta) {
+      startTimeDelta = new Date(gameState.startTimeDelta);
+      if (isGameActiveDelta) {
+        timerIntervalDelta = setInterval(updateTimerDelta, 1000);
+        $("#current-player-delta").text(gameState.currentPlayerDelta);
+        $("#start-delta-btn").prop("disabled", true);
+        $("#stop-delta-btn").prop("disabled", false);
+        updateTimerDelta(); // Aggiorna immediatamente il timer
+      }
+    }
+
+    if (gameState.startTimeEcho) {
+      startTimeEcho = new Date(gameState.startTimeEcho);
+      if (isGameActiveEcho) {
+        timerIntervalEcho = setInterval(updateTimerEcho, 1000);
+        $("#current-player-echo").text(gameState.currentPlayerEcho);
+        $("#start-echo-btn").prop("disabled", true);
+        $("#stop-echo-btn").prop("disabled", false);
+        updateTimerEcho(); // Aggiorna immediatamente il timer
+      }
+    }
+  } else {
+    console.log("Nessuno stato salvato trovato");
+  }
+}
+
+// Funzione per resettare lo stato del gioco
+function clearGameState() {
+  localStorage.removeItem("gameState");
+  isGameActiveDelta = false;
+  isGameActiveEcho = false;
+  startTimeDelta = null;
+  startTimeEcho = null;
+  clearInterval(timerIntervalDelta);
+  clearInterval(timerIntervalEcho);
+  $("#timer-delta, #timer-echo").text("00:00");
+  $("#current-player-delta, #current-player-echo").text("-");
+  $("#start-delta-btn, #start-echo-btn").prop("disabled", false);
+  $("#stop-delta-btn, #stop-echo-btn").prop("disabled", true);
+}
 
 function updateSkipped() {
   fetch("/get_skipped")
@@ -65,6 +154,14 @@ function updateNextPlayer() {
   fetch("/simulate")
     .then((response) => response.json())
     .then((data) => {
+      // Verifica se il server è stato riavviato
+      if (isGameActiveDelta || isGameActiveEcho) {
+        if (checkServerRestart(data)) {
+          console.log("Server riavviato, reset dello stato");
+          clearGameState();
+        }
+      }
+
       if (data.statico && data.statico.length > 0) {
         const nextPlayer = data.statico[0];
         $("#next-player").text(`${nextPlayer.id}`);
@@ -82,8 +179,14 @@ function updateTrackStatus(data) {
   const canStartDelta = data.delta_status === "Libera";
   const canStartEcho = data.echo_status === "Libera";
 
-  $("#start-delta-btn").prop("disabled", !canStartDelta);
-  $("#start-echo-btn").prop("disabled", !canStartEcho);
+  // Aggiorna i pulsanti solo se non c'è già un timer attivo
+  if (!isGameActiveDelta) {
+    $("#start-delta-btn").prop("disabled", !canStartDelta);
+  }
+
+  if (!isGameActiveEcho) {
+    $("#start-echo-btn").prop("disabled", !canStartEcho);
+  }
 
   $("#status-delta").text(data.delta_status + " - " + data.delta_remaining);
   $("#status-echo").text(data.echo_status + " - " + data.echo_remaining);
@@ -131,7 +234,6 @@ function activateNextPlayer() {
   updateNextPlayer();
 }
 
-// Aggiungi la funzione per lo skip statico
 function skipNextPlayerStatico() {
   const nextPlayer = document.getElementById("next-player").textContent;
   if (
@@ -191,6 +293,7 @@ function pressButton(button) {
         );
         $("#start-delta-btn").prop("disabled", true);
         $("#stop-delta-btn").prop("disabled", false);
+        saveGameState(); // Salva lo stato dopo l'avvio
       } else if (button === "statico_start_echo") {
         startTimeEcho = new Date();
         isGameActiveEcho = true;
@@ -202,12 +305,14 @@ function pressButton(button) {
         );
         $("#start-echo-btn").prop("disabled", true);
         $("#stop-echo-btn").prop("disabled", false);
+        saveGameState(); // Salva lo stato dopo l'avvio
       } else if (button === "statico_stop_delta") {
         isGameActiveDelta = false;
         clearInterval(timerIntervalDelta);
         $("#current-player-delta").text("-");
         $("#start-delta-btn").prop("disabled", false);
         $("#stop-delta-btn").prop("disabled", true);
+        saveGameState(); // Salva lo stato dopo lo stop
         updateNextPlayer();
       } else if (button === "statico_stop_echo") {
         isGameActiveEcho = false;
@@ -215,6 +320,7 @@ function pressButton(button) {
         $("#current-player-echo").text("-");
         $("#start-echo-btn").prop("disabled", false);
         $("#stop-echo-btn").prop("disabled", true);
+        saveGameState(); // Salva lo stato dopo lo stop
         updateNextPlayer();
       }
     },
@@ -229,7 +335,34 @@ setInterval(() => {
   updateNextPlayer();
 }, 1000);
 
+// Salva periodicamente lo stato del gioco (ogni 5 secondi)
+setInterval(() => {
+  if (isGameActiveDelta || isGameActiveEcho) {
+    saveGameState();
+  }
+}, 5000);
+
 $(document).ready(function () {
+  // Salva il timestamp di caricamento della pagina
+  pageLoadTime = Date.now();
+
+  // Carica lo stato salvato all'avvio
+  loadGameState();
+
+  // Imposta i pulsanti di stop in base allo stato caricato
+  if (!isGameActiveDelta) {
+    $("#stop-delta-btn").prop("disabled", true);
+  }
+
+  if (!isGameActiveEcho) {
+    $("#stop-echo-btn").prop("disabled", true);
+  }
+
+  // Verifica lo stato del server subito dopo il caricamento
   updateNextPlayer();
-  $("#stop-delta-btn, #stop-echo-btn").prop("disabled", true);
+});
+
+// Salva lo stato del gioco prima di chiudere la pagina
+window.addEventListener("beforeunload", function () {
+  saveGameState();
 });

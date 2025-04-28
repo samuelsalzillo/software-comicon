@@ -417,12 +417,14 @@ function submitPenaltyForm2(typeSuffix) {
           isGameActiveCouple2 = false;
           clearInterval(timerIntervalCouple2);
           startTimeCouple2 = null;
+          localStorage.removeItem("startTimeCouple2"); // <--- AGGIUNTO
           $("#current-player-couple2").text("-");
           $("#timer-couple2").text("00:00");
         } else if (typeSuffix === "single2") {
           isGameActiveSingle2 = false;
           clearInterval(timerIntervalSingle2);
           startTimeSingle2 = null;
+          localStorage.removeItem("startTimeSingle2"); // <--- AGGIUNTO
           $("#current-player-single2").text("-");
           $("#timer-single2").text("00:00");
         }
@@ -482,6 +484,7 @@ function pressButton2(button, typeContext) {
       if (button.includes("_start")) {
         if (typeContext === "couple2") {
           startTimeCouple2 = new Date();
+          localStorage.setItem("startTimeCouple2", startTimeCouple2.toISOString()); // <--- AGGIUNTO
           isGameActiveCouple2 = true;
           clearInterval(timerIntervalCouple2);
           timerIntervalCouple2 = setInterval(
@@ -497,6 +500,7 @@ function pressButton2(button, typeContext) {
             $("#current-player-couple2").text(response.current_player_alfa2.id);
         } else if (typeContext === "single2") {
           startTimeSingle2 = new Date();
+          localStorage.setItem("startTimeSingle2", startTimeSingle2.toISOString()); // <--- AGGIUNTO
           isGameActiveSingle2 = true;
           clearInterval(timerIntervalSingle2);
           timerIntervalSingle2 = setInterval(
@@ -536,6 +540,45 @@ function pressButton2(button, typeContext) {
 $(document).ready(function () {
   console.log("Controls Combined 2 Ready (Inline Version - Listener Fixed)");
   activateNextPlayer2(); // Imposta stato iniziale UI
+
+  fetch("/simulate")
+    .then((r) => r.json())
+    .then((data) => {
+      const savedStartTimeCouple2 = localStorage.getItem("startTimeCouple2");
+      const savedStartTimeSingle2 = localStorage.getItem("startTimeSingle2");
+
+      if (
+        savedStartTimeCouple2 &&
+        ((data.current_player_bravo2 &&
+          data.current_player_bravo2.id.startsWith("ROSA")) ||
+         (data.current_player_alfa2 &&
+          data.current_player_alfa2.id.startsWith("ROSA")))
+      ) {
+        startTimeCouple2 = new Date(savedStartTimeCouple2);
+        isGameActiveCouple2 = true;
+        clearInterval(timerIntervalCouple2);
+        timerIntervalCouple2 = setInterval(() => updateTimer2("couple2"), 1000);
+      } else {
+        localStorage.removeItem("startTimeCouple2");
+      }
+
+      if (
+        savedStartTimeSingle2 &&
+        data.current_player_alfa2 &&
+        (data.current_player_alfa2.id.startsWith("ARANCIO") ||
+         data.current_player_alfa2.id.startsWith("BIANCO"))
+      ) {
+        startTimeSingle2 = new Date(savedStartTimeSingle2);
+        isGameActiveSingle2 = true;
+        clearInterval(timerIntervalSingle2);
+        timerIntervalSingle2 = setInterval(() => updateTimer2("single2"), 1000);
+      } else {
+        localStorage.removeItem("startTimeSingle2");
+      }
+    })
+    .catch((e) => {
+      console.error("Errore nel ripristino stato timer:", e);
+    });
 
   // ** Delegazione Eventi una sola volta **
   $(".control-container")
