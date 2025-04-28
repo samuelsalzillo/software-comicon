@@ -463,6 +463,7 @@ function pressButton(button, type) {
       if (button.includes("_start")) {
         if (type === "couple") {
           startTimeCouple = new Date();
+          localStorage.setItem("startTimeCouple", startTimeCouple.toISOString());
           isGameActiveCouple = true;
           clearInterval(timerIntervalCouple);
           timerIntervalCouple = setInterval(() => updateTimer("couple"), 1000);
@@ -473,6 +474,7 @@ function pressButton(button, type) {
             $("#current-player-couple").text(response.current_player_alfa.id);
         } else if (type === "single") {
           startTimeSingle = new Date();
+          localStorage.setItem("startTimeSingle", startTimeSingle.toISOString());      
           isGameActiveSingle = true;
           clearInterval(timerIntervalSingle);
           timerIntervalSingle = setInterval(() => updateTimer("single"), 1000);
@@ -509,6 +511,35 @@ function pressButton(button, type) {
 $(document).ready(function () {
   console.log("Controls Combined 1 Ready (Inline Version - Listener Fixed)");
   activateNextPlayer();
+
+  fetch("/simulate")
+  .then(response => response.json())
+  .then(data => {
+    const savedStartTimeCouple = localStorage.getItem("startTimeCouple");
+    const savedStartTimeSingle = localStorage.getItem("startTimeSingle");
+
+    if (savedStartTimeCouple && data.current_player_bravo) {
+      startTimeCouple = new Date(savedStartTimeCouple);
+      isGameActiveCouple = true;
+      timerIntervalCouple = setInterval(() => updateTimer("couple"), 1000);
+    } else {
+      localStorage.removeItem("startTimeCouple");
+    }
+
+    if (savedStartTimeSingle && data.current_player_alfa && data.current_player_alfa.id.startsWith("BLU")) {
+      startTimeSingle = new Date(savedStartTimeSingle);
+      isGameActiveSingle = true;
+      timerIntervalSingle = setInterval(() => updateTimer("single"), 1000);
+    } else {
+      localStorage.removeItem("startTimeSingle");
+    }
+
+    activateNextPlayer(); // Spostato qui per assicurarsi che lo stato sia corretto
+  })
+  .catch(error => {
+    console.error("Errore durante il controllo dello stato server:", error);
+    activateNextPlayer(); // In fallback
+  });
 
   // ** Delegazione Eventi una sola volta **
   $(".control-container")
