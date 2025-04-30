@@ -923,7 +923,7 @@ class GameBackend:
         self.ALFA_next_available2 = self.localize_time(self.ALFA_next_available2)
         BRAVO_avail2 = self.BRAVO_next_available2 if self.BRAVO_next_available2 > sim_time else sim_time
         
-        dt_mid2 = datetime.timedelta(minutes=self.T_mid)
+        dt_mid2 = datetime.timedelta(minutes=self.T_mid2)
         dt_total2 = datetime.timedelta(minutes=self.T_total)
         dt_single2 = datetime.timedelta(minutes=self.T_single)
         
@@ -1017,15 +1017,15 @@ class GameBackend:
             else:
                 next_player_found2 = False
                 for queue_item in self.queue_couples2 + self.queue_singles2:
-                    estimated_time = est2.get(queue_item['id']) # Usa est2
-                    if estimated_time:
-                        minutes_to_entry = (estimated_time - now).total_seconds() / 60
-                        if minutes_to_entry <= 2 or not next_player_found2:
+                    estimated_time2 = est2.get(queue_item['id']) # Usa est2
+                    if estimated_time2:
+                        minutes_to_entry2 = (estimated_time2 - now).total_seconds() / 60
+                        if minutes_to_entry2 <= 2 or not next_player_found2:
                             self.next_player_alfa_bravo_id2 = queue_item['id']
                             self.next_player_alfa_bravo_name2 = self.get_player_name(self.next_player_alfa_bravo_id2) # Aggiorna anche il nome
                             self.next_player_alfa_bravo_locked2 = True
                             next_player_found2 = True
-                            if minutes_to_entry <= 2:
+                            if minutes_to_entry2 <= 2:
                                 break
 
             # --- Costruzione board ALFA/BRAVO 1 (usa est1) ---
@@ -1044,14 +1044,14 @@ class GameBackend:
         # --- Costruzione board ALFA/BRAVO 2 (usa est2) --- (MODIFICATA)
         couples_board2: List[Tuple[int, str, Union[datetime.datetime, str]]] = []
         for idx, item in enumerate(self.queue_couples2):
-            estimated = est2.get(item['id'], "N/D") # Usa est2, Default a "N/D"
-            display_time = "PROSSIMO INGRESSO" if item['id'] == self.next_player_alfa_bravo_id2 else estimated
+            estimated2 = est2.get(item['id'], "N/D") # Usa est2, Default a "N/D"
+            display_time = "PROSSIMO INGRESSO" if item['id'] == self.next_player_alfa_bravo_id2 else estimated2
             couples_board2.append((idx + 1, item['id'], display_time))
 
         singles_board2: List[Tuple[int, str, Union[datetime.datetime, str]]] = []
         for idx, item in enumerate(self.queue_singles2):
-            estimated = est2.get(item['id'], "N/D") # Usa est2, Default a "N/D"
-            display_time = "PROSSIMO INGRESSO" if item['id'] == self.next_player_alfa_bravo_id2 else estimated
+            estimated2 = est2.get(item['id'], "N/D") # Usa est2, Default a "N/D"
+            display_time = "PROSSIMO INGRESSO" if item['id'] == self.next_player_alfa_bravo_id2 else estimated2
             singles_board2.append((idx + 1, item['id'], display_time))
 
             charlie_board: List[Tuple[int, str, Union[datetime.datetime, str]]] = []
