@@ -227,6 +227,7 @@ def load_average_times_from_db():
         # Pulisci liste
         backend.couple_timer_history.clear()
         backend.single_timer_history.clear()
+        backend.single_timer_history2.clear()
         logging.debug("[LOAD AVG TIMES] Liste backend *timer* resettate.")
 
         for i, row in enumerate(rows): # Aggiunto indice per logging
@@ -239,8 +240,12 @@ def load_average_times_from_db():
                     backend.couple_timer_history.append(duration_minutes)
                     appended_couple += 1
                     logging.debug(f"  -> Appended to couple_timer_history (new size: {len(backend.couple_timer_history)})") # LOG APPEND
-                elif player_type in ('single', 'single2'):
+                elif player_type in ('single'):
                     backend.single_timer_history.append(duration_minutes)
+                    appended_single += 1
+                    logging.debug(f"  -> Appended to single_timer_history (new size: {len(backend.single_timer_history)})") # LOG APPEND
+                elif player_type in ('single2'):
+                    backend.single_timer_history2.append(duration_minutes)
                     appended_single += 1
                     logging.debug(f"  -> Appended to single_timer_history (new size: {len(backend.single_timer_history)})") # LOG APPEND
                 else:
