@@ -228,28 +228,33 @@
 }
 
 .next-player.couple {
-  color: #ffd700; /* Giallo */
+  background-color: #ffd700; /* Giallo */
+  color: white;
 }
 
 .next-player.single {
-  color: #0000ff; /* Blu */
+  background-color: #0000ff; /* Blu */
+  color: white;
 }
 
 .next-player.couple2 {
-  color: #ff69b4; /* Rosa */
+  background-color: #ff69b4; /* Rosa */
+  color: white;
 }
 
 .next-player.single2 {
-  color: #ffffff; /* Bianco */
+  background-color: #ffffff; /* Bianco */
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Aggiunge ombra per migliorare la leggibilità */
 }
 
 .next-player.charlie {
-  color: #00ff00; /* Verde */
+  background-color: #00ff00; /* Verde */
+  color: white;
 }
 
 .next-player.statico {
-  color: #ff0000; /* Rosso */
+  background-color: #ff0000; /* Rosso */
+  color: white;
 }
 
 /* Stili per i pulsanti di aggiunta */

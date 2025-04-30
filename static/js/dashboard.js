@@ -41,13 +41,13 @@ function updateDashboard() {
         "next-statico-text",
       ];
 
-      // Aggiorna il colore per ogni elemento
-      nextPlayerFields.forEach((fieldId) => {
-        const element = document.getElementById(fieldId);
-        if (element) {
-          element.style.color = getPlayerColor(element.textContent);
-        }
-      });
+      // // Aggiorna il colore per ogni elemento
+      // nextPlayerFields.forEach((fieldId) => {
+      //   const element = document.getElementById(fieldId);
+      //   if (element) {
+      //     element.style.color = getPlayerColor(element.textContent);
+      //   }
+      // });
 
       const couplesBoard = document.getElementById("couples-board");
       if (couplesBoard) {
