@@ -849,6 +849,10 @@ def backup_database():
 def index():
     return redirect(url_for('dashboard'))
 
+@app.route('/tview')
+def tv_view():
+    return render_template('tv_view.html')
+
 
 @app.route('/controls/cassa')
 def controls_cassa():

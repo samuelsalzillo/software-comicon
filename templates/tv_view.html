@@ -1,0 +1,76 @@
+{% extends "layout.html" %} {% block extra_css %}
+<link
+  rel="stylesheet"
+  href="{{ url_for('static', filename='css/tv_view.css') }}"
+/>
+{% endblock %} {% block content %}
+<div class="tv-container">
+  <!-- Colonna Coda Coppie (ALFA/BRAVO 1) -->
+  <div class="tv-column">
+    <h2 class="queue-title">Coda Coppie</h2>
+    <div class="list-viewport">
+      {/* Viewport handles scrolling */}
+      <ul id="tv-couples-list" class="scrolling-list">
+        <li>Caricamento...</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Colonna Coda Singoli (ALFA/BRAVO 1) -->
+  <div class="tv-column">
+    <h2 class="queue-title">Coda Singoli</h2>
+    <div class="list-viewport">
+      {/* Viewport handles scrolling */}
+      <ul id="tv-singles-list" class="scrolling-list">
+        <li>Caricamento...</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Colonna Coda Coppie 2 (ALFA/BRAVO 2) -->
+  <div class="tv-column">
+    <h2 class="queue-title">Coda Coppie 2</h2>
+    <div class="list-viewport">
+      {/* Viewport handles scrolling */}
+      <ul id="tv-couples2-list" class="scrolling-list">
+        <li>Caricamento...</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Colonna Coda Singoli 2 (ALFA/BRAVO 2) -->
+  <div class="tv-column">
+    <h2 class="queue-title">Coda Singoli 2</h2>
+    <div class="list-viewport">
+      {/* Viewport handles scrolling */}
+      <ul id="tv-singles2-list" class="scrolling-list">
+        <li>Caricamento...</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Colonna Coda G&G (Charlie) -->
+  <div class="tv-column">
+    <h2 class="queue-title">Coda G&G</h2>
+    <div class="list-viewport">
+      {/* Viewport handles scrolling */}
+      <ul id="tv-charlie-list" class="scrolling-list">
+        <li>Caricamento...</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Colonna Coda Statico (Delta/Echo) -->
+  <div class="tv-column">
+    <h2 class="queue-title">Coda Statico</h2>
+    <div class="list-viewport">
+      {/* Viewport handles scrolling */}
+      <ul id="tv-statico-list" class="scrolling-list">
+        <li>Caricamento...</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/tv_view.js') }}"></script>
+{% endblock %}
