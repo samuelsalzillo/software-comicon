@@ -33,28 +33,7 @@
 {% endblock %} {% block content %}
 <h1>Classifiche</h1>
 
-<div class="row" style="align-items: baseline">
-  <div class="col-3"></div>
-  <div
-    class="col-2"
-    style="border-radius: 30px 30px 0px 0px; height: 100px; padding: 10px"
-  >
-    <div style="background-color: purple; height: 100%; width: 100%"></div>
-  </div>
-  <div
-    class="col-2"
-    style="border-radius: 30px 30px 0px 0px; height: 170px; padding: 10px"
-  >
-    <div style="background-color: #f29f05; height: 100%; width: 100%"></div>
-  </div>
-
-  <div
-    class="col-2"
-    style="border-radius: 30px 30px 0px 0px; height: 130px; padding: 10px"
-  >
-    <div style="background-color: #8fbf60; height: 100%; width: 100%"></div>
-  </div>
-  <div class="col-3"></div>
+<div class="row" style="align-items: baseline; row-gap: 20px">
   <div class="col-3">
     <div class="leaderboard">
       <h2>Classifica Coppie</h2>
@@ -81,6 +60,13 @@
     </div>
   </div>
 
+  <div class="col-3">
+    <div class="top-players leaderboard">
+      <h2>Migliori 3 Giocatori per Classifica</h2>
+      <div id="top-players-container"></div>
+    </div>
+  </div>
+
   {% endblock %} {% block scripts %}
   <script>
     function updateLeaderboard() {
@@ -99,11 +85,15 @@
           const staticoLeaderboard = document.getElementById(
             "statico-leaderboard"
           );
+          const topPlayersContainer = document.getElementById(
+            "top-players-container"
+          );
 
           couplesLeaderboard.innerHTML = "";
           singlesLeaderboard.innerHTML = "";
           charlieLeaderboard.innerHTML = "";
           staticoLeaderboard.innerHTML = "";
+          topPlayersContainer.innerHTML = "";
 
           function createPlayerDiv(player, index) {
             const div = document.createElement("div");
@@ -114,7 +104,6 @@
             rank.textContent = `${index + 1}.`;
             rank.style.marginRight = "10px";
 
-            // Apply gold color to the first three ranks
             if (index < 3) {
               rank.style.color = "gold";
             } else {
@@ -166,6 +155,37 @@
           data.statico.forEach((player, index) => {
             staticoLeaderboard.appendChild(createPlayerDiv(player, index));
           });
+
+          // Aggiungi i migliori 3 giocatori per ogni classifica
+          fetch("/leaderboard/top3")
+            .then((response) => response.json())
+            .then((top3Data) => {
+              const categories = ["couples", "singles", "charlie"];
+              categories.forEach((category) => {
+                const topPlayers = top3Data[category];
+                if (topPlayers && topPlayers.length > 0) {
+                  const categoryDiv = document.createElement("div");
+                  categoryDiv.innerHTML = `<h4>${category.toUpperCase()}</h4>`;
+                  const ul = document.createElement("ul");
+                  topPlayers.forEach((player, index) => {
+                    const li = document.createElement("li");
+                    li.textContent = `${index + 1}. ${player.name} (${
+                      player.score
+                    })`;
+                    ul.appendChild(li);
+                  });
+                  categoryDiv.appendChild(ul);
+                  categoryDiv.style.color = "white";
+                  topPlayersContainer.appendChild(categoryDiv);
+                }
+              });
+            })
+            .catch((error) =>
+              console.error(
+                "Errore durante il caricamento dei migliori 3 giocatori:",
+                error
+              )
+            );
         })
         .catch((error) =>
           console.error(
@@ -176,7 +196,7 @@
     }
 
     // Aggiorna la classifica ogni secondo
-    setInterval(updateLeaderboard, 1000);
+    setInterval(updateLeaderboard, 3000);
 
     // Aggiorna la classifica all'avvio della pagina
     document.addEventListener("DOMContentLoaded", updateLeaderboard);
