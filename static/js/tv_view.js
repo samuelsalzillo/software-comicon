@@ -20,7 +20,6 @@ function formatTimeRome(date) {
   }
 }
 
-// Function to update a single list's content
 function updateListContent(listId, players) {
   const listElement = document.getElementById(listId);
   if (!listElement) {
@@ -53,17 +52,21 @@ function updateListContent(listId, players) {
       const li = document.createElement("li");
       li.textContent = `${player.id} - ${timeDisplay}`;
 
-      // Optional: Add data-attribute for potential styling based on type
+      // Add a class based on the player's type
       const playerIdStr = String(player.id);
-      if (playerIdStr.includes("GIALLO")) li.dataset.playerType = "couple";
-      else if (playerIdStr.includes("BLU")) li.dataset.playerType = "single";
-      else if (playerIdStr.includes("ROSA")) li.dataset.playerType = "couple2";
-      else if (playerIdStr.includes("BIANCO"))
-        li.dataset.playerType = "single2";
-      else if (playerIdStr.includes("VERDE")) li.dataset.playerType = "charlie";
-      else if (playerIdStr.includes("ROSSO")) li.dataset.playerType = "statico";
-      // Add other types if necessary
+      if (playerIdStr.includes("GIALLO")) li.classList.add("bg-yellow");
+      else if (playerIdStr.includes("BLU")) li.classList.add("bg-blue");
+      else if (playerIdStr.includes("ROSA")) li.classList.add("bg-pink");
+      else if (playerIdStr.includes("BIANCO")) li.classList.add("bg-white");
+      else if (playerIdStr.includes("VERDE")) li.classList.add("bg-green");
+      else if (playerIdStr.includes("ROSSO")) li.classList.add("bg-red");
 
+      // Add blinking effect for "PROSSIMO INGRESSO"
+      if (player.estimated_time === "PROSSIMO INGRESSO") {
+        li.classList.add("blinking");
+      }
+
+      li.style.fontWeight = "bold"; // Fallback to black if color is not defined
       listElement.appendChild(li);
     });
   }

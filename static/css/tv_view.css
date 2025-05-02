@@ -100,3 +100,56 @@ body {
   font-style: italic;
   border-bottom: none;
 }
+.bg-yellow {
+  background-color: #ffd700; /* Giallo */
+  color: black;
+}
+
+.bg-blue {
+  background-color: #1f598c; /* Blu */
+  color: white;
+}
+
+.bg-pink {
+  background-color: #ffc0cb; /* Rosa */
+  color: black;
+}
+
+.bg-white {
+  background-color: white; /* Bianco */
+  color: black;
+}
+
+.bg-green {
+  background-color: #8fbf60; /* Verde */
+  color: white;
+}
+
+.bg-red {
+  background-color: #ff0000; /* Rosso */
+  color: white;
+}
+
+/* Optional: Add padding and border-radius for better appearance */
+.scrolling-list li {
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+/* Blinking effect */
+.blinking {
+  animation: blinkingEffect 1s infinite;
+}
+
+@keyframes blinkingEffect {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
