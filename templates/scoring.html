@@ -34,35 +34,29 @@
 <h1>Classifiche</h1>
 
 <div class="row" style="align-items: baseline; row-gap: 20px">
-  <div class="col-4">
+  <div class="col-3">
     <div class="top-players leaderboard">
       <h2>Migliori 3 Giocatori per Classifica</h2>
       <div id="top-players-container"></div>
     </div>
   </div>
-  <div class="col-2">
+  <div class="col-3">
     <div class="leaderboard">
       <h2>Classifica Coppie</h2>
       <ul id="couples-leaderboard"></ul>
     </div>
   </div>
 
-  <div class="col-2">
+  <div class="col-3">
     <div class="leaderboard">
       <h2>Classifica Singoli</h2>
       <ul id="singles-leaderboard"></ul>
     </div>
   </div>
-  <div class="col-2">
+  <div class="col-3">
     <div class="leaderboard">
       <h2>Classifica Charlie</h2>
       <ul id="charlie-leaderboard"></ul>
-    </div>
-  </div>
-  <div class="col-2">
-    <div class="leaderboard">
-      <h2>Classifica Statico</h2>
-      <ul id="statico-leaderboard"></ul>
     </div>
   </div>
 
@@ -81,9 +75,7 @@
           const charlieLeaderboard = document.getElementById(
             "charlie-leaderboard"
           );
-          const staticoLeaderboard = document.getElementById(
-            "statico-leaderboard"
-          );
+
           const topPlayersContainer = document.getElementById(
             "top-players-container"
           );
@@ -91,7 +83,6 @@
           couplesLeaderboard.innerHTML = "";
           singlesLeaderboard.innerHTML = "";
           charlieLeaderboard.innerHTML = "";
-          staticoLeaderboard.innerHTML = "";
           topPlayersContainer.innerHTML = "";
 
           function createPlayerDiv(player, index) {
@@ -149,10 +140,6 @@
 
           data.charlie.forEach((player, index) => {
             charlieLeaderboard.appendChild(createPlayerDiv(player, index));
-          });
-
-          data.statico.forEach((player, index) => {
-            staticoLeaderboard.appendChild(createPlayerDiv(player, index));
           });
 
           // Aggiungi i migliori 3 giocatori per ogni classifica

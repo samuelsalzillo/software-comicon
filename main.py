@@ -360,6 +360,15 @@ class GameBackend:
                     LIMIT 3
                 """, (player_type,))
                 top_qualified_scores_result = cursor.fetchall()
+
+
+                cursor.execute("""
+                    SELECT score FROM scoring
+                    WHERE player_type = ?
+                    ORDER BY score ASC
+                    LIMIT 1
+                """, (player_type,))
+                top_player_today_result = cursor.fetchall()
                 # ---- FINE MODIFICA ----
 
                 conn.close() # Chiudi connessione dopo la query
@@ -367,6 +376,9 @@ class GameBackend:
             # Elabora i risultati dalla tabella dei qualificati
             top_qualified_scores = [float(row[0]) for row in top_qualified_scores_result if row[0] is not None]
             logging.debug(f"[QUAL CHECK NEW] Top 3 qualified scores found: {top_qualified_scores}")
+
+            top_player_today = [float(row[0]) for row in top_player_today_result if row[0] is not None]
+            logging.debug(f"[QUAL CHECK NEW] Top 3 qualified scores found: {top_player_today}")
 
             # Logica di qualificazione basata sui top 3 qualificati
             if len(top_qualified_scores) < 3:
@@ -377,10 +389,17 @@ class GameBackend:
                 logging.debug(f"[QUAL CHECK NEW] Qualifies because less than 3 players are currently qualified for type {player_type}.")
             # elif score_minutes <= top_qualified_scores[-1] + 1e-9: # Aggiungi tolleranza se lavori con float che possono avere imprecisioni
             elif score_minutes <= top_qualified_scores[-1]:
+                 if score_minutes <= top_player_today[0]:
+                    is_qualified = True
+                    reason = 'beats_current_top_3 & top_today' # Motivo: batte i top 3 attuali
+                 else:
                  # Il punteggio è migliore o uguale al terzo miglior punteggio attuale dei qualificati
-                 is_qualified = True
-                 reason = 'beats_current_top_3' # Motivo: batte i top 3 attuali
-                 logging.debug(f"[QUAL CHECK NEW] Qualifies by beating or matching the current 3rd best qualified score ({top_qualified_scores[-1]}) for type {player_type}.")
+                    is_qualified = True
+                    reason = 'beats_current_top_3' # Motivo: batte i top 3 attuali
+                    logging.debug(f"[QUAL CHECK NEW] Qualifies by beating or matching the current 3rd best qualified score ({top_qualified_scores[-1]}) for type {player_type}.")
+            elif score_minutes <= top_player_today[0]: 
+                is_qualified = True
+                reason = 'top_today' # Motivo: migliore della giornata
             else:
                  # Il punteggio non è abbastanza buono per entrare nei top 3 attuali
                  logging.debug(f"[QUAL CHECK NEW] Does not qualify. Score {score_minutes} is not better than the 3rd best qualified score ({top_qualified_scores[-1]}) for type {player_type}.")
