@@ -327,87 +327,99 @@ class GameBackend:
 
     def check_qualification(self, score_minutes: float, player_type: str) -> Tuple[bool, Optional[str]]:
         """
-        Controlla se un punteggio si qualifica (migliore del giorno o top 3).
-        Query diretta al DB 'scoring'.
+        Controlla se un punteggio si qualifica confrontandolo con i top 3
+        attualmente presenti nella tabella 'qualified_players'.
+        Query diretta al DB 'qualified_players'.
         """
-        # Necessario importare o avere accesso a:
-        import sqlite3
-        import logging
-        # Assumendo che SQLITE_DB_PATH e sqlite_lock siano accessibili (es. globali in app.py)
-        # o passati come argomenti se preferisci.
-
-        is_qualified = False
-        reason = None
-
         sqlite_lock = Lock()
         SQLITE_DB_PATH = 'stand_db.db'  # Database local MySQLite in cui salveremo le queue
 
-        # Assicurati che SQLITE_DB_PATH sia definito correttamente dove questa funzione viene chiamata (app.py)
-        # Assicurati che sqlite_lock sia definito correttamente dove questa funzione viene chiamata (app.py)
+        is_qualified = False
+        reason = None
         db_path = SQLITE_DB_PATH
         lock = sqlite_lock
 
-        today_str = self.get_current_time().strftime('%Y-%m-%d')
-        logging.debug(f"[QUAL CHECK] Checking score {score_minutes} for type {player_type} against date {today_str}")
+        logging.debug(f"[QUAL CHECK NEW] Checking score {score_minutes} for type {player_type} against qualified players.")
 
         try:
-            with lock: # Usa il lock definito in app.py
+            with lock: # Usa il lock definito nel contesto dell'app
                 conn = sqlite3.connect(db_path)
                 cursor = conn.cursor()
 
-                # 1. Migliore del Giorno
+                # ---- INIZIO MODIFICA ----
+                # Rimuoviamo il check "Migliore del Giorno" basato su 'scoring'.
+                # Rimuoviamo il check "Top 3 Generale" basato su 'scoring'.
+
+                # NUOVO CHECK: Controlliamo i top 3 direttamente da 'qualified_players'
+                # *** IMPORTANTE: Assicurati che la tabella 'qualified_players' abbia le colonne 'score' e 'player_type' ***
+                # *** Adatta i nomi delle colonne se necessario (es. 'tempo', 'tipo_giocatore') ***
                 cursor.execute("""
-                    SELECT MIN(score) FROM scoring
-                    WHERE player_type = ? AND date(created_at, 'localtime') = ?
-                """, (player_type, today_str))
-                result = cursor.fetchone()
-                best_today_score_db = result[0] if result and result[0] is not None else None
-                best_today_score = float(best_today_score_db) if best_today_score_db is not None else float('inf')
-                logging.debug(f"[QUAL CHECK] Best today score in DB: {best_today_score_db} -> {best_today_score}")
+                    SELECT score_minutes FROM qualified_players
+                    WHERE player_type = ?
+                    ORDER BY score_minutes ASC
+                    LIMIT 3
+                """, (player_type,))
+                top_qualified_scores_result = cursor.fetchall()
 
 
-                # Usa una tolleranza molto piccola per confronti float se necessario
-                # epsilon = 1e-9
-                # if score_minutes <= best_today_score + epsilon:
-                if score_minutes <= best_today_score:
-                    is_qualified = True
-                    reason = 'best_today'
-                    logging.debug(f"[QUAL CHECK] Qualifies as best_today.")
-
-                # 2. Top 3 Generale
                 cursor.execute("""
                     SELECT score FROM scoring
                     WHERE player_type = ?
                     ORDER BY score ASC
-                    LIMIT 3
+                    LIMIT 1
                 """, (player_type,))
-                top_scores_result = cursor.fetchall()
-                top_scores = [float(row[0]) for row in top_scores_result if row[0] is not None]
-                logging.debug(f"[QUAL CHECK] Top 3 scores in DB: {top_scores}")
+                top_player_today_result = cursor.fetchall()
+                # ---- FINE MODIFICA ----
 
-                conn.close() # Chiudi connessione prima di elaborare i top scores
+                conn.close() # Chiudi connessione dopo la query
 
-            qualifies_top_3 = False
-            if len(top_scores) < 3:
-                qualifies_top_3 = True # Si qualifica se ci sono meno di 3 punteggi
-                logging.debug(f"[QUAL CHECK] Qualifies top_3 (less than 3 scores exist).")
-            # elif score_minutes <= top_scores[-1] + epsilon: # Confronta con il terzo (ultimo della lista)
-            elif score_minutes <= top_scores[-1]:
-                 qualifies_top_3 = True
-                 logging.debug(f"[QUAL CHECK] Qualifies top_3 (score <= {top_scores[-1]}).")
+            # Elabora i risultati dalla tabella dei qualificati
+            top_qualified_scores = [float(row[0]) for row in top_qualified_scores_result if row[0] is not None]
+            logging.debug(f"[QUAL CHECK NEW] Top 3 qualified scores found: {top_qualified_scores}")
 
+            top_player_today = [float(row[0]) for row in top_player_today_result if row[0] is not None]
+            logging.debug(f"[QUAL CHECK NEW] Top 3 qualified scores found: {top_player_today}")
 
-            if qualifies_top_3:
-                 is_qualified = True
-                 if reason is None: # Imposta solo se non è già 'best_today'
-                      reason = 'top_3_overall'
+            # Logica di qualificazione basata sui top 3 qualificati
+            if len(top_qualified_scores) < 3:
+                # Ci sono meno di 3 giocatori qualificati, quindi questo nuovo punteggio si qualifica automaticamente
+                # per riempire i posti disponibili.
+                is_qualified = True
+                reason = 'fills_top_3' # Motivo: riempie i top 3
+                logging.debug(f"[QUAL CHECK NEW] Qualifies because less than 3 players are currently qualified for type {player_type}.")
+            # elif score_minutes <= top_qualified_scores[-1] + 1e-9: # Aggiungi tolleranza se lavori con float che possono avere imprecisioni
+            elif score_minutes <= top_qualified_scores[-1]:
+                 if score_minutes <= top_player_today[0]:
+                    is_qualified = True
+                    reason = 'beats_current_top_3 & top_today' # Motivo: batte i top 3 attuali
+                 else:
+                 # Il punteggio è migliore o uguale al terzo miglior punteggio attuale dei qualificati
+                    is_qualified = True
+                    reason = 'beats_current_top_3' # Motivo: batte i top 3 attuali
+                    logging.debug(f"[QUAL CHECK NEW] Qualifies by beating or matching the current 3rd best qualified score ({top_qualified_scores[-1]}) for type {player_type}.")
+            elif score_minutes <= top_player_today[0]: 
+                is_qualified = True
+                reason = 'top_today' # Motivo: migliore della giornata
+            else:
+                 # Il punteggio non è abbastanza buono per entrare nei top 3 attuali
+                 logging.debug(f"[QUAL CHECK NEW] Does not qualify. Score {score_minutes} is not better than the 3rd best qualified score ({top_qualified_scores[-1]}) for type {player_type}.")
 
-        except Exception as e:
-            logging.error(f"[QUAL CHECK] Error checking qualification for {player_type} score {score_minutes}: {e}", exc_info=True)
+        except sqlite3.Error as e:
+            # Gestione specifica per errori SQLite (es. tabella non trovata, colonna mancante)
+            logging.error(f"[QUAL CHECK NEW] Database error checking qualification for {player_type} score {score_minutes}: {e}", exc_info=True)
+            # Potrebbe essere utile controllare qui se la tabella o le colonne esistono davvero
+            if "no such table" in str(e).lower():
+                 logging.error(f"[QUAL CHECK NEW] **** ERROR: The table 'qualified_players' might not exist. ****")
+            elif "no such column" in str(e).lower():
+                 logging.error(f"[QUAL CHECK NEW] **** ERROR: Check if 'qualified_players' table has columns named 'score' and 'player_type'. ****")
             return False, None # Errore durante il check
+        except Exception as e:
+            # Gestione per altri errori generici
+            logging.error(f"[QUAL CHECK NEW] General error checking qualification for {player_type} score {score_minutes}: {e}", exc_info=True)
+            return False, None # Errore generico
 
-        logging.debug(f"[QUAL CHECK] Final result: Qualified={is_qualified}, Reason={reason}")
-        return is_qualified, reason            
+        logging.debug(f"[QUAL CHECK NEW] Final result: Qualified={is_qualified}, Reason={reason}")
+        return is_qualified, reason
 
     def record_charlie_game(self, timer_duration: float) -> None:
         """

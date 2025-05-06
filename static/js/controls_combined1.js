@@ -9,6 +9,28 @@ let timerIntervalSingle = null;
 let startTimeSingle = null;
 let isGameActiveSingle = false;
 
+let effectiveStartTimeCouple = null;
+let effectiveStartTimeSingle = null;
+
+function resetTimer(type) {
+  const now = new Date();
+  if (type === "couple" && isGameActiveCouple) {
+    effectiveStartTimeCouple = now;
+    startTimeCouple = now; // Mantieni compatibilità con la logica esistente
+    localStorage.setItem("effectiveStartTimeCouple", now.toISOString());
+    localStorage.setItem("startTimeCouple", now.toISOString());
+    $("#timer-couple").text("00:00");
+    console.log("Timer coppia resettato - tempo effettivo aggiornato");
+  } else if (type === "single" && isGameActiveSingle) {
+    effectiveStartTimeSingle = now;
+    startTimeSingle = now; // Mantieni compatibilità con la logica esistente
+    localStorage.setItem("effectiveStartTimeSingle", now.toISOString());
+    localStorage.setItem("startTimeSingle", now.toISOString());
+    $("#timer-single").text("00:00");
+    console.log("Timer singolo resettato - tempo effettivo aggiornato");
+  }
+}
+
 // --- Funzioni di Aggiornamento UI Base ---
 function updateNextPlayer() {
   fetch("/simulate")
@@ -159,18 +181,31 @@ function showInlinePenaltyForm(data) {
   } else {
     return;
   }
+
   console.log(
     `Showing penalty section ${penaltySectionId} for ${data.player_id}`
   );
+
+  // Calcola la durata CORRETTA usando effectiveStartTime
+  let timerDuration = 0;
+  const now = new Date();
+
+  if (data.player_type === "couple" && effectiveStartTimeCouple) {
+    timerDuration = (now - effectiveStartTimeCouple) / 1000 / 60; // minuti
+  } else if (data.player_type === "single" && effectiveStartTimeSingle) {
+    timerDuration = (now - effectiveStartTimeSingle) / 1000 / 60; // minuti
+  } else {
+    // Fallback al calcolo normale se non c'è stato reset
+    timerDuration = data.timer_duration_minutes;
+  }
+
   $(`#penalty-player-display-${typeSuffix}`).text(
     data.player_name || data.player_id
   );
-  $(`#penalty-timer-display-${typeSuffix}`).text(
-    formatTimeJS(data.timer_duration_minutes)
-  );
+  $(`#penalty-timer-display-${typeSuffix}`).text(formatTimeJS(timerDuration));
   $(`#penalty-player-id-${typeSuffix}`).val(data.player_id);
   $(`#penalty-player-name-${typeSuffix}`).val(data.player_name);
-  $(`#penalty-timer-duration-${typeSuffix}`).val(data.timer_duration_minutes);
+  $(`#penalty-timer-duration-${typeSuffix}`).val(timerDuration);
   $(`#penalty-form-${typeSuffix}`)[0].reset();
   $(`#penalty_minutes_${typeSuffix}`).val(0);
   $(`#penalty_seconds_${typeSuffix}`).val(0);
@@ -461,9 +496,12 @@ function pressButton(button, type) {
         return;
       }
       if (button.includes("_start")) {
+        const now = new Date();
         if (type === "couple") {
-          startTimeCouple = new Date();
-          localStorage.setItem("startTimeCouple", startTimeCouple.toISOString());
+          effectiveStartTimeCouple = now;
+          startTimeCouple = now;
+          localStorage.setItem("effectiveStartTimeCouple", now.toISOString());
+          localStorage.setItem("startTimeCouple", now.toISOString());
           isGameActiveCouple = true;
           clearInterval(timerIntervalCouple);
           timerIntervalCouple = setInterval(() => updateTimer("couple"), 1000);
@@ -473,8 +511,10 @@ function pressButton(button, type) {
           else if (response.current_player_alfa)
             $("#current-player-couple").text(response.current_player_alfa.id);
         } else if (type === "single") {
-          startTimeSingle = new Date();
-          localStorage.setItem("startTimeSingle", startTimeSingle.toISOString());      
+          effectiveStartTimeSingle = now;
+          startTimeSingle = now;
+          localStorage.setItem("effectiveStartTimeSingle", now.toISOString());
+          localStorage.setItem("startTimeSingle", now.toISOString());
           isGameActiveSingle = true;
           clearInterval(timerIntervalSingle);
           timerIntervalSingle = setInterval(() => updateTimer("single"), 1000);
@@ -510,36 +550,51 @@ function pressButton(button, type) {
 // --- READY E INTERVAL (Corretti con Delegazione Eventi) ---
 $(document).ready(function () {
   console.log("Controls Combined 1 Ready (Inline Version - Listener Fixed)");
+
+  // Recupera gli effectiveStartTime dal localStorage
+  const savedEffectiveCouple = localStorage.getItem("effectiveStartTimeCouple");
+  const savedEffectiveSingle = localStorage.getItem("effectiveStartTimeSingle");
+
+  if (savedEffectiveCouple) {
+    effectiveStartTimeCouple = new Date(savedEffectiveCouple);
+  }
+  if (savedEffectiveSingle) {
+    effectiveStartTimeSingle = new Date(savedEffectiveSingle);
+  }
   activateNextPlayer();
 
   fetch("/simulate")
-  .then(response => response.json())
-  .then(data => {
-    const savedStartTimeCouple = localStorage.getItem("startTimeCouple");
-    const savedStartTimeSingle = localStorage.getItem("startTimeSingle");
+    .then((response) => response.json())
+    .then((data) => {
+      const savedStartTimeCouple = localStorage.getItem("startTimeCouple");
+      const savedStartTimeSingle = localStorage.getItem("startTimeSingle");
 
-    if (savedStartTimeCouple && data.current_player_bravo) {
-      startTimeCouple = new Date(savedStartTimeCouple);
-      isGameActiveCouple = true;
-      timerIntervalCouple = setInterval(() => updateTimer("couple"), 1000);
-    } else {
-      localStorage.removeItem("startTimeCouple");
-    }
+      if (savedStartTimeCouple && data.current_player_bravo) {
+        startTimeCouple = new Date(savedStartTimeCouple);
+        isGameActiveCouple = true;
+        timerIntervalCouple = setInterval(() => updateTimer("couple"), 1000);
+      } else {
+        localStorage.removeItem("startTimeCouple");
+      }
 
-    if (savedStartTimeSingle && data.current_player_alfa && data.current_player_alfa.id.startsWith("BLU")) {
-      startTimeSingle = new Date(savedStartTimeSingle);
-      isGameActiveSingle = true;
-      timerIntervalSingle = setInterval(() => updateTimer("single"), 1000);
-    } else {
-      localStorage.removeItem("startTimeSingle");
-    }
+      if (
+        savedStartTimeSingle &&
+        data.current_player_alfa &&
+        data.current_player_alfa.id.startsWith("BLU")
+      ) {
+        startTimeSingle = new Date(savedStartTimeSingle);
+        isGameActiveSingle = true;
+        timerIntervalSingle = setInterval(() => updateTimer("single"), 1000);
+      } else {
+        localStorage.removeItem("startTimeSingle");
+      }
 
-    activateNextPlayer(); // Spostato qui per assicurarsi che lo stato sia corretto
-  })
-  .catch(error => {
-    console.error("Errore durante il controllo dello stato server:", error);
-    activateNextPlayer(); // In fallback
-  });
+      activateNextPlayer(); // Spostato qui per assicurarsi che lo stato sia corretto
+    })
+    .catch((error) => {
+      console.error("Errore durante il controllo dello stato server:", error);
+      activateNextPlayer(); // In fallback
+    });
 
   // ** Delegazione Eventi una sola volta **
   $(".control-container")
