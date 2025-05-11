@@ -139,23 +139,23 @@
         </svg>
       </div>
       <div class="nav-links" id="navLinks">
-        <a href="{{ url_for('dashboard') }}" class="nav-link">Dashboard</a>
-        <a href="{{ url_for('controls_combined') }}" class="nav-link"
+        <a href="{{ url_for('dashboard.view_dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('controls.controls_combined') }}" class="nav-link"
           >Dinamico 1 (Giallo/Blu)</a
         >
-        <a href="{{ url_for('controls_combined2') }}" class="nav-link"
+        <a href="{{ url_for('controls.controls_combined2') }}" class="nav-link"
           >Dinamico 2 (Rosa/Bianco)</a
         >
-        <a href="{{ url_for('controls_charlie') }}" class="nav-link"
+        <a href="{{ url_for('controls.controls_charlie') }}" class="nav-link"
           >Controllo G&G (Verde)</a
         >
-        <a href="{{ url_for('controls_statico') }}" class="nav-link"
+        <a href="{{ url_for('controls.controls_statico') }}" class="nav-link"
           >Controllo Statico (Rosso)</a
         >
-        <a href="{{ url_for('controls_cassa') }}" class="nav-link">Cassa</a>
-        <a href="{{ url_for('scoring') }}" class="nav-link">Scoring</a>
-        <a href="{{ url_for('keypad') }}" class="nav-link">Tastierino 1</a>
-        <a href="{{ url_for('keypad2') }}" class="nav-link">Tastierino 2</a>
+        <a href="{{ url_for('controls.controls_cassa') }}" class="nav-link">Cassa</a>
+        <a href="{{ url_for('leaderboard.get_scoring') }}" class="nav-link">Scoring</a>
+        <a href="{{ url_for('keypad.get_keypad') }}" class="nav-link">Tastierino 1</a>
+        <a href="{{ url_for('keypad.get_keypad2') }}" class="nav-link">Tastierino 2</a>
       </div>
     </nav>
 

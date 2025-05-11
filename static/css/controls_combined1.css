@@ -8,8 +8,8 @@
 
 .control-section {
   flex: 1;
-  min-width: 400px;
-  max-width: 500px;
+  min-width: 700px;
+  max-width: 700px;
 }
 
 .couple-section {
@@ -88,6 +88,13 @@
   background: #ddc01d;
   color: white;
 }
+
+.btn-emergency {
+  background: white;
+  color: red;
+  align-content: center
+}
+
 
 .single-section .btn-start {
   background: #2772db;
