@@ -12,6 +12,19 @@ let isGameActiveSingle = false;
 let effectiveStartTimeCouple = null;
 let effectiveStartTimeSingle = null;
 
+let not_emergency = true
+
+function getEmergency(){
+    return not_emergency;
+}
+
+function emergencyStop() {
+    not_emergency = false
+    pressThirdButton()
+    console.log(not_emergency)
+}
+
+
 function resetTimer(type) {
   const now = new Date();
   if (type === "couple" && isGameActiveCouple) {
@@ -121,15 +134,16 @@ function updateUIState() {
       );
       $("#stop-btn-couple").prop(
         "disabled",
-        !stdControlsCoupleVisible ||
+        (!stdControlsCoupleVisible ||
           !isGameActiveCouple ||
-          !data.can_stop_couple1
+          !data.can_stop_couple1) &&
+          not_emergency
       );
       $("#stop-btn-single").prop(
         "disabled",
-        !stdControlsSingleVisible ||
+        (!stdControlsSingleVisible ||
           !isGameActiveSingle ||
-          !data.can_stop_single1
+          !data.can_stop_single1)
       );
     })
     .catch((error) => {
@@ -488,7 +502,7 @@ function pressButton(button, type) {
     url: "/button_press",
     type: "POST",
     contentType: "application/json",
-    data: JSON.stringify({ button: button }),
+    data: JSON.stringify({ button: button , control : not_emergency }),
     success: function (response) {
       if (!response.success) {
         alert(response.error || "Errore.");
@@ -545,6 +559,7 @@ function pressButton(button, type) {
       updateUIState();
     },
   });
+  not_emergency = true
 }
 
 // --- READY E INTERVAL (Corretti con Delegazione Eventi) ---
