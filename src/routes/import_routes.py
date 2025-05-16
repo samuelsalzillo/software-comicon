@@ -3,6 +3,7 @@ from .game.api import game
 from .leaderboard.api import leaderboard_api
 from .player.api import player
 from .submit.api import submit
+from .treasure_hunt.api import treasure_hunt
 
 from .controls.views import controls
 from .dashboard.views import dashboard
@@ -15,6 +16,7 @@ def register_root(app):
     app.register_blueprint(game)
     app.register_blueprint(player)
     app.register_blueprint(submit)
+    app.register_blueprint(treasure_hunt)
 
     app.register_blueprint(controls)
     app.register_blueprint(dashboard)

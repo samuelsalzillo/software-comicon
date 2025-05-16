@@ -7,11 +7,13 @@ from flask import Flask
 import logging
 import os
 import socket # per il print dell'ip
+
 from src.database.init import init
 from src.database.load import load
 from src.batch import thread_queue
 import src.routes.import_routes as routes
 import src.batch.thread_backup as thread_backup
+from src.database.initialize_table import db
 
 # importo le variabili
 load_dotenv()
@@ -23,11 +25,18 @@ if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 
 # Impostazioni logging
 logging.basicConfig(level=logging.DEBUG) 
 
 # INIZIALIZZAZIONE DATABASE
+db.init_app(app)
+with app.app_context():
+    db.create_all()
+
 init.init_database()
 
 # LOAD DATABASE
