@@ -18,6 +18,34 @@
   letter-spacing: 5px;
 }
 
+.color-squares {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.color-square {
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #CCCCCC; /* Default gray color for inactive state */
+}
+
+/* Color definitions - Updated for better visibility */
+.color-white { background-color: #FFFFFF; border: 1px solid #999; }
+.color-yellow { background-color: #FFD700; } /* Giallo più brillante */
+.color-green { background-color: #00A86B; } /* Verde più scuro e distintivo */
+.color-blue { background-color: #0066CC; } /* Blu più scuro */
+.color-red { background-color: #DC143C; } /* Rosso più scuro e distintivo */
+.color-orange { background-color: #FF8C00; } /* Arancione più scuro e distintivo */
+.color-pink { background-color: #FF1493; } /* Rosa più scuro e distintivo */
+.color-brown { background-color: #8B4513; } /* Marrone più scuro */
+.color-purple { background-color: #800080; } /* Viola più scuro */
+.color-black { background-color: #000000; }
+.color-inactive { background-color: #CCCCCC; }
+
 .keypad {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
