@@ -23,6 +23,7 @@ def init_qualified_players_table(sqlite_lock):
                 player_type TEXT CHECK(player_type IN ('couple', 'single', 'charlie')) NOT NULL,
                 qualification_reason TEXT NOT NULL, -- 'best_today' or 'top_3_overall'
                 qualification_date DATE NOT NULL,
+                treasure_hunt_updated TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')

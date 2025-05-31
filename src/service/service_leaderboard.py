@@ -6,8 +6,17 @@ basandosi sul tempo più basso registrato nella tabella qualified_players.
 import logging
 import os
 import sqlite3
+
+from bottle import response
+
 from ..utils.database import get_lock
+from ..utils.date import convert_string_date_datetime_into_date,format_time_into_mmss
+from ..database.select.qualified_players import find_by_type_id_player, find_by_id_player
+from ..database.save.save_qualified_players import update_score_formatted_and_score_minutes
 from flask import jsonify
+from .service_treasure_hunt import get_all_treasure_hunt
+from ..database.save.save_scoring import update_score_formatted
+from ..utils.model import get_game_backend, set_game_backend
 
 
 def get_top3_leaderboard():
@@ -26,10 +35,11 @@ def get_top3_leaderboard():
             for p_type in player_types:
                 logging.debug(f"Querying top 3 for type: {p_type} (using short ID from DB)")
                 # --- Query che assume player_id è l'ID CORTO ---
-                cursor.execute("""
+                cursor.execute(f"""
                     SELECT player_id, first_name, last_name, score_formatted, score_minutes
                     FROM qualified_players
                     WHERE player_type = ?
+                    {"AND treasure_hunt_updated is not null" if (os.environ.get("TREASURE_HUNT_ACTIVE") and (p_type == 'couple' or p_type == 'single')) else ""}
                     ORDER BY score_minutes ASC
                     LIMIT 3
                 """, (p_type,))
@@ -61,6 +71,32 @@ def get_top3_leaderboard():
     except sqlite3.Error as db_err:
         logging.error(f"Errore Database in /leaderboard/top3: {db_err}", exc_info=True)
         return jsonify(error=f"Errore database: {db_err}"), 500
+    except Exception as e:
+        logging.error(f"Errore generico in /leaderboard/top3: {e}", exc_info=True)
+        return jsonify(error="Errore interno del server"), 500
+
+def sync_new_date():
+    metadata = get_all_treasure_hunt()
+    backend = get_game_backend()
+    player_types = ['couple', 'single', 'charlie']  # Tipi da cercare
+    try:
+        for data in metadata:
+            for player_type in player_types:
+                row = find_by_type_id_player(player_type,data.id_player)
+                if row:
+                    player_id, player_name, score = row
+                    differenza_min = (data.timestamp_fine - data.timestamp_inizio).total_seconds() / 60
+                    score_minutes = differenza_min + score
+                    score_formatted = format_time_into_mmss(score_minutes)
+                    if not find_by_id_player(player_id):
+                        update_score_formatted_and_score_minutes(player_id,player_name,player_type,data,score_formatted,score_minutes)
+                        update_score_formatted(backend,player_id,score_minutes)
+                    if not response:
+                        logging.error("problem")
+                    logging.debug(f"Found {len(row)} and update results for {player_type}")
+        return jsonify(error="Operazione completata con successo"), 200
+
+
     except Exception as e:
         logging.error(f"Errore generico in /leaderboard/top3: {e}", exc_info=True)
         return jsonify(error="Errore interno del server"), 500

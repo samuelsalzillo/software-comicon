@@ -2,9 +2,8 @@ import datetime
 import logging
 import os
 import sqlite3
-import threading
-import time
 from ...utils.model import get_game_backend
+from . import save_scoring
 from ...utils import timer
 
 def save_queues_to_db():
@@ -19,80 +18,13 @@ def save_queues_to_db():
             cursor.execute("DELETE FROM queues")
             conn.commit()
 
-            # Salva le code delle coppie
-            for couple in backend.queue_couples:
-                cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?) ",
-                    ('couple', couple['id'], backend.get_player_name(couple['id']), couple['arrival'])
-                )
-
-            # Salva le code dei singoli
-            for single in backend.queue_singles:
-                cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
-                    ('single', single['id'], backend.get_player_name(single['id']), single['arrival'])
-                )
-
-            # Salva le code delle coppie2
-            for couple2 in backend.queue_couples2:
-                cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
-                    ('couple2', couple2['id'], backend.get_player_name(couple2['id']), couple2['arrival'])
-                )
-
-            # Salva le code dei singoli2
-            for single2 in backend.queue_singles2:
-                cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
-                    ('single2', single2['id'], backend.get_player_name(single2['id']), single2['arrival'])
-                )
-
-            # Salva le code di Charlie
-            for charlie in backend.queue_charlie:
-                cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
-                    ('charlie', charlie['id'], backend.get_player_name(charlie['id']), charlie['arrival'])
-                )
-
-            # Salva le code di Statico
-            for statico in backend.queue_statico:
-                cursor.execute(
-                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
-                    ('statico', statico['id'], backend.get_player_name(statico['id']), statico['arrival'])
-                )
+            refresh_queues([("couple",backend.queue_couples),("single",backend.queue_singles),("couple",backend.queue_couples2),("single",backend.queue_singles2),("charlie",backend.queue_charlie),("statico",backend.queue_statico)],backend,conn)
 
             # Salva gli score
             cursor.execute("DELETE FROM scoring")
-            for player_id, score in backend.couple_history_total:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('couple', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.single_history:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('single', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.couple_history_total2:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('couple2', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.single_history2:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('single', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.charlie_history:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('charlie', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.statico_history:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('statico', player_id, backend.get_player_name(player_id), score)
-                )
+            conn.commit()
+
+            save_scoring.refresh_scoring([("couple",backend.couple_history_total),("single",backend.single_history),("couple",backend.couple_history_total2),("single",backend.single_history2),("charlie",backend.charlie_history),("statico",backend.statico_history)],backend,cursor)
 
             logging.debug("[DB SAVE THREAD] Cancellazione vecchi timer Charlie...")
             cursor.execute("DELETE FROM charlie_timer_scores")
@@ -143,3 +75,13 @@ def save_queues_to_db():
         except Exception as e:
             print(f"Errore durante il salvataggio delle code nel database: {e}")
         timer.timer_for_thread(10,"save_queue")  # Salva ogni 10 secondi
+
+def refresh_queues(queue_list, backend, cursor):
+    # Salva le code
+    for queue in queue_list:
+        if queue[1] and len(queue) > 0:
+            for single_queue in queue[1]:
+                cursor.execute(
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?) ",
+                    (queue[0], single_queue['id'], backend.get_player_name(single_queue['id']), single_queue['arrival'])
+                )

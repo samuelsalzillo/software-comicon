@@ -29,7 +29,7 @@ def service_save_contact():
 
     try:
         score_float = float(score_minutes_str)
-        score_formatted = date.format_time(score_float)
+        score_formatted = date.format_time_into_mmss(score_float)
         qualification_date = date.get_current_time().strftime('%Y-%m-%d')
         timestamp = date.get_current_time()
 
@@ -334,13 +334,13 @@ def service_button_press():
                             'player_name': backend.get_player_name(player_id)  # Passa il nome
                         }
                         set_game_backend(backend)
-                        return (jsonify(response_data))
                         # NON salvare in scoring qui, NON checkare qualifica qui
                         logging.info(f"Charlie timer recorded for {player_id}. Ready for manual input.")
+                        return jsonify(response_data)
                     except Exception as e:
                         logging.error(f"Error during backend.record_charlie_game: {e}", exc_info=True)
                         response_data['error'] = f"Errore registrazione timer Charlie: {e}"
-                        return (jsonify(response_data))
+                        return jsonify(response_data)
 
                 else:
                     logging.error(f"Charlie stop failed for {player_id}: Start time not found.")

@@ -1,0 +1,100 @@
+        .toggle-container {
+            text-align: center;
+            gap: 15px;
+            padding: 20px 30px;
+        }
+
+        .toggle-label-text { /* Nuova classe per il testo descrittivo */
+            font-size: 1.2em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        /* Il contenitore del toggle (solo l'interruttore visivo) */
+        .toggle-switch {
+            position: relative; /* Importante per posizionare il slider */
+            display: inline-block; /* Assicura che occupi lo spazio necessario */
+            width: 60px;
+            height: 34px;
+        }
+
+        /* Nascondi la checkbox nativa */
+        .toggle-switch input[type="checkbox"] {
+            opacity: 0; /* Rendi invisibile ma interattiva */
+            width: 0;
+            height: 0;
+        }
+
+        /* Stile per il "track" (la barra) del toggle */
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: background-color 0.4s;
+            border-radius: 34px;
+        }
+
+        /* Stile per il "thumb" (il cerchio) del toggle */
+        .slider::before {
+            content: "";
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background-color: white;
+            top: 4px;
+            left: 4px;
+            transition: transform 0.4s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Quando la checkbox è selezionata (checked) */
+        .toggle-switch input[type="checkbox"]:checked + .slider {
+            background-color: #2196F3; /* Blu per "on" */
+        }
+
+        /* Sposta il thumb quando la checkbox è selezionata */
+        .toggle-switch input[type="checkbox"]:checked + .slider::before {
+            transform: translateX(26px); /* Sposta il cerchio a destra */
+        }
+
+        /* Stile per lo stato di focus (accessibilità) */
+        .toggle-switch input[type="checkbox"]:focus + .slider {
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.5);
+        }
+
+        /* Stili per le etichette True/False all'interno dello slider (opzionali) */
+        .toggle-text {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            line-height: 1;
+        }
+
+        .toggle-text.off {
+            left: 10px;
+            opacity: 1;
+            transition: opacity 0.4s;
+        }
+
+        .toggle-text.on {
+            right: 10px;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+
+        .toggle-switch input[type="checkbox"]:checked + .slider .toggle-text.off {
+            opacity: 0;
+        }
+
+        .toggle-switch input[type="checkbox"]:checked + .slider .toggle-text.on {
+            opacity: 1;
+        }

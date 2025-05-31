@@ -1,4 +1,5 @@
 import logging
+import os
 import sqlite3
 from copy import deepcopy
 import datetime
@@ -328,11 +329,10 @@ class GameBackend:
         Query diretta al DB 'qualified_players'.
         """
         sqlite_lock = Lock()
-        SQLITE_DB_PATH = 'stand_db.db'  # Database local MySQLite in cui salveremo le queue
 
         is_qualified = False
         reason = None
-        db_path = SQLITE_DB_PATH
+        db_path = os.environ.get('SQLITE_DB_PATH')
         lock = sqlite_lock
 
         logging.debug(
@@ -470,45 +470,21 @@ class GameBackend:
             self.next_player_charlie_locked = False
 
     def get_leaderboard(self) -> Dict[str, List[Tuple[str, str]]]:
-        """
-        Restituisce la classifica basata sulle liste _history.
-        Per Charlie, ora usa i punteggi ufficiali (manuali) salvati in chalie_history.
-        """
-        # Assicurati che i player_id/nomi siano corretti se non usi "COMPLETATO-..."
-        # Potresti voler recuperare i nomi reali dalla tabella scoring se necessario.
-        # Questa implementazione semplice usa un ID generico.
-        couple_scores = sorted(self.couple_history_total)
-        single_scores = sorted(self.single_history)
-        charlie_scores = sorted(self.charlie_history)  # <-- Legge i tempi UFFICIALI
-        statico_scores = sorted(self.statico_history)
-
-        # Funzione helper per formattare l'output della leaderboard
-        def format_leaderboard(scores: List[float], prefix: str) -> List[Tuple[str, str]]:
-            board = []
-            # Recupera i dati dalla tabella scoring per avere ID/Nomi reali
-            # Questo è un esempio SEMPLIFICATO. Per una leaderboard reale,
-            # dovresti fare una query su 'scoring', ordinare per 'score'
-            # e prendere i primi N, mostrando 'player_name' o 'player_id'.
-            # Qui usiamo solo i valori numerici dalla history list.
-            for i, time in enumerate(scores):
-                # Per ora usiamo un ID generico basato sull'indice
-                player_display_id = f"{prefix}-{i + 1}"
-                board.append((player_display_id, date.format_time(time)))
-            return board
 
         # Query effettiva per la leaderboard (esempio per Charlie)
         def get_real_leaderboard(player_type: str, limit: int = 10) -> List[Tuple[str, str]]:
             board = []
-            SQLITE_DB_PATH = 'stand_db.db'
             sqlite_lock = Lock()  # Assumendo sia definita globalmente in app.py
             try:
                 with sqlite_lock:
-                    conn = sqlite3.connect(SQLITE_DB_PATH)
+                    conn = sqlite3.connect(os.environ.get('SQLITE_DB_PATH'))
                     cursor = conn.cursor()
-                    cursor.execute("""
-                        SELECT player_name, player_id, score FROM scoring
-                        WHERE player_type = ?
-                        ORDER BY score ASC
+                    cursor.execute(f"""
+                        SELECT s.player_name, s.player_id, s.score FROM scoring s
+                        {"JOIN qualified_players q on q.player_id = s.player_id" if os.environ.get("TREASURE_HUNT_ACTIVE") and (player_type == 'couple' or player_type == 'single') else ""}
+                        WHERE s.player_type = ?
+                        {"AND q.treasure_hunt_updated is not null" if os.environ.get("TREASURE_HUNT_ACTIVE") and (player_type == 'couple' or player_type == 'single') else ""}
+                        ORDER BY s.score ASC
                         LIMIT ?
                     """, (player_type, limit))
                     rows = cursor.fetchall()
@@ -516,7 +492,7 @@ class GameBackend:
                 for row in rows:
                     player_name, player_id, score_minutes = row
                     display_name = player_id if player_id else player_name
-                    board.append((display_name, date.format_time(score_minutes)))
+                    board.append((display_name, date.format_time_into_mmss(score_minutes)))
             except Exception as e:
                 logging.error(f"Error fetching real leaderboard for {player_type}: {e}")
             return board
@@ -527,11 +503,6 @@ class GameBackend:
             'singles': get_real_leaderboard('single'),
             'charlie': get_real_leaderboard('charlie'),
             'statico': get_real_leaderboard('statico')
-
-            # 'couples': format_leaderboard(couple_scores, "COPPIA"), # Vecchio modo
-            # 'singles': format_leaderboard(single_scores, "SINGOLO"),# Vecchio modo
-            # 'charlie': format_leaderboard(charlie_scores, "CHARLIE"),# Vecchio modo
-            # 'statico': format_leaderboard(statico_scores, "STATICO") # Vecchio modo
         }
 
     def localize_time(self, dt):
@@ -1169,9 +1140,8 @@ class GameBackend:
                 self.couple_history_mid.append(mid_duration_minutes)
                 try:
                     sqlite_lock = Lock()
-                    SQLITE_DB_PATH = 'stand_db.db'  # Database local MySQLite in cui salveremo le queue
                     with sqlite_lock:
-                        conn = sqlite3.connect(SQLITE_DB_PATH)
+                        conn = sqlite3.connect(os.environ.get('SQLITE_DB_PATH'))
                         cursor = conn.cursor()
                         # Inserisci il record specifico del timer
                         cursor.execute(
@@ -1247,9 +1217,8 @@ class GameBackend:
                 self.couple_history_mid2.append(mid2_duration_minutes)
                 try:
                     sqlite_lock = Lock()
-                    SQLITE_DB_PATH = 'stand_db.db'  # Database local MySQLite in cui salveremo le queue
                     with sqlite_lock:
-                        conn = sqlite3.connect(SQLITE_DB_PATH)
+                        conn = sqlite3.connect(os.environ.get('SQLITE_DB_PATH'))
                         cursor = conn.cursor()
                         # Inserisci il record specifico del timer
                         cursor.execute(

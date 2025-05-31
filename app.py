@@ -8,12 +8,17 @@ import logging
 import os
 import socket # per il print dell'ip
 
+from flask_migrate import Migrate
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from src.database.init import init
 from src.database.load import load
 from src.batch import thread_queue
 import src.routes.import_routes as routes
 import src.batch.thread_backup as thread_backup
 from src.database.initialize_table import db
+from src.batch import treasure_hunt_php
 
 # importo le variabili
 load_dotenv()
@@ -25,8 +30,11 @@ if src_path not in sys.path:
     sys.path.insert(0, src_path)
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///site.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///"+os.path.join('../', os.environ.get('SQLITE_DB_PATH'))
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+engine = create_engine(app.config['SQLALCHEMY_DATABASE_URI'])
+Session = sessionmaker(bind=engine)
 
 
 # Impostazioni logging
@@ -34,6 +42,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 # INIZIALIZZAZIONE DATABASE
 db.init_app(app)
+migrate = Migrate(app, db)
 with app.app_context():
     db.create_all()
 
@@ -49,6 +58,9 @@ if __name__ == '__main__':
     thread_queue.start_thread()
 
     thread_backup.start_thread_backup()  # Avvia il ciclo di backup automatico
+
+    if os.environ.get('TREASURE_HUNT_ACTIVE'):
+        treasure_hunt_php.start_thread_treasure_hunt(app)
 
     app.secret_key = os.urandom(12)
     log = logging.getLogger('werkzeug')

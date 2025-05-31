@@ -31,7 +31,7 @@ def submit_combined_score():
         timer_duration = float(timer_duration_str)
         official_score = float(official_score_str)
         now = date.get_current_time()
-        score_formatted = date.format_time(official_score)
+        score_formatted = date.format_time_into_mmss(official_score)
 
         logging.info(f"[COMBINED SCORE SUBMIT] Player: {player_id} ({player_name}), Type: {player_type}, Timer: {timer_duration:.4f}, Score: {official_score:.4f} ({score_formatted})")
 
@@ -153,7 +153,7 @@ def submit_charlie_score():
 
         # Calcola il punteggio ufficiale in minuti (float)
         manual_score_minutes = minutes + (seconds / 60.0) + (milliseconds / 60000.0)
-        score_formatted = date.format_time(manual_score_minutes)
+        score_formatted = date.format_time_into_mmss(manual_score_minutes)
         now = date.get_current_time()
 
         logging.info(f"[CHARLIE SCORE SUBMIT] Player: {player_id} ({player_name}), Manual Score: {manual_score_minutes:.4f} min ({score_formatted})")

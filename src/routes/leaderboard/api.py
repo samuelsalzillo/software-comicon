@@ -1,8 +1,9 @@
 # --- NUOVA ROUTE PER LEADERBOARD TOP 3 QUALIFICATI (con ID Corto nel DB) ---
 import logging
+import os
 
 from flask import jsonify, request, Blueprint
-from ...service.service_leaderboard import get_top3_leaderboard as service_get_top3
+from ...service.service_leaderboard import get_top3_leaderboard as service_get_top3, sync_new_date
 from ...utils.model import get_game_backend, set_game_backend
 
 leaderboard_api = Blueprint('leaderboard_api', __name__, url_prefix='')
@@ -13,6 +14,9 @@ def get_top3_leaderboard():
 
 @leaderboard_api.route('/get_scores', methods=['GET'])
 def get_scores():
+    sync = request.args.get('sync',"False")
+    if sync in ("True",) and os.environ.get("TREASURE_HUNT_ACTIVE"):
+        sync_new_date()
     scores = get_game_backend().get_leaderboard()
     return jsonify(scores)
 
@@ -39,3 +43,7 @@ def check_qualification_status():
     except Exception as e:
         logging.error(f"Error during qualification check API call: {e}", exc_info=True)
         return jsonify(qualified=False, reason=None, error="Errore interno durante verifica qualifica."), 500
+
+@leaderboard_api.route('/sync', methods=['POST'])
+def sync():
+    return sync_new_date()

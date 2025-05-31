@@ -8,6 +8,15 @@ let startTimeSingle2 = null;
 let isGameActiveSingle2 = false;
 let effectiveStartTimeSingle2 = null; // Aggiunto per gestire il reset
 
+let not_emergency = true
+
+let enviroment_treasure_hunt = 0
+
+fetch("/config/treasure_hunt_active")
+   .then(response => response.json())
+   .then(config => {
+    enviroment_treasure_hunt = config
+    })
 // --- Funzioni di Aggiornamento UI Base ---
 function updateNextPlayer2() {
   fetch("/simulate")
@@ -16,6 +25,15 @@ function updateNextPlayer2() {
       $("#next-player2").text(d.next_player_alfa_bravo_id2 || "-");
     })
     .catch((e) => console.error("Error fetch next P2:", e));
+}
+function getEmergency(){
+    return not_emergency;
+}
+
+function emergencyStop() {
+    not_emergency = false
+    pressThirdButton2()
+    console.log(not_emergency)
 }
 
 function updateTimer2(type) {
@@ -118,9 +136,10 @@ function updateUIState2() {
       );
       $("#stop-btn-couple2").prop(
         "disabled",
-        !stdControlsCouple2Visible ||
+        (!stdControlsCouple2Visible ||
           !isGameActiveCouple2 ||
-          !data.can_stop_couple2
+          !data.can_stop_couple2) &&
+          not_emergency
       );
       $("#stop-btn-single2").prop(
         "disabled",
@@ -226,6 +245,9 @@ function showInlineQualificationForm2(data) {
   let standardControlsId = "";
   let qualificationSectionId = "";
   let baseType = data.player_type;
+  if(enviroment_treasure_hunt && (baseType === "couple" || baseType === "single")){
+    return
+    }
   if (baseType === "couple") {
     typeSuffix = "couple2";
     standardControlsId = "#standard-controls-couple2";

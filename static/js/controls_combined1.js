@@ -14,6 +14,14 @@ let effectiveStartTimeSingle = null;
 
 let not_emergency = true
 
+let enviroment_treasure_hunt = 0
+
+fetch("/config/treasure_hunt_active")
+   .then(response => response.json())
+   .then(config => {
+    enviroment_treasure_hunt = config
+    })
+
 function getEmergency(){
     return not_emergency;
 }
@@ -234,10 +242,13 @@ function showInlinePenaltyForm(data) {
 }
 
 function showInlineQualificationForm(data) {
-  let typeSuffix = "";
-  let standardControlsId = "";
-  let qualificationSectionId = "";
   let baseType = data.player_type;
+  let standardControlsId = "";
+  let typeSuffix = "";
+  let qualificationSectionId = "";
+  if(enviroment_treasure_hunt && (baseType === "couple" || baseType === "single")){
+    return
+    }
   if (baseType === "couple") {
     typeSuffix = "couple";
     standardControlsId = "#standard-controls-couple";
