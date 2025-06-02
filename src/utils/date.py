@@ -16,8 +16,9 @@ def crea_nuova_data():
 
 def format_time_into_mmss(time_in_minutes: float) -> str:
     """Formatta il tempo in minuti e secondi"""
-    minutes = int(time_in_minutes)
-    seconds = int((time_in_minutes - minutes) * 60)
+    all_time = (time_in_minutes * 100)
+    minutes = int(all_time / 60)
+    seconds = int(all_time % 60)
     return f"{minutes}m {seconds}s"
 
 def get_current_time() -> dt:
