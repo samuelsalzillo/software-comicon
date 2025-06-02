@@ -1,5 +1,6 @@
 import os
 import time
+from datetime import date
 
 from flask import jsonify
 
@@ -27,23 +28,24 @@ def service_treasure_hunt(app_instance):
                     timestamp_fine = convert_string_date_into_date(item.get('timestamp_fine'))
                     if chiave:
                         existing_data = TreasureHunt.query.filter_by(chiave_esterna=int(chiave)).first()
-                        if existing_data:
-                            existing_data.nome = nome
-                            existing_data.id_player = colore.upper() + " " + format_id_number(id_player)
-                            existing_data.cognome = cognome
-                            existing_data.telefono = telefono
-                            existing_data.qr_code = qr_code
-                            existing_data.colore = colore
-                            existing_data.qr_code_founded = qr_code_founded
-                            existing_data.timestamp_inizio = existing_data.timestamp_inizio
-                            existing_data.timestamp_fine = existing_data.timestamp_fine
-                            db.session.commit()
-                            print(f"Dato con chiave '{chiave}' aggiornato.")
-                        else:
-                            treasure_hunt = TreasureHunt(chiave_esterna=int(chiave),nome=nome,cognome=cognome,telefono = telefono,qr_code = qr_code,qr_code_founded = qr_code_founded,timestamp_inizio = timestamp_inizio,timestamp_fine = timestamp_fine,id_player= colore.upper() + " " + format_id_number(id_player) )
-                            db.session.add(treasure_hunt)
-                            db.session.commit()
-                            print(f"Nuovo dato con chiave '{chiave}' salvato.")
+                        if timestamp_fine and timestamp_fine.strftime('%Y-%m-%d') == date.today().strftime('%Y-%m-%d'):
+                            if existing_data:
+                                existing_data.nome = nome
+                                existing_data.id_player = colore.upper() + " " + format_id_number(id_player)
+                                existing_data.cognome = cognome
+                                existing_data.telefono = telefono
+                                existing_data.qr_code = qr_code
+                                existing_data.colore = colore
+                                existing_data.qr_code_founded = qr_code_founded
+                                existing_data.timestamp_inizio = existing_data.timestamp_inizio
+                                existing_data.timestamp_fine = existing_data.timestamp_fine
+                                db.session.commit()
+                                print(f"Dato con chiave '{chiave}' aggiornato.")
+                            else:
+                                treasure_hunt = TreasureHunt(chiave_esterna=int(chiave),nome=nome,cognome=cognome,telefono = telefono,qr_code = qr_code,qr_code_founded = qr_code_founded,timestamp_inizio = timestamp_inizio,timestamp_fine = timestamp_fine,id_player= colore.upper() + " " + format_id_number(id_player) )
+                                db.session.add(treasure_hunt)
+                                db.session.commit()
+                                print(f"Nuovo dato con chiave '{chiave}' salvato.")
                 print({'messaggio': 'Dati esterni recuperati e salvati/aggiornati con successo'})
             except Exception as e:
                 db.session.rollback()
@@ -55,7 +57,9 @@ def service_treasure_hunt(app_instance):
 # Metodo per recuperare tutti i record senza salvarli in memoria, solo db
 def get_all_treasure_hunt():
     try:
-        return TreasureHunt.query.all()
+        return TreasureHunt.query.filter(
+        db.func.strftime('%Y-%m-%d', TreasureHunt.timestamp_inizio) == date.today().strftime('%Y-%m-%d')
+    ).all()
     except Exception as e:
         db.session.rollback()
         return jsonify({'errore': f'Errore durante il salvataggio nel database: {e}'}), 500

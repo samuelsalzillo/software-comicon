@@ -250,3 +250,26 @@ def add_statico():
 @player.route('/skip_statico_player', methods=['POST'])
 def skip_statico_player():
     return service_player.service_skip_statico_player()
+
+@player.route('/unlock_pista', methods=['GET'])
+def unlock_pista():
+    backend = get_game_backend()
+    tipo_pista = request.args.get('pista')
+
+    match tipo_pista:
+
+        case "alfa":
+            backend.current_player_alfa = None
+        case "bravo":
+            backend.current_player_bravo = None
+        case "alfa2":
+            backend.current_player_alfa2 = None
+        case "bravo2":
+            backend.current_player_bravo2 = None
+    set_game_backend(backend)
+    return jsonify({
+        'alfa_status': 'Occupata' if backend.current_player_alfa else 'Libera',
+        'bravo_status': 'Occupata' if backend.current_player_bravo else 'Libera',
+        'alfa_status2': 'Occupata' if backend.current_player_alfa2 else 'Libera',
+        'bravo_status2': 'Occupata' if backend.current_player_bravo2 else 'Libera'
+    })

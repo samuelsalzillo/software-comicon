@@ -86,6 +86,8 @@ def sync_new_date():
                 if row:
                     player_id, player_name, score = row
                     differenza_min = (data.timestamp_fine - data.timestamp_inizio).total_seconds() / 60
+                    if data.qr_code_founded != data.qr_code:
+                        differenza_min = differenza_min + 0.5 # todo penalita
                     score_minutes = differenza_min + score
                     score_formatted = format_time_into_mmss(score_minutes)
                     if not find_by_id_player(player_id):

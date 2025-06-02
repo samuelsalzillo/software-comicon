@@ -1,10 +1,12 @@
+from ...utils.model import get_game_backend,set_game_backend
+
 def update_score_formatted(backend,player_id,score):
-    #non ce bisogno di fare la query in quanto usa la history, semplicemente va aggiornata la history
     for list_tuple_score in [backend.couple_history_total,backend.couple_history_total2,backend.single_history,backend.single_history2]:
         for tuple_score in list_tuple_score:
             if tuple_score[0] == player_id:
-                list_tuple_score.remove(tuple_score)
-                list_tuple_score.append((player_id,score))
+                indice = list_tuple_score.index(tuple_score)
+                list_tuple_score[indice] = (player_id, score)
+                set_game_backend(backend)
 
 
 def refresh_scoring(scoring_list,backend,cursor):
