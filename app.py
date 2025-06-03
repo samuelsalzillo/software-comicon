@@ -959,6 +959,10 @@ def keypad2():
 def provaE1():
     return render_template('provaE1.html')
 
+@app.route('/provaE2')
+def provaE2():
+    return render_template('provaE2.html')
+
 @app.route('/dashboard')
 def dashboard():
     return render_template('dashboard.html')
@@ -1883,11 +1887,15 @@ def get_status():
 
     # Check if single1 is active
     single1_active = backend.current_player_alfa is not None and backend.current_player_alfa.get('id','').startswith("BLU")
+    
+    # Check if single2 is active
+    single2_active = backend.current_player_alfa2 is not None and backend.current_player_alfa2.get('id','').startswith("BIANCO")
 
     return jsonify({
         'charlie_status': charlie_status,
         'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min",
-        'single1_active': single1_active
+        'single1_active': single1_active,
+        'single2_active': single2_active
     })
 
 
