@@ -1,0 +1,357 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Prova E1 - Decodifica Binaria</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Binary Codes Display -->
+                    <div class="binary-display mb-4">
+                        <h4 class="text-center">Codici Binari:</h4>
+                        <div class="d-flex justify-content-center">
+                            <div id="binaryCodes" class="display-4 text-center">
+                                <div class="binary-code-group mb-3">
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                </div>
+                                <div class="binary-code-group mb-3">
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                </div>
+                                <div class="binary-code-group mb-3">
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                </div>
+                                <div class="binary-code-group">
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                    <span class="binary-digit">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Switches Grid -->
+                    <div class="switches-grid mb-4">
+                        <div class="row justify-content-center">
+                            {% for i in range(10) %}
+                            <div class="col-2 mb-3">
+                                <div class="switch-container">
+                                    <label class="switch">
+                                        <input type="checkbox" class="switch-input" data-value="{{ i }}">
+                                        <span class="switch-handle"></span>
+                                        <span class="switch-label">{{ i }}</span>
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="text-center">
+                        <button id="submitBtn" class="btn btn-primary btn-lg">Invia</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Successo!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center">Prova superata!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let currentBinaryCodes = ['', '', '', ''];
+    let selectedSwitches = new Set();
+    let isInitialized = false;
+    
+    // Function to generate random binary code (0-9)
+    function generateBinaryCode() {
+        // Generate a random number between 0 and 9
+        const decimal = Math.floor(Math.random() * 10);
+        // Convert to 4-digit binary string
+        const binary = decimal.toString(2).padStart(4, '0');
+        console.log('Generated binary code:', binary, 'from decimal:', decimal);
+        return binary;
+    }
+
+    // Function to generate unique combination
+    function generateUniqueCombination() {
+        const usedNumbers = new Set();
+        const codes = [];
+        
+        while (codes.length < 4) {
+            const decimal = Math.floor(Math.random() * 10);
+            if (!usedNumbers.has(decimal)) {
+                usedNumbers.add(decimal);
+                const binary = decimal.toString(2).padStart(4, '0');
+                codes.push(binary);
+                console.log('Added unique number:', decimal, 'binary:', binary);
+            }
+        }
+        
+        return codes;
+    }
+
+    // Function to update binary display
+    function updateBinaryDisplay(codes) {
+        console.log('Updating display with codes:', codes);
+        const codeGroups = document.querySelectorAll('.binary-code-group');
+        codes.forEach((code, groupIndex) => {
+            const digits = codeGroups[groupIndex].querySelectorAll('.binary-digit');
+            for (let i = 0; i < 4; i++) {
+                digits[i].textContent = code[i];
+            }
+        });
+    }
+
+    // Function to reset switches
+    function resetSwitches() {
+        console.log('Resetting switches');
+        document.querySelectorAll('.switch-input').forEach(switchElement => {
+            switchElement.checked = false;
+        });
+        selectedSwitches.clear();
+    }
+
+    // Function to reset display to zeros
+    function resetDisplay() {
+        const zeroCodes = ['0000', '0000', '0000', '0000'];
+        updateBinaryDisplay(zeroCodes);
+        currentBinaryCodes = zeroCodes;
+        isInitialized = false;
+    }
+
+    // Function to play failure sound
+    function playFailureSound() {
+        const audio = new Audio('/static/sounds/failure.mp3');
+        audio.play();
+    }
+
+    // Initialize the puzzle
+    function initPuzzle() {
+        if (!isInitialized) {
+            console.log('Initializing puzzle');
+            currentBinaryCodes = generateUniqueCombination();
+            console.log('Current binary codes:', currentBinaryCodes);
+            updateBinaryDisplay(currentBinaryCodes);
+            resetSwitches();
+            isInitialized = true;
+        }
+    }
+
+    // Handle switch toggles
+    document.querySelectorAll('.switch-input').forEach(switchElement => {
+        switchElement.addEventListener('change', function() {
+            const value = parseInt(this.dataset.value);
+            if (this.checked) {
+                selectedSwitches.add(value);
+            } else {
+                selectedSwitches.delete(value);
+            }
+            console.log('Selected switches:', Array.from(selectedSwitches));
+        });
+    });
+
+    // Function to convert binary to decimal
+    function binaryToDecimal(binary) {
+        return parseInt(binary, 2);
+    }
+
+    // Handle submit button
+    document.getElementById('submitBtn').addEventListener('click', function() {
+        const selectedValues = Array.from(selectedSwitches).sort();
+        const expectedValues = currentBinaryCodes.map(code => binaryToDecimal(code));
+        
+        console.log('Checking combination:');
+        console.log('Selected values:', selectedValues);
+        console.log('Expected values:', expectedValues);
+
+        // Check if all expected values are present in selected values
+        const isCorrect = expectedValues.every(value => selectedValues.includes(value)) &&
+                         selectedValues.length === expectedValues.length;
+
+        if (isCorrect) {
+            console.log('Success! Combination correct');
+            const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+            successModal.show();
+        } else {
+            console.log('Failure! Combination incorrect');
+            playFailureSound();
+            resetSwitches();
+        }
+    });
+
+    // Listen for single1 start event and stop
+    function checkSingle1Start() {
+        fetch('/get_status')
+            .then(response => response.json())
+            .then(data => {
+                if (data.single1_active && !isInitialized) {
+                    console.log('Single1 is active, initializing puzzle');
+                    initPuzzle();
+                } else if (!data.single1_active && isInitialized) {
+                    console.log('Single1 stopped, resetting puzzle');
+                    resetDisplay();
+                    resetSwitches();
+                }
+            })
+            .catch(error => console.error('Error checking single1 status:', error));
+    }
+
+    // Check every second if single1 has started or stopped
+    setInterval(checkSingle1Start, 1000);
+});
+</script>
+
+<style>
+.switch-container {
+    text-align: center;
+    padding: 10px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 80px;
+    cursor: pointer;
+}
+
+.switch-input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+}
+
+.switch-handle {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #34495e;
+    transition: .4s;
+    border-radius: 4px;
+    border: 2px solid #2c3e50;
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+}
+
+.switch-handle:before {
+    position: absolute;
+    content: "";
+    height: 32px;
+    width: 32px;
+    left: 2px;
+    bottom: 4px;
+    background-color: #e74c3c;
+    transition: .4s;
+    border-radius: 2px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+}
+
+.switch-input:checked + .switch-handle {
+    background-color: #27ae60;
+}
+
+.switch-input:checked + .switch-handle:before {
+    transform: translateY(-40px);
+    background-color: #2ecc71;
+}
+
+.switch-label {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: bold;
+    pointer-events: none;
+}
+
+.binary-digit {
+    display: inline-block;
+    width: 40px;
+    height: 60px;
+    line-height: 60px;
+    text-align: center;
+    background-color: #417f4e;
+    border: 2px solid #dee2e6;
+    border-radius: 5px;
+    margin: 0 5px;
+    font-family: monospace;
+}
+
+.binary-code-group {
+    margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 5px;
+}
+
+#submitBtn {
+    background-color: #2c3e50;
+    border: none;
+    padding: 12px 30px;
+    font-size: 1.2em;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    transition: all 0.3s ease;
+}
+
+#submitBtn:hover {
+    background-color: #34495e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.card {
+    background-color: #609762;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.card-header {
+    background-color: #496e4a !important;
+    border-bottom: 2px solid #304931;
+}
+
+.card-body {
+    background-color: #609762;
+    color: #ecf0f1;
+}
+
+h3, h4 {
+    color: #ecf0f1;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+</style>
+{% endblock %} 

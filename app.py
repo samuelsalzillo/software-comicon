@@ -195,7 +195,7 @@ def load_mid_times_from_db():
         logging.info(f"[LOAD MID TIMES] Caricamento completato. Righe DB: {loaded_rows}. Appended Mid1: {appended_mid1}. Appended Mid2: {appended_mid2}.")
         logging.info(f"  -> Final backend list sizes: mid1={len(backend.couple_history_mid)}, mid2={len(backend.couple_history_mid2)}")
 
-        # Ricalcola medie (DOPO aver caricato TUTTI i dati necessari, quindi magari chiamalo una sola volta alla fine di tutti i load_)
+        # Ricalcola medie (DOPO aver caricato TUTTI i dati necessari, quindi magari chiamalo una sola volta alla fine di tutte le funzioni load_)
         # backend.update_averages() # Sposta questa chiamata alla fine di tutte le funzioni load_
 
     except sqlite3.Error as db_err:
@@ -954,6 +954,10 @@ def keypad():
 @app.route('/keypad2')
 def keypad2():
     return render_template('keypad2.html')
+
+@app.route('/provaE1')
+def provaE1():
+    return render_template('provaE1.html')
 
 @app.route('/dashboard')
 def dashboard():
@@ -1877,9 +1881,13 @@ def get_status():
     charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
     charlie_status = 'Occupata' if charlie_remaining > 0 else 'Libera'
 
+    # Check if single1 is active
+    single1_active = backend.current_player_alfa is not None and backend.current_player_alfa.get('id','').startswith("BLU")
+
     return jsonify({
         'charlie_status': charlie_status,
-        'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min"
+        'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min",
+        'single1_active': single1_active
     })
 
 
