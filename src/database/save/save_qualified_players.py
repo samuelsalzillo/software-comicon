@@ -8,7 +8,7 @@ from ...utils.database import get_lock
 from ...utils.date import get_current_time
 from ...database.select.qualified_players import find_by_id_player
 
-def update_score_formatted_and_score_minutes(player_id,player_name,player_type,data,score_formatted,score_minutes):
+def update_score_formatted_and_score_minutes(player_id,player_name,player_type,data,score_formatted,score_minutes,qualification_reason):
     sqlite_lock = get_lock()
     try:
 
@@ -19,7 +19,7 @@ def update_score_formatted_and_score_minutes(player_id,player_name,player_type,d
                                 INSERT INTO qualified_players
                                 (player_id, player_name, first_name, last_name, phone_number, score_minutes, score_formatted, player_type, qualification_reason, qualification_date, treasure_hunt_updated, created_at)
                                 VALUES(?,?,?,?,?,?,?,?,?,?,?,?)
-""", (player_id, player_name,data.nome,data.cognome,data.telefono,score_minutes,score_formatted,player_type,"",data.timestamp_fine,"AGGIORNATO",get_current_time()))
+""", (player_id, player_name,data.nome,data.cognome,data.telefono,score_minutes,score_formatted,player_type,qualification_reason,data.timestamp_fine,"AGGIORNATO",get_current_time()))
             conn.commit()
             conn.close()
         return True

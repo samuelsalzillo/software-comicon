@@ -484,6 +484,7 @@ class GameBackend:
                         {"JOIN qualified_players q on q.player_id = s.player_id" if os.environ.get("TREASURE_HUNT_ACTIVE") and (player_type == 'couple' or player_type == 'single') else ""}
                         WHERE s.player_type = ?
                         {"AND q.treasure_hunt_updated is not null" if os.environ.get("TREASURE_HUNT_ACTIVE") and (player_type == 'couple' or player_type == 'single') else ""}
+                        AND q.qualification_reason is not 'Non qualificato'
                         ORDER BY s.score ASC
                         LIMIT ?
                     """, (player_type, limit))

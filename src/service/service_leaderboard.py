@@ -40,6 +40,7 @@ def get_top3_leaderboard():
                     FROM qualified_players
                     WHERE player_type = ?
                     {"AND treasure_hunt_updated is not null" if (os.environ.get("TREASURE_HUNT_ACTIVE") and (p_type == 'couple' or p_type == 'single')) else ""}
+                    AND qualification_reason is not 'Non qualificato'
                     ORDER BY score_minutes ASC
                     LIMIT 3
                 """, (p_type,))
@@ -87,11 +88,12 @@ def sync_new_date():
                     player_id, player_name, score = row
                     differenza_min = (data.timestamp_fine - data.timestamp_inizio).total_seconds() / 60
                     if data.qr_code_founded != data.qr_code:
-                        differenza_min = differenza_min + 0.5 # todo penalita
+                        differenza_min = differenza_min + 100 # todo penalita
                     score_minutes = differenza_min + score
                     score_formatted = format_time_into_mmss(score_minutes)
                     if not find_by_id_player(player_id):
-                        update_score_formatted_and_score_minutes(player_id,player_name,player_type,data,score_formatted,score_minutes)
+                        is_qualified, reason=  backend.check_qualification(score_minutes,player_type)
+                        update_score_formatted_and_score_minutes(player_id,player_name,player_type,data,score_formatted,score_minutes,reason if is_qualified else "Non qualificato")
                         update_score_formatted(backend,player_id,score_minutes)
                     if not response:
                         logging.error("problem")
