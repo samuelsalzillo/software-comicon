@@ -90,7 +90,7 @@ def sync_new_date():
                     if not find_by_id_player(player_id):
                         differenza_in_secondi = (data.timestamp_fine - data.timestamp_inizio).total_seconds()
                         if data.qr_code_founded != data.qr_code:
-                            differenza_in_secondi = differenza_in_secondi + 0 # todo penalita
+                            differenza_in_secondi = differenza_in_secondi + 216000 # todo PER IL CALCOLO DEL MIGLIORE AGGIUNGO 60 ORE
                         score_minutes = (differenza_in_secondi + converti_float_mmss_in_secondi_totali(score)) / 60
                         score_formatted = format_time_into_mmss(score_minutes)
                         if data.qr_code_founded != data.qr_code:
