@@ -2,12 +2,76 @@
 
 let keypadInput2 = ""; // Variabile specifica per keypad 2
 let currentPlayerAlfa2 = null; // Variabile specifica per giocatore in Alfa 2
-const correctCode2 = "8746"; // Definisci il codice per il keypad 2 (CAMBIALO SE NECESSARIO)
+let currentCode2 = ""; // Il codice corrente generato
+let isFirstUpdate = true; // Flag per il primo aggiornamento
+
+// Mappa dei colori
+const colorMap = {
+  0: "white",
+  1: "yellow",
+  2: "green",
+  3: "blue",
+  4: "red",
+  5: "orange",
+  6: "pink",
+  7: "brown",
+  8: "purple",
+  9: "black",
+};
+
+// Funzione per generare un codice casuale di 4 cifre
+function generateRandomCode() {
+  const digits = [...Array(10).keys()]; // Array di cifre da 0 a 9
+  let code = "";
+  for (let i = 0; i < 4; i++) {
+    const randomIndex = Math.floor(Math.random() * digits.length);
+    code += digits[randomIndex].toString();
+    digits.splice(randomIndex, 1); // Rimuovi la cifra usata per evitare ripetizioni
+  }
+  return code;
+}
+
+// Funzione per impostare i quadrati in stato inattivo (grigio)
+function setSquaresInactive2() {
+  for (let i = 1; i <= 4; i++) {
+    const square = document.getElementById(`color-square2-${i}`);
+    if (square) {
+      // Rimuovi tutte le classi di colore esistenti
+      Object.values(colorMap).forEach((color) => {
+        square.classList.remove(`color-${color}`);
+      });
+      // Aggiungi la classe inattiva
+      square.classList.add("color-inactive");
+    }
+  }
+}
+
+// Funzione per aggiornare i quadrati colorati
+function updateColorSquares2(code) {
+  if (!code) {
+    setSquaresInactive2();
+    return;
+  }
+
+  for (let i = 0; i < 4; i++) {
+    const digit = code[i];
+    const colorClass = `color-${colorMap[digit]}`;
+    const square = document.getElementById(`color-square2-${i + 1}`);
+    if (square) {
+      // Rimuovi tutte le classi di colore esistenti
+      Object.values(colorMap).forEach((color) => {
+        square.classList.remove(`color-${color}`);
+      });
+      square.classList.remove("color-inactive");
+      // Aggiungi la nuova classe di colore
+      square.classList.add(colorClass);
+    }
+  }
+}
 
 // Funzione per aggiungere cifre all'input del keypad 2
 function addKey2(key) {
   if (keypadInput2.length < 4) {
-    // Limite a 4 cifre
     keypadInput2 += key;
     updateKeypadDisplay2();
   }
@@ -29,15 +93,16 @@ function updateKeypadDisplay2() {
 
 // Funzione per verificare il codice inserito nel keypad 2
 function checkCode2() {
-  if (keypadInput2 === correctCode2) {
-    // Controlla se c'è un giocatore in ALFA 2 e se è una coppia (es. ROSA)
-    // Assicurati che currentPlayerAlfa2 sia aggiornato correttamente
+  console.log("Codice inserito:", keypadInput2); // Debug log
+  console.log("Codice attuale:", currentCode2); // Debug log
+
+  if (keypadInput2 === currentCode2) {
     if (
       currentPlayerAlfa2 &&
       currentPlayerAlfa2.id &&
       currentPlayerAlfa2.id.startsWith("ROSA")
     ) {
-      pressThirdButton2(); // Chiama la funzione per inviare il segnale 'third2'
+      pressThirdButton2();
     } else {
       let message = "Nessuna Coppia 2 (Rosa) in ALFA 2.";
       if (currentPlayerAlfa2 && currentPlayerAlfa2.id) {
@@ -50,23 +115,20 @@ function checkCode2() {
   } else {
     showKeypad2Notification("Codice non valido", true);
   }
-  clearKey2(); // Pulisci l'input dopo il controllo
+  clearKey2();
 }
 
 // Funzione per inviare il segnale 'third2' al backend
 function pressThirdButton2() {
   fetch("/button_press", {
-    // L'endpoint rimane /button_press
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    // Invia l'identificatore specifico per il keypad 2
     body: JSON.stringify({ button: "third2" }),
   })
     .then((response) => {
       if (!response.ok) {
-        // Gestione errori HTTP
         return response.json().then((err) => {
           throw new Error(err.error || `Errore ${response.status}`);
         });
@@ -76,7 +138,10 @@ function pressThirdButton2() {
     .then((data) => {
       if (data.success) {
         showKeypad2Notification("Metà percorso 2 attivato con successo.");
-        updateCurrentPlayerAlfa2(); // Aggiorna subito lo stato visivo
+        // Resetta il codice e imposta i quadrati in grigio
+        currentCode2 = "";
+        setSquaresInactive2();
+        updateCurrentPlayerAlfa2();
       } else {
         showKeypad2Notification(
           `Errore: ${data.error || "Attivazione fallita."}`,
@@ -95,11 +160,11 @@ function pressThirdButton2() {
 
 // Funzione per aggiornare la variabile currentPlayerAlfa2 e il display HTML
 function updateCurrentPlayerAlfa2() {
-  fetch("/simulate") // Chiamiamo /simulate che contiene tutti i dati aggiornati
+  fetch("/simulate")
     .then((response) => response.json())
     .then((data) => {
-      currentPlayerAlfa2 = data.current_player_alfa2; // Aggiorna la variabile JS
-      // Aggiorna anche il display nell'HTML
+      const previousPlayer = currentPlayerAlfa2;
+      currentPlayerAlfa2 = data.current_player_alfa2;
       const displayElement = document.getElementById(
         "current-player-alfa2-display"
       );
@@ -108,16 +173,42 @@ function updateCurrentPlayerAlfa2() {
           ? currentPlayerAlfa2.id
           : "-";
       }
+
+      // Se c'è un nuovo giocatore ROSA in ALFA 2, genera un nuovo codice
+      if (
+        currentPlayerAlfa2 &&
+        currentPlayerAlfa2.id &&
+        currentPlayerAlfa2.id.startsWith("ROSA")
+      ) {
+        // Genera il codice se è il primo aggiornamento o se non c'era già un giocatore ROSA
+        if (
+          isFirstUpdate ||
+          !previousPlayer ||
+          !previousPlayer.id ||
+          !previousPlayer.id.startsWith("ROSA")
+        ) {
+          currentCode2 = generateRandomCode();
+          updateColorSquares2(currentCode2);
+          isFirstUpdate = false;
+        }
+      } else {
+        // Se non c'è un giocatore ROSA, resetta il codice e imposta i quadrati in grigio
+        currentCode2 = "";
+        setSquaresInactive2();
+      }
     })
     .catch((error) => {
       console.error("Errore aggiornamento giocatore ALFA 2:", error);
-      currentPlayerAlfa2 = null; // Resetta in caso di errore
+      currentPlayerAlfa2 = null;
       const displayElement = document.getElementById(
         "current-player-alfa2-display"
       );
       if (displayElement) {
         displayElement.textContent = "Errore";
       }
+      // In caso di errore, resetta il codice e imposta i quadrati in grigio
+      currentCode2 = "";
+      setSquaresInactive2();
     });
 }
 
@@ -127,20 +218,26 @@ function showKeypad2Notification(message, isError = false) {
   if (notificationElement) {
     notificationElement.textContent = message;
     notificationElement.style.color = isError ? "red" : "#8FBF60";
-    notificationElement.style.display = "block"; // Mostra
-    // Nasconde dopo 3 secondi
+    notificationElement.style.display = "block";
     setTimeout(() => {
       notificationElement.style.display = "none";
       notificationElement.textContent = "";
     }, 3000);
   } else {
-    // Fallback con alert se l'elemento non esiste
-    alert((isError ? "Errore: " : "") + message);
+    console.warn(
+      "Elemento notifica #notification-keypad2 non trovato. Messaggio:",
+      message
+    );
   }
 }
 
-// Aggiorna il giocatore corrente in ALFA 2 all'avvio e poi periodicamente
+// Inizializzazione al caricamento della pagina
 document.addEventListener("DOMContentLoaded", (event) => {
-  updateCurrentPlayerAlfa2(); // Chiamata iniziale
-  setInterval(updateCurrentPlayerAlfa2, 5000); // Aggiorna ogni 5 secondi (o intervallo preferito)
+  // Inizia con i quadrati in grigio
+  setSquaresInactive2();
+
+  // Forza il primo aggiornamento immediato
+  updateCurrentPlayerAlfa2();
+  // Poi imposta l'intervallo per gli aggiornamenti successivi
+  setInterval(updateCurrentPlayerAlfa2, 5000);
 });

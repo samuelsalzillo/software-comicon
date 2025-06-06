@@ -233,10 +233,14 @@ def get_status():
     now = date.get_current_time()
     charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
     charlie_status = 'Occupata' if charlie_remaining > 0 else 'Libera'
+    single1_active = backend.current_player_alfa is not None and backend.current_player_alfa.get('id','').startswith("BLU")
+    single2_active = backend.current_player_alfa2 is not None and backend.current_player_alfa2.get('id','').startswith("BIANCO")
     set_game_backend(backend)
     return jsonify({
         'charlie_status': charlie_status,
-        'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min"
+        'charlie_remaining': f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min",
+        'single1_active': single1_active,
+        'single2_active': single2_active
     })
 
 @player.route('/delete_player', methods=['POST'])

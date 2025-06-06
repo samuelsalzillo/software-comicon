@@ -1,0 +1,576 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card bomb-container">
+                <div class="card-header bg-danger text-white">
+                    <h3 class="mb-0">Prova E2 - Disinnesco Bomba</h3>
+                </div>
+                <div class="card-body">
+                    <!-- Timer Display -->
+                    <div class="timer-display mb-4">
+                        <div class="lcd-screen">
+                            <div id="bombTimer" class="display-4 text-center">
+                                10:00
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Morse Code Display -->
+                    <div class="morse-display mb-4">
+                        <div class="morse-grid">
+                            {% for i in range(4) %}
+                            <div class="morse-digit">
+                                <h5>Codice {{i+1}}:</h5>
+                                <div id="morseCode{{i}}" class="morse-code">
+                                    - - - -
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Numeric Keypad -->
+                    <div class="keypad-grid mb-4">
+                        {% for i in range(1, 10) %}
+                        <button class="keypad-btn" data-value="{{i}}">{{i}}</button>
+                        {% endfor %}
+                        <button class="keypad-btn" data-value="clear">C</button>
+                        <button class="keypad-btn" data-value="0">0</button>
+                        <button class="keypad-btn" data-value="enter">E</button>
+                    </div>
+
+                    <!-- Input Display -->
+                    <div class="input-display mb-4">
+                        <div class="input-grid">
+                            {% for i in range(4) %}
+                            <div class="input-container">
+                                <input type="text" class="form-control morse-input" maxlength="1" data-position="{{ i }}" readonly>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="successModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Successo!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center">Bomba disinnescata con successo!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Failure Modal -->
+<div class="modal fade" id="failureModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Errore!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center">Codice errato! Riprova.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Timer Settings Modal -->
+<div class="modal fade" id="timerSettingsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Impostazioni Timer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="timerMinutes">Minuti:</label>
+                    <input type="number" class="form-control" id="timerMinutes" min="1" max="10" value="10">
+                </div>
+                <div class="form-group mt-3">
+                    <label for="timerSeconds">Secondi:</label>
+                    <input type="number" class="form-control" id="timerSeconds" min="0" max="59" value="0">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                <button type="button" class="btn btn-primary" id="saveTimerSettings">Salva</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Boom Modal -->
+<div class="modal fade" id="boomModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">BOOOOOM!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-center">Tempo scaduto!</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Verifica che jQuery e Bootstrap siano caricati
+if (typeof jQuery === 'undefined') {
+    console.error('jQuery non è stato caricato correttamente');
+}
+if (typeof bootstrap === 'undefined') {
+    console.error('Bootstrap non è stato caricato correttamente');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const DEFAULT_TIME = 600; // 10 minuti in secondi
+    let currentMorseCode = '';
+    let timerInterval = null;
+    let timeLeft = DEFAULT_TIME;
+    let isGameActive = false;
+    let currentInputPosition = 0;
+    let adminCodeEntered = false;
+    let adminCodeTimer = null;
+    let lastUpdateTime = 0;
+    let isResetting = false;
+    let playerCheckInterval = null;
+    let isGameCompleted = false;
+
+    // Audio elements
+    const explosionSound = new Audio('/static/sounds/bomb_explosion.mp3');
+    const plantedSound = new Audio('/static/sounds/bomb_planted.mp3');
+    const defusedSound = new Audio('/static/sounds/bomb_defused.mp3');
+
+    // Funzione per generare un codice morse casuale (4 cifre senza ripetizioni)
+    function generateMorseCode() {
+        const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        let code = '';
+        let availableDigits = [...digits]; // Crea una copia dell'array delle cifre
+
+        for (let i = 0; i < 4; i++) {
+            // Seleziona un indice casuale tra le cifre disponibili
+            const randomIndex = Math.floor(Math.random() * availableDigits.length);
+            // Aggiungi la cifra al codice
+            code += availableDigits[randomIndex];
+            // Rimuovi la cifra usata dall'array delle cifre disponibili
+            availableDigits.splice(randomIndex, 1);
+        }
+
+        return code;
+    }
+
+    // Funzione per convertire un numero in codice morse
+    function numberToMorse(number) {
+        const morseMap = {
+            '0': '-----',
+            '1': '.----',
+            '2': '..---',
+            '3': '...--',
+            '4': '....-',
+            '5': '.....',
+            '6': '-....',
+            '7': '--...',
+            '8': '---..',
+            '9': '----.'
+        };
+        return morseMap[number] || '';
+    }
+
+    // Funzione per aggiornare il display del codice morse
+    function updateMorseDisplay(code) {
+        for (let i = 0; i < 4; i++) {
+            const morseDisplay = document.getElementById(`morseCode${i}`);
+            const digit = code[i];
+            morseDisplay.textContent = numberToMorse(digit);
+        }
+    }
+
+    // Funzione per aggiornare il timer
+    function updateTimer() {
+        if (isResetting || isGameCompleted) return;
+        
+        const now = Date.now();
+        const elapsed = Math.floor((now - lastUpdateTime) / 1000);
+        
+        if (elapsed >= 1) {
+            timeLeft -= elapsed;
+            lastUpdateTime = now;
+            
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                isResetting = true;
+                explosionSound.play();
+                showBoomModal();
+                resetTimerToDefault();
+                resetGame();
+                isResetting = false;
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('bombTimer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+    }
+
+    // Funzione per avviare il timer
+    function startTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+        lastUpdateTime = Date.now();
+        timerInterval = setInterval(updateTimer, 100);
+    }
+
+    // Funzione per fermare il timer
+    function stopTimer() {
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+    }
+
+    // Funzione per mostrare il modal di successo
+    function showSuccessModal() {
+        if (isResetting) return;
+        const successModal = new bootstrap.Modal(document.getElementById('successModal'));
+        successModal.show();
+    }
+
+    // Funzione per mostrare il modal di fallimento
+    function showFailureModal() {
+        if (isResetting) return;
+        const failureModal = new bootstrap.Modal(document.getElementById('failureModal'));
+        failureModal.show();
+    }
+
+    // Funzione per resettare il timer al valore predefinito
+    function resetTimerToDefault() {
+        timeLeft = DEFAULT_TIME;
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        document.getElementById('bombTimer').textContent = 
+            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    // Funzione per resettare i codici Morse
+    function resetMorseCodes() {
+        for (let i = 0; i < 4; i++) {
+            const morseDisplay = document.getElementById(`morseCode${i}`);
+            morseDisplay.textContent = '- - - -';
+        }
+    }
+
+    // Funzione per resettare il gioco
+    function resetGame() {
+        if (isResetting) return;
+        isResetting = true;
+        
+        stopTimer();
+        isGameActive = false;
+        
+        // Resetta gli input solo se il gioco era attivo
+        if (isGameActive) {
+            document.querySelectorAll('.morse-input').forEach(input => {
+                input.value = '';
+                input.disabled = false;
+            });
+            currentInputPosition = 0;
+        }
+        
+        lastUpdateTime = 0;
+        resetTimerToDefault();
+            
+        setTimeout(() => {
+            isResetting = false;
+        }, 1000);
+    }
+
+    // Funzione per inizializzare il gioco
+    function initGame() {
+        currentMorseCode = generateMorseCode();
+        updateMorseDisplay(currentMorseCode);
+        document.querySelectorAll('.morse-input').forEach(input => {
+            input.value = '';
+            input.disabled = false;
+        });
+        currentInputPosition = 0;
+        isGameActive = true;
+        // Aggiorna il display del timer all'inizializzazione
+        updateTimer();
+    }
+
+    // Funzione per controllare se il codice inserito è 0000
+    function checkAdminCode(inputs) {
+        const code = Array.from(inputs).map(input => input.value).join('');
+        return code === '0000';
+    }
+
+    // Funzione per gestire il timer del codice admin
+    function startAdminCodeTimer() {
+        let holdTime = 0;
+        adminCodeTimer = setInterval(() => {
+            holdTime++;
+            if (holdTime >= 5) {
+                clearInterval(adminCodeTimer);
+                const timerSettingsModal = new bootstrap.Modal(document.getElementById('timerSettingsModal'));
+                timerSettingsModal.show();
+                adminCodeEntered = false;
+            }
+        }, 1000);
+    }
+
+    // Funzione per gestire il completamento con successo
+    function handleSuccess() {
+        isGameCompleted = true;
+        stopTimer();
+        defusedSound.play();
+        showSuccessModal();
+        resetTimerToDefault();
+        // Resetta gli input dopo il successo
+        document.querySelectorAll('.morse-input').forEach(input => {
+            input.value = '';
+            input.disabled = false;
+        });
+        currentInputPosition = 0;
+    }
+
+    // Funzione per controllare lo stato del giocatore
+    function checkPlayerStatus() {
+        fetch('/get_status')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Player status:', data);
+                if (data.single2_active && !isGameActive && !isGameCompleted) {
+                    console.log('Player entered, starting timer');
+                    isGameActive = true;
+                    currentMorseCode = generateMorseCode();
+                    updateMorseDisplay(currentMorseCode);
+                    plantedSound.play();
+                    startTimer();
+                } else if (!data.single2_active && isGameActive) {
+                    console.log('Player left, stopping timer');
+                    isGameActive = false;
+                    stopTimer();
+                    if (isGameCompleted) {
+                        isGameCompleted = false;
+                    }
+                    resetMorseCodes();
+                    resetGame();
+                }
+            })
+            .catch(error => console.error('Error checking player status:', error));
+    }
+
+    // Gestione tastierino numerico
+    document.querySelectorAll('.keypad-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const value = this.dataset.value;
+            const inputs = document.querySelectorAll('.morse-input');
+            
+            if (value === 'clear') {
+                inputs.forEach(input => input.value = '');
+                currentInputPosition = 0;
+                adminCodeEntered = false;
+                if (adminCodeTimer) {
+                    clearInterval(adminCodeTimer);
+                }
+            } else if (value === 'enter') {
+                if (checkAdminCode(inputs)) {
+                    if (!adminCodeEntered) {
+                        adminCodeEntered = true;
+                        startAdminCodeTimer();
+                    }
+                } else if (isGameActive && !isGameCompleted) {
+                    const enteredCode = Array.from(inputs).map(input => input.value).join('');
+                    if (enteredCode === currentMorseCode) {
+                        handleSuccess();
+                        return;
+                    } else {
+                        showFailureModal();
+                        inputs.forEach(input => input.value = '');
+                        currentInputPosition = 0;
+                    }
+                }
+            } else if (currentInputPosition < 4) {
+                inputs[currentInputPosition].value = value;
+                currentInputPosition++;
+            }
+        });
+    });
+
+    // Gestione impostazioni timer
+    document.getElementById('saveTimerSettings').addEventListener('click', function() {
+        const minutes = parseInt(document.getElementById('timerMinutes').value) || 0;
+        const seconds = parseInt(document.getElementById('timerSeconds').value) || 0;
+        timeLeft = minutes * 60 + seconds;
+        
+        if (timeLeft > 0) {
+            stopTimer();
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('bombTimer').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        const timerSettingsModal = bootstrap.Modal.getInstance(document.getElementById('timerSettingsModal'));
+        timerSettingsModal.hide();
+    });
+
+    // Funzione per mostrare il modal di boom
+    function showBoomModal() {
+        const boomModal = new bootstrap.Modal(document.getElementById('boomModal'));
+        boomModal.show();
+    }
+
+    // Inizializza il controllo dello stato del giocatore
+    playerCheckInterval = setInterval(checkPlayerStatus, 1000);
+
+    // Inizializza il gioco
+    initGame();
+    updateTimer();
+
+    // Cleanup quando la pagina viene chiusa
+    window.addEventListener('beforeunload', function() {
+        if (playerCheckInterval) {
+            clearInterval(playerCheckInterval);
+        }
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+    });
+});
+</script>
+
+<style>
+.bomb-container {
+    background-color: #2c3e50;
+    border: none;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+.timer-display {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.lcd-screen {
+    background-color: #000;
+    padding: 15px;
+    border-radius: 5px;
+    border: 2px solid #333;
+}
+
+#bombTimer {
+    color: #ff0000;
+    font-family: 'Digital', monospace;
+    text-shadow: 0 0 5px #ff0000;
+}
+
+.morse-display {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.morse-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.morse-digit {
+    background-color: #2c3e50;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+.morse-code {
+    color: #00ff00;
+    font-family: monospace;
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+
+.keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+.keypad-btn {
+    background-color: #34495e;
+    color: white;
+    border: none;
+    padding: 15px;
+    font-size: 1.2em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.keypad-btn:hover {
+    background-color: #2c3e50;
+    transform: translateY(-2px);
+}
+
+.input-display {
+    background-color: #1a1a1a;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.input-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.morse-input {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    font-size: 1.5em;
+    height: 50px;
+    border: 2px solid #34495e;
+}
+
+.card-header {
+    background-color: #c0392b !important;
+    border-bottom: 2px solid #a93226;
+}
+
+h3, h4, h5 {
+    color: #ecf0f1;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+</style>
+{% endblock %} 

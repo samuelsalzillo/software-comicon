@@ -5,6 +5,7 @@ from .player.api import player
 from .submit.api import submit
 from .treasure_hunt.api import treasure_hunt
 from .config.api import config
+from .proveE.api import provaE
 
 from .controls.views import controls
 from .dashboard.views import dashboard
@@ -19,6 +20,7 @@ def register_root(app):
     app.register_blueprint(submit)
     app.register_blueprint(treasure_hunt)
     app.register_blueprint(config)
+    app.register_blueprint(provaE)
 
     app.register_blueprint(controls)
     app.register_blueprint(dashboard)
