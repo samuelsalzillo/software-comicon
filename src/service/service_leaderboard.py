@@ -10,7 +10,8 @@ import sqlite3
 from bottle import response
 
 from ..utils.database import get_lock
-from ..utils.date import convert_string_date_datetime_into_date,format_time_into_mmss
+from ..utils.date import convert_string_date_datetime_into_date, format_time_into_mmss, \
+    converti_float_mmss_in_secondi_totali
 from ..database.select.qualified_players import find_by_type_id_player, find_by_id_player
 from ..database.save.save_qualified_players import update_score_formatted_and_score_minutes
 from flask import jsonify
@@ -86,13 +87,16 @@ def sync_new_date():
                 row = find_by_type_id_player(player_type,data.id_player)
                 if row:
                     player_id, player_name, score = row
-                    differenza_min = (data.timestamp_fine - data.timestamp_inizio).total_seconds() / 60
-                    if data.qr_code_founded != data.qr_code:
-                        differenza_min = differenza_min + 100 # todo penalita
-                    score_minutes = differenza_min + score
-                    score_formatted = format_time_into_mmss(score_minutes)
                     if not find_by_id_player(player_id):
-                        is_qualified, reason=  backend.check_qualification(score_minutes,player_type)
+                        differenza_in_secondi = (data.timestamp_fine - data.timestamp_inizio).total_seconds()
+                        if data.qr_code_founded != data.qr_code:
+                            differenza_in_secondi = differenza_in_secondi + 0 # todo penalita
+                        score_minutes = (differenza_in_secondi + converti_float_mmss_in_secondi_totali(score)) / 60
+                        score_formatted = format_time_into_mmss(score_minutes)
+                        if data.qr_code_founded != data.qr_code:
+                            is_qualified, reason = False,"Non qualificato"
+                        else:
+                            is_qualified, reason=  backend.check_qualification(score_minutes,player_type)
                         update_score_formatted_and_score_minutes(player_id,player_name,player_type,data,score_formatted,score_minutes,reason if is_qualified else "Non qualificato")
                         update_score_formatted(backend,player_id,score_minutes)
                     if not response:

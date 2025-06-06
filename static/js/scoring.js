@@ -134,7 +134,7 @@ fetch("/config/treasure_hunt_active")
     }
 
     // Aggiorna la classifica ogni secondo
-    setInterval(updateLeaderboard, 3000);
+    setInterval(updateLeaderboard, 10000);
 
     // Aggiorna la classifica all'avvio della pagina
     document.addEventListener("DOMContentLoaded", updateLeaderboard);

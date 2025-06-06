@@ -483,8 +483,7 @@ class GameBackend:
                         SELECT s.player_name, s.player_id, s.score FROM scoring s
                         {"JOIN qualified_players q on q.player_id = s.player_id" if os.environ.get("TREASURE_HUNT_ACTIVE") and (player_type == 'couple' or player_type == 'single') else ""}
                         WHERE s.player_type = ?
-                        {"AND q.treasure_hunt_updated is not null" if os.environ.get("TREASURE_HUNT_ACTIVE") and (player_type == 'couple' or player_type == 'single') else ""}
-                        AND q.qualification_reason is not 'Non qualificato'
+                        {"AND q.treasure_hunt_updated is not null AND q.qualification_reason is not 'Non qualificato'" if os.environ.get("TREASURE_HUNT_ACTIVE") and (player_type == 'couple' or player_type == 'single') else ""}
                         ORDER BY s.score ASC
                         LIMIT ?
                     """, (player_type, limit))
