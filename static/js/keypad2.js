@@ -7,26 +7,21 @@ let isFirstUpdate = true; // Flag per il primo aggiornamento
 
 // Mappa dei colori
 const colorMap = {
-  0: "white",
   1: "yellow",
   2: "green",
-  3: "blue",
-  4: "red",
-  5: "orange",
-  6: "pink",
-  7: "brown",
-  8: "purple",
-  9: "black",
+  3: "white",
+  5: "blue",
+  8: "orange",
 };
 
-// Funzione per generare un codice casuale di 4 cifre
+// Funzione per generare un codice casuale a 4 cifre (1,2,3,5,8)
 function generateRandomCode() {
-  const digits = [...Array(10).keys()]; // Array di cifre da 0 a 9
+  const digits = [1, 2, 3, 5, 8]; // Cifre consentite 1,2,3,5,8
   let code = "";
   for (let i = 0; i < 4; i++) {
     const randomIndex = Math.floor(Math.random() * digits.length);
     code += digits[randomIndex].toString();
-    digits.splice(randomIndex, 1); // Rimuovi la cifra usata per evitare ripetizioni
+    // Non rimuoviamo la cifra per permettere ripetizioni, se desiderato
   }
   return code;
 }

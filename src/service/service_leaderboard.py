@@ -7,8 +7,6 @@ import logging
 import os
 import sqlite3
 
-from bottle import response
-
 from ..utils.database import get_lock
 from ..utils.date import convert_string_date_datetime_into_date, format_time_into_mmss, \
     converti_float_mmss_in_secondi_totali
@@ -99,8 +97,6 @@ def sync_new_date():
                             is_qualified, reason=  backend.check_qualification(score_minutes,player_type)
                         update_score_formatted_and_score_minutes(player_id,player_name,player_type,data,score_formatted,score_minutes,reason if is_qualified else "Non qualificato")
                         update_score_formatted(backend,player_id,score_minutes)
-                    if not response:
-                        logging.error("problem")
                     logging.debug(f"Found {len(row)} and update results for {player_type}")
         return jsonify(error="Operazione completata con successo"), 200
 

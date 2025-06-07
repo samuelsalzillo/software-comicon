@@ -20,13 +20,13 @@ def load_queues_from_db(backend):
 
         for row in rows:
             player_type, player_id, player_name, arrival_time = row
-            if player_type == 'couple':
+            if player_type == 'couple' and "GIALLO" in player_id:
                 backend.queue_couples.append({'id': player_id, 'arrival': arrival_time})
-            elif player_type == 'single':
+            elif player_type == 'single' and "BLU" in player_id:
                 backend.queue_singles.append({'id': player_id, 'arrival': arrival_time})
-            elif player_type == 'couple2':
+            elif player_type == 'couple' and "ROSA" in player_id:
                 backend.queue_couples2.append({'id': player_id, 'arrival': arrival_time})
-            elif player_type == 'single2':
+            elif player_type == 'single' and "BIANCO" in player_id:
                 backend.queue_singles2.append({'id': player_id, 'arrival': arrival_time})
             elif player_type == 'charlie':
                 backend.queue_charlie.append({'id': player_id, 'arrival': arrival_time})

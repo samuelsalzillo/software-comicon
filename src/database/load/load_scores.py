@@ -45,13 +45,13 @@ def load_scores_from_db(sqlite_lock,backend):
             player_type, player_id, score_value = row
             try:
                 score_minutes = float(score_value)
-                if player_type == 'couple':
+                if player_type == 'couple' and "GIALLO" in player_id:
                     backend.couple_history_total.append((player_id, score_minutes))
-                elif player_type == 'single':
+                elif player_type == 'single' and "BLU" in player_id:
                     backend.single_history.append((player_id, score_minutes))
-                elif player_type == 'couple2':
+                elif player_type == 'couple' and "ROSA" in player_id:
                     backend.couple_history_total2.append((player_id, score_minutes))
-                elif player_type == 'single2':
+                elif player_type == 'single' and "BIANCO" in player_id:
                     backend.single_history2.append((player_id, score_minutes))
                 elif player_type == 'charlie':
                     backend.charlie_history.append((player_id, score_minutes))
