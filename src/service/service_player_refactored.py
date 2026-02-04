@@ -5,15 +5,19 @@ This module provides a service class for all player-related operations,
 including contact management, game simulation, button handling, and player actions.
 """
 import logging
+import os
+import sqlite3
 from typing import Dict, Optional, Tuple, Any
 
 from flask import request, jsonify, url_for
 
+from ..utils.database import get_lock, execute_with_retry
 from ..utils import date
 from ..utils.model import get_game_backend, set_game_backend
 from ..service import service_game_backend
 from ..model.GameBackend import GameBackend
-from ..exceptions import ValidationError
+from ..exceptions import ValidationError, PlayerNotFoundError, QueueError
+from ..config import PlayerType
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +128,7 @@ class PlayerService:
 
     def _save_contact_to_db(self, contact_data: Dict[str, Any]) -> None:
         """
-        Save contact data to database using repository.
+        Save contact data to database.
 
         Args:
             contact_data: Validated contact data
@@ -132,30 +136,43 @@ class PlayerService:
         Raises:
             Exception: If database operation fails
         """
-        from ..repository import get_qualified_players_repository
+        sqlite_lock = get_lock()
 
-        qualified_repo = get_qualified_players_repository()
+        with sqlite_lock:
+            conn = sqlite3.connect(os.environ.get('SQLITE_DB_PATH'))
+            cursor = conn.cursor()
 
-        logger.info(
-            f"[CONTACT SAVE] ID={contact_data['player_id']}, "
-            f"Contact={contact_data['first_name']} {contact_data['last_name']}, "
-            f"Score={contact_data['score_formatted']}"
-        )
+            logger.info(
+                f"[CONTACT SAVE] ID={contact_data['player_id']}, "
+                f"Contact={contact_data['first_name']} {contact_data['last_name']}, "
+                f"Score={contact_data['score_formatted']}"
+            )
 
-        # Use repository to save
-        qualified_repo.save_qualified_player(
-            player_id=contact_data['player_id'],
-            player_name=contact_data['player_name'],
-            first_name=contact_data['first_name'],
-            last_name=contact_data['last_name'],
-            phone_number=contact_data['phone_number'],
-            score_minutes=contact_data['score_float'],
-            score_formatted=contact_data['score_formatted'],
-            player_type=contact_data['player_type'],
-            qualification_reason=contact_data['qualification_reason'],
-            qualification_date=contact_data['qualification_date'],
-            created_at=contact_data['timestamp'].isoformat()
-        )
+            execute_with_retry(
+                cursor,
+                """
+                INSERT INTO qualified_players
+                (player_id, player_name, first_name, last_name, phone_number, 
+                 score_minutes, score_formatted, player_type, qualification_reason, 
+                 qualification_date, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    contact_data['player_id'],
+                    contact_data['player_name'],
+                    contact_data['first_name'],
+                    contact_data['last_name'],
+                    contact_data['phone_number'],
+                    contact_data['score_float'],
+                    contact_data['score_formatted'],
+                    contact_data['player_type'],
+                    contact_data['qualification_reason'],
+                    contact_data['qualification_date'],
+                    contact_data['timestamp']
+                )
+            )
+            conn.commit()
+            conn.close()
 
     # ============================================================================
     # GAME SIMULATION & STATUS

@@ -1,9 +1,7 @@
 import logging
-import os
-import sqlite3
 
 from flask import Blueprint, jsonify, request
-from ...utils.database import get_lock,execute_with_retry
+from ...repository import get_scoring_repository, get_average_times_repository
 from ...utils.model import get_game_backend, set_game_backend
 from ...utils import date
 
@@ -11,10 +9,16 @@ submit = Blueprint('submit',__name__,url_prefix='')
 
 @submit.route('/submit_combined_score', methods=['POST'])
 def submit_combined_score():
+    """
+    Submit combined score using repository pattern.
+    """
     backend = get_game_backend()
-    sqlite_lock = get_lock()
+    scoring_repo = get_scoring_repository()
+    avg_times_repo = get_average_times_repository()
+
     data = request.json
     logging.debug(f"Received /submit_combined_score data: {data}")
+
     player_id = data.get('player_id')
     player_name = data.get('player_name')
     player_type = data.get('player_type') # 'couple', 'single', 'couple2', 'single2'
@@ -35,58 +39,37 @@ def submit_combined_score():
 
         logging.info(f"[COMBINED SCORE SUBMIT] Player: {player_id} ({player_name}), Type: {player_type}, Timer: {timer_duration:.4f}, Score: {official_score:.4f} ({score_formatted})")
 
-        # 1. Salva Timer Duration nel DB per le medie
+        # 1. Salva Timer Duration usando repository
         try:
-            with sqlite_lock:
-                conn = sqlite3.connect(os.environ.get('SQLITE_DB_PATH'))
-                cursor = conn.cursor()
-                # Inserisci il record specifico del timer
-                execute_with_retry(
-                    cursor,
-                    "INSERT INTO average_times (player_type, timer_duration_minutes, recorded_at) VALUES (?, ?, ?)",
-                    (player_type, timer_duration, now)
-                )
-                conn.commit()
-                conn.close()
-            logging.info(f"[AVG TIME DB SAVE] Success for {player_id} ({player_type}).")
-        except sqlite3.Error as db_err:
-            logging.error(f"[AVG TIME DB SAVE] Failed for {player_id}: {db_err}", exc_info=True)
-            # Potremmo decidere di continuare comunque o ritornare errore? Per ora continuiamo.
+            avg_times_repo.save_average(
+                player_type=player_type,
+                timer_duration_minutes=timer_duration,
+                official_score_minutes=official_score
+            )
+            logging.info(f"[AVG TIME REPO SAVE] Success for {player_id} ({player_type}).")
         except Exception as e:
-            logging.error(f"[AVG TIME DB SAVE] Failed (General Error) for {player_id}: {e}", exc_info=True)
-            # Continuiamo
+            logging.error(f"[AVG TIME REPO SAVE] Failed for {player_id}: {e}", exc_info=True)
+            # Continuiamo comunque
 
-        # 2. Salva Official Score nel DB per la classifica
+        # 2. Salva Official Score usando repository
         try:
-            with sqlite_lock:
-                conn = sqlite3.connect(os.environ.get('SQLITE_DB_PATH'))
-                cursor = conn.cursor()
-                # Determina il player_type corretto per la tabella scoring ('couple' o 'single')
-                scoring_player_type = 'couple' if player_type in ('couple', 'couple2') else 'single'
-                execute_with_retry(
-                    cursor,
-                    "INSERT INTO scoring (player_type, player_id, player_name, score, created_at) VALUES (?, ?, ?, ?, ?)",
-                    (scoring_player_type, player_id, player_name, official_score, now)
-                )
-                conn.commit()
-                conn.close()
-            logging.info(f"[SCORING DB SAVE] Success for {player_id} ({scoring_player_type}).")
-        except sqlite3.Error as db_err:
-            logging.error(f"[SCORING DB SAVE] Failed for {player_id}: {db_err}", exc_info=True)
-            return jsonify(success=False, qualified=False, reason=None, error=f"Errore DB salvataggio score: {db_err}"), 500
-        except Exception as e:
-            logging.error(f"[SCORING DB SAVE] Failed (General Error) for {player_id}: {e}", exc_info=True)
-            return jsonify(success=False, qualified=False, reason=None, error=f"Errore generico salvataggio score: {e}"), 500
+            # Determina il player_type corretto per la tabella scoring
+            scoring_player_type = 'couple' if player_type in ('couple', 'couple2') else 'single'
 
+            scoring_repo.save_score(
+                player_id=player_id,
+                player_name=player_name,
+                player_type=scoring_player_type,
+                score=official_score
+            )
+            logging.info(f"[SCORING REPO SAVE] Success for {player_id} ({scoring_player_type}).")
+        except Exception as e:
+            logging.error(f"[SCORING REPO SAVE] Failed for {player_id}: {e}", exc_info=True)
+            return jsonify(success=False, qualified=False, reason=None, error=f"Errore salvataggio score: {e}"), 500
 
         # 3. Chiama il metodo backend per aggiornare medie e stato interno
-        #    Passa SIA timer_duration SIA official_score
         try:
             if player_type == 'couple':
-                # Calcola mid_time_approx se necessario per T_mid (come faceva prima button_press)
-                # start_time = backend.player_start_times.get(player_id) # Start time dovrebbe essere già stato rimosso da record_...
-                # alfa_avail = backend.localize_time(backend.ALFA_next_available)
-                # mid_time_approx = (alfa_avail - start_time).total_seconds() / 60 if start_time and alfa_avail > start_time else backend.T_mid
                 backend.record_couple_game(timer_duration, official_score)
             elif player_type == 'single':
                 backend.record_single_game(timer_duration, official_score)
@@ -96,16 +79,14 @@ def submit_combined_score():
                 backend.record_single2_game(timer_duration, official_score)
             logging.debug(f"Backend record method called successfully for {player_id}")
         except Exception as e:
-             logging.error(f"Error calling backend record method for {player_id} ({player_type}): {e}", exc_info=True)
-             # Anche se c'è errore qui, i dati sono salvati, quindi procedi col check qualifica
-
+            logging.error(f"Error calling backend record method for {player_id} ({player_type}): {e}", exc_info=True)
+            # Anche se c'è errore qui, i dati sono salvati, quindi procedi col check qualifica
 
         # 4. Controlla la qualifica usando l'OFFICIAL SCORE
         scoring_player_type = 'couple' if player_type in ('couple', 'couple2') else 'single'
-        logging.debug(f"Checking qualification for {player_id} with score={official_score}, type={scoring_player_type}") # Log prima del check
+        logging.debug(f"Checking qualification for {player_id} with score={official_score}, type={scoring_player_type}")
         is_qualified, reason = backend.check_qualification(official_score, scoring_player_type)
         logging.info(f"[COMBINED QUAL CHECK] Player: {player_id}, Score: {official_score:.4f}, Qualified: {is_qualified}, Reason: {reason}")
-
 
         # 5. Ritorna il risultato al frontend
         set_game_backend(backend)
@@ -113,11 +94,10 @@ def submit_combined_score():
             success=True,
             qualified=is_qualified,
             reason=reason,
-            # Passa indietro i dati necessari per il modal contatti
             player_id=player_id,
             player_name=player_name,
-            recorded_score=official_score, # Punteggio ufficiale che ha qualificato
-            player_type=scoring_player_type # Tipo per il modal contatti ('couple' o 'single')
+            recorded_score=official_score,
+            player_type=scoring_player_type
         )
 
     except ValueError as ve:
@@ -129,12 +109,17 @@ def submit_combined_score():
 
 @submit.route('/submit_charlie_score', methods=['POST'])
 def submit_charlie_score():
+    """
+    Submit Charlie score using repository pattern.
+    """
     backend = get_game_backend()
-    sqlite_lock = get_lock()
+    scoring_repo = get_scoring_repository()
+
     data = request.json
     logging.debug(f"Received /submit_charlie_score data: {data}")
+
     player_id = data.get('player_id')
-    player_name = data.get('player_name') # Ricevi anche il nome
+    player_name = data.get('player_name')
     minutes_str = data.get('minutes')
     seconds_str = data.get('seconds')
     milliseconds_str = data.get('milliseconds')
@@ -149,37 +134,30 @@ def submit_charlie_score():
         milliseconds = int(milliseconds_str)
 
         if not (0 <= minutes < 60 and 0 <= seconds < 60 and 0 <= milliseconds < 1000):
-             raise ValueError("Valori tempo fuori range.")
+            raise ValueError("Valori tempo fuori range.")
 
         # Calcola il punteggio ufficiale in minuti (float)
         manual_score_minutes = minutes + (seconds / 60.0) + (milliseconds / 60000.0)
         score_formatted = date.format_time_into_mmss(manual_score_minutes)
-        now = date.get_current_time()
 
         logging.info(f"[CHARLIE SCORE SUBMIT] Player: {player_id} ({player_name}), Manual Score: {manual_score_minutes:.4f} min ({score_formatted})")
 
-        # 1. Salva nella tabella scoring
+        # 1. Salva nella tabella scoring usando repository
         try:
-            with sqlite_lock:
-                conn = sqlite3.connect(os.environ.get('SQLITE_DB_PATH'))
-                cursor = conn.cursor()
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score, created_at) VALUES (?, ?, ?, ?, ?)",
-                    ('charlie', player_id, player_name, manual_score_minutes, now)
-                )
-                conn.commit()
-                conn.close()
-            logging.info(f"[CHARLIE SCORE DB SAVE] Success for {player_id}.")
-        except sqlite3.Error as db_err:
-            logging.error(f"[CHARLIE SCORE DB SAVE] Failed for {player_id}: {db_err}", exc_info=True)
-            return jsonify(success=False, qualified=False, reason=None, error=f"Errore DB salvataggio punteggio: {db_err}"), 500
+            scoring_repo.save_score(
+                player_id=player_id,
+                player_name=player_name,
+                player_type='charlie',
+                score=manual_score_minutes
+            )
+            logging.info(f"[CHARLIE SCORE REPO SAVE] Success for {player_id}.")
         except Exception as e:
-            logging.error(f"[CHARLIE SCORE DB SAVE] Failed (General Error) for {player_id}: {e}", exc_info=True)
-            return jsonify(success=False, qualified=False, reason=None, error=f"Errore generico salvataggio punteggio: {e}"), 500
+            logging.error(f"[CHARLIE SCORE REPO SAVE] Failed for {player_id}: {e}", exc_info=True)
+            return jsonify(success=False, qualified=False, reason=None, error=f"Errore salvataggio punteggio: {e}"), 500
 
-        # 2. Aggiungi alla history ufficiale per leaderboard in-memory (se get_leaderboard la usa)
+        # 2. Aggiungi alla history in-memory
         backend.charlie_history.append((player_id, manual_score_minutes))
-        logging.debug(f"Added manual score to backend.charlie_history (new size: {len(backend.charlie_timer_history)})")
+        logging.debug(f"Added manual score to backend.charlie_history")
 
         # 3. Controlla la qualifica
         is_qualified, reason = backend.check_qualification(manual_score_minutes, 'charlie')
@@ -191,10 +169,9 @@ def submit_charlie_score():
             success=True,
             qualified=is_qualified,
             reason=reason,
-            # Passa indietro i dati necessari per il modal contatti
             player_id=player_id,
             player_name=player_name,
-            recorded_score=manual_score_minutes, # Il punteggio manuale
+            recorded_score=manual_score_minutes,
             player_type='charlie'
         )
 

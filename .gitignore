@@ -5,3 +5,6 @@
 __pycache__/
 stand_db.db
 /backup
+.idea/*
+.idea
+.idea/
