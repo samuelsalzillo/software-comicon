@@ -1899,6 +1899,65 @@ def get_status():
     })
 
 
+@app.route('/management')
+def admin_control():
+    return render_template('admin_control.html')
+
+@app.route('/admin/reset_day', methods=['POST'])
+def reset_day():
+    try:
+        now_dt = backend.get_current_time()
+        date_str = now_dt.strftime('%Y-%m-%d_%H-%M-%S')
+        backup_filename = f"Scoring_Day_{date_str}.db"
+        backup_path = os.path.join('database_saves', backup_filename)
+        
+        # 1. Backup existing DB
+        logging.info(f"[RESET DAY] Starting manual backup: {backup_filename}")
+        with sqlite_lock:
+            if not os.path.exists('database_saves'):
+                os.makedirs('database_saves')
+            shutil.copy2(SQLITE_DB_PATH, backup_path)
+            
+            # 2. Cleanup tables
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            
+            logging.info("[RESET DAY] Clearing scoring, queues, and average_times tables.")
+            cursor.execute("DELETE FROM scoring")
+            cursor.execute("DELETE FROM queues")
+            cursor.execute("DELETE FROM average_times")
+            
+            # 3. Cleanup qualified_players (keep only top 3 per type)
+            logging.info("[RESET DAY] Cleaning up qualified_players - keeping top 3 per category.")
+            for p_type in ['couple', 'single', 'charlie']:
+                cursor.execute("""
+                    SELECT id FROM qualified_players 
+                    WHERE player_type = ? 
+                    ORDER BY score_minutes ASC 
+                    LIMIT 3
+                """, (p_type,))
+                top_ids = [row[0] for row in cursor.fetchall()]
+                
+                if top_ids:
+                    placeholders = ','.join(['?'] * len(top_ids))
+                    query = f"DELETE FROM qualified_players WHERE player_type = ? AND id NOT IN ({placeholders})"
+                    cursor.execute(query, (p_type, *top_ids))
+                else:
+                    cursor.execute("DELETE FROM qualified_players WHERE player_type = ?", (p_type,))
+            
+            conn.commit()
+            conn.close()
+            
+        # 4. Reset backend in-memory state
+        logging.info("[RESET DAY] Resetting backend memory state.")
+        backend.reset_daily_state()
+        
+        return jsonify(success=True, message=f"Reset della giornata completato con successo. Backup creato: {backup_filename}")
+    except Exception as e:
+        logging.error(f"[RESET DAY] Critical Error: {e}", exc_info=True)
+        return jsonify(success=False, error=str(e)), 500
+
+
 @app.route('/delete_player', methods=['POST'])
 def delete_player():
     player_id = request.json.get('id')

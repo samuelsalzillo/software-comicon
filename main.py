@@ -1680,6 +1680,68 @@ class GameBackend:
         
         return estimated_times
 
+    def reset_daily_state(self) -> None:
+        """Resetta lo stato in memoria per una nuova giornata."""
+        self.queue_couples.clear()
+        self.queue_singles.clear()
+        self.queue_couples2.clear()
+        self.queue_singles2.clear()
+        self.queue_charlie.clear()
+        self.queue_statico.clear()
+
+        self.couple_history_mid.clear()
+        self.couple_history_total.clear()
+        self.single_history.clear()
+        self.couple_history_mid2.clear()
+        self.couple_history_total2.clear()
+        self.single_history2.clear()
+        self.charlie_history.clear()
+        self.statico_history.clear()
+
+        self.charlie_timer_history.clear()
+        self.couple_timer_history.clear()
+        self.single_timer_history.clear()
+        self.single_timer_history2.clear()
+
+        self.player_start_times.clear()
+        self.player_durations.clear()
+
+        # Reset piste
+        self.current_player_alfa = None
+        self.current_player_bravo = None
+        self.current_player_alfa2 = None
+        self.current_player_bravo2 = None
+        self.current_player_charlie = None
+        self.current_player_delta = None
+        self.current_player_echo = None
+
+        self.couple_in_bravo = False
+        self.couple_in_alfa = False
+        self.single_in_alfa = False
+        self.third_button_pressed = False
+        self.couple_in_bravo2 = False
+        self.couple_in_alfa2 = False
+        self.single_in_alfa2 = False
+        self.third_button_pressed2 = False
+        self.statico_in_delta = False
+        self.statico_in_echo = False
+
+        # Reset disponibilià
+        now = self.get_current_time()
+        self.ALFA_next_available = now
+        self.BRAVO_next_available = now
+        self.ALFA_next_available2 = now
+        self.BRAVO_next_available2 = now
+        self.CHARLIE_next_available = now
+        self.DELTA_next_available = now
+        self.ECHO_next_available = now
+
+        # Ricalcola medie con i valori di default
+        self.update_averages()
+        self.update_next_player()
+        self.update_next_player2()
+        self.update_next_charlie_player()
+
 if __name__ == '__main__':
     backend = GameBackend()
     

@@ -1,0 +1,170 @@
+{% extends "layout.html" %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 30px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        color: white;
+    }
+
+    .admin-header {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .admin-header h1 {
+        font-size: 2.5rem;
+        background: linear-gradient(45deg, #f5a525, #ff4b2b);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
+    }
+
+    .admin-card {
+        background: rgba(255, 255, 255, 0.08);
+        padding: 25px;
+        border-radius: 15px;
+        margin-bottom: 25px;
+        transition: transform 0.3s ease;
+    }
+
+    .admin-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.12);
+    }
+
+    .admin-card h2 {
+        color: #f5a525;
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+    }
+
+    .admin-card p {
+        color: #ddd;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+
+    .btn-reset-day {
+        background: linear-gradient(45deg, #ff4b2b, #ff416c);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(255, 75, 43, 0.3);
+        display: block;
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .btn-reset-day:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(255, 75, 43, 0.5);
+        filter: brightness(1.1);
+    }
+
+    .status-msg {
+        margin-top: 20px;
+        padding: 15px;
+        border-radius: 10px;
+        display: none;
+        text-align: center;
+    }
+
+    .status-msg.success {
+        background: rgba(40, 167, 69, 0.2);
+        border: 1px solid #28a745;
+        color: #d4edda;
+    }
+
+    .status-msg.error {
+        background: rgba(220, 53, 69, 0.2);
+        border: 1px solid #dc3545;
+        color: #f8d7da;
+    }
+
+    .danger-zone {
+        border: 1px dashed #ff4b2b;
+        padding: 20px;
+        border-radius: 15px;
+        background: rgba(255, 75, 43, 0.05);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>Gestione Sistema</h1>
+        <p>Pannello di controllo per la fiera</p>
+    </div>
+
+    <div class="admin-card">
+        <h2>Backup & Ripristino</h2>
+        <p>Tutti i salvataggi del database vengono archiviati nella cartella <code>database_saves</code> del progetto. È consigliabile effettuare un backup manuale regolarmente.</p>
+    </div>
+
+    <div class="admin-card danger-zone">
+        <h2>Reset della Giornata</h2>
+        <p>Questa operazione eseguirà le seguenti azioni:</p>
+        <ul style="color: #ddd; margin-left: 20px; margin-top: 10px;">
+            <li>Backup completo del database corrente.</li>
+            <li>Pulizia totale delle code e dei punteggi giornalieri.</li>
+            <li><strong>Mantenimento dei Top 3</strong> di ogni categoria (Coppie, Singoli, Charlie).</li>
+            <li>Reset delle medie per il calcolo dei tempi di attesa.</li>
+        </ul>
+        <button id="reset-day-btn" class="btn-reset-day">ESEGUI RESET GIORNATA</button>
+    </div>
+
+    <div id="status-display" class="status-msg"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    $(document).ready(function() {
+        $('#reset-day-btn').click(function() {
+            if (confirm("Sei assolutamente sicuro di voler resettare la giornata? Verrà creato un backup, ma la coda e i punteggi odierni saranno cancellati (tranne i Top 3).")) {
+                const btn = $(this);
+                const status = $('#status-display');
+                
+                btn.prop('disabled', true).text('RESET IN CORSO...');
+                status.hide();
+
+                $.ajax({
+                    url: '/admin/reset_day',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    success: function(response) {
+                        if (response.success) {
+                            status.removeClass('error').addClass('success').text(response.message).fadeIn();
+                            btn.text('RESET COMPLETATO');
+                        } else {
+                            status.removeClass('success').addClass('error').text(response.error || "Errore sconosciuto").fadeIn();
+                            btn.prop('disabled', false).text('ESEGUI RESET GIORNATA');
+                        }
+                    },
+                    error: function(xhr) {
+                        status.removeClass('success').addClass('error').text("Errore durante la richiesta: " + (xhr.responseJSON?.error || "Errore server")).fadeIn();
+                        btn.prop('disabled', false).text('ESEGUI RESET GIORNATA');
+                    }
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
