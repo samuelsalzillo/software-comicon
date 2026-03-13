@@ -80,11 +80,6 @@
             "top-players-container"
           );
 
-          couplesLeaderboard.innerHTML = "";
-          singlesLeaderboard.innerHTML = "";
-          charlieLeaderboard.innerHTML = "";
-          topPlayersContainer.innerHTML = "";
-
           function createPlayerDiv(player, index) {
             const div = document.createElement("div");
             div.style.display = "flex";
@@ -130,22 +125,35 @@
             return div;
           }
 
+          const couplesFragment = document.createDocumentFragment();
           data.couples.forEach((player, index) => {
-            couplesLeaderboard.appendChild(createPlayerDiv(player, index));
+            couplesFragment.appendChild(createPlayerDiv(player, index));
           });
-
+          
+          const singlesFragment = document.createDocumentFragment();
           data.singles.forEach((player, index) => {
-            singlesLeaderboard.appendChild(createPlayerDiv(player, index));
+            singlesFragment.appendChild(createPlayerDiv(player, index));
           });
 
+          const charlieFragment = document.createDocumentFragment();
           data.charlie.forEach((player, index) => {
-            charlieLeaderboard.appendChild(createPlayerDiv(player, index));
+            charlieFragment.appendChild(createPlayerDiv(player, index));
           });
+
+          couplesLeaderboard.innerHTML = "";
+          couplesLeaderboard.appendChild(couplesFragment);
+
+          singlesLeaderboard.innerHTML = "";
+          singlesLeaderboard.appendChild(singlesFragment);
+
+          charlieLeaderboard.innerHTML = "";
+          charlieLeaderboard.appendChild(charlieFragment);
 
           // Aggiungi i migliori 3 giocatori per ogni classifica
           fetch("/leaderboard/top3")
             .then((response) => response.json())
             .then((top3Data) => {
+              const top3Fragment = document.createDocumentFragment();
               const categories = ["couples", "singles", "charlie"];
               categories.forEach((category) => {
                 const topPlayers = top3Data[category];
@@ -162,9 +170,11 @@
                   });
                   categoryDiv.appendChild(ul);
                   categoryDiv.style.color = "white";
-                  topPlayersContainer.appendChild(categoryDiv);
+                  top3Fragment.appendChild(categoryDiv);
                 }
               });
+              topPlayersContainer.innerHTML = "";
+              topPlayersContainer.appendChild(top3Fragment);
             })
             .catch((error) =>
               console.error(
