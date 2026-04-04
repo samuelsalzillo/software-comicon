@@ -118,6 +118,15 @@
         <p>Tutti i salvataggi del database vengono archiviati nella cartella <code>database_saves</code> del progetto. È consigliabile effettuare un backup manuale regolarmente.</p>
     </div>
 
+    <div class="admin-card">
+        <h2>Sincronizzazione Caccia al Tesoro (Aruba)</h2>
+        <p>Recupera gli ultimi completamenti della caccia al tesoro dal cloud Aruba e verifica le qualificazioni finali per la classifica.</p>
+        <button id="sync-aruba-btn" class="btn-reset-day" style="background: linear-gradient(45deg, #4facfe, #00f2fe); box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3); color: black;">
+            SINCRONIZZA ORA
+        </button>
+        <div id="sync-status-display" class="status-msg"></div>
+    </div>
+
     <div class="admin-card danger-zone">
         <h2>Reset della Giornata</h2>
         <p>Questa operazione eseguirà le seguenti azioni:</p>
@@ -137,6 +146,37 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
+        $('#sync-aruba-btn').click(function() {
+            const btn = $(this);
+            const status = $('#sync-status-display');
+            
+            btn.prop('disabled', true).text('SINCRONIZZAZIONE IN CORSO...');
+            status.hide();
+
+            $.ajax({
+                url: '/sync_aruba',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({}),
+                success: function(response) {
+                    if (response.success) {
+                        let msg = `Sincronizzazione completata.<br>Giocatori aggiornati/qualificati: <strong>${response.synced_count}</strong>`;
+                        if (response.errors && response.errors.length > 0) {
+                            msg += `<br><em>Verificatisi ${response.errors.length} errori/skip per alcuni codici.</em>`;
+                        }
+                        status.removeClass('error').addClass('success').html(msg).fadeIn();
+                    } else {
+                        status.removeClass('success').addClass('error').text(response.error || "Errore sconosciuto durante la sincronizzazione.").fadeIn();
+                    }
+                    btn.prop('disabled', false).text('SINCRONIZZA ORA');
+                },
+                error: function(xhr) {
+                    status.removeClass('success').addClass('error').text("Errore durante la richiesta al server: " + (xhr.responseJSON?.error || "Connessione fallita")).fadeIn();
+                    btn.prop('disabled', false).text('SINCRONIZZA ORA');
+                }
+            });
+        });
+
         $('#reset-day-btn').click(function() {
             if (confirm("Sei assolutamente sicuro di voler resettare la giornata? Verrà creato un backup, ma la coda e i punteggi odierni saranno cancellati (tranne i Top 3).")) {
                 const btn = $(this);

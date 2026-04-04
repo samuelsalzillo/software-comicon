@@ -442,18 +442,30 @@ function submitPenaltyForm2(typeSuffix) {
 
         closeInlineForm2(typeSuffix, "penalty");
 
-        if (response.qualified) {
-          showInlineQualificationForm2({
-            player_id: response.player_id,
-            player_name: response.player_name,
-            recorded_score: response.recorded_score,
-            player_type: response.player_type,
-            reason: response.reason,
-          });
-        } else {
-          updateNextPlayer2();
-          updateUIState2();
-        }
+        // Mostra il popup della caccia al tesoro
+        const overlay = document.createElement('div');
+        overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;display:flex;justify-content:center;align-items:center;";
+        const popup = document.createElement('div');
+        popup.style = "background:#1e293b;padding:30px;border-radius:15px;color:white;text-align:center;box-shadow:0 0 20px rgba(79,172,254,0.5);max-width:400px;width:90%;font-family:sans-serif;";
+        popup.innerHTML = `
+            <h2 style="color:#00f2fe; margin-top:0;">Pista Completata!</h2>
+            <p style="font-size:1.1rem; margin-bottom: 20px;">Il Giocatore può passare alla fase Caccia al Tesoro.</p>
+            <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; margin-bottom:20px;">
+                <p><strong>ASSEGNA MAPPA NUMERO:</strong> <br><span style="color:#ffd700; font-size:2.5em; font-weight:bold;">${response.gener_map}</span></p>
+                <hr style="border-color:#334155; margin:15px 0;">
+                <p><strong>CODICE SQUADRA:</strong> <br><span style="font-family:monospace; font-size:2em; letter-spacing:3px; background:#475569; padding:5px 15px; border-radius:8px;">${response.treasure_code}</span></p>
+                <hr style="border-color:#334155; margin:15px 0;">
+                <p style="margin-top:15px; font-size:1rem; color:#cbd5e1;">Password Finale Forziere: <br/><strong style="color:white; font-size:1.3em;">${response.treasure_password}</strong></p>
+            </div>
+            <button id="closePopupBtn-${typeSuffix}" style="background:linear-gradient(to right, #4facfe, #00f2fe); border:none; padding:12px 30px; border-radius:25px; font-weight:bold; color:black; cursor:pointer; font-size:1.1rem;">CHIUDI E PROCEDI</button>
+        `;
+        overlay.appendChild(popup);
+        document.body.appendChild(overlay);
+        document.getElementById(`closePopupBtn-${typeSuffix}`).addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            updateNextPlayer2();
+            updateUIState2();
+        });
       } else {
         showInlineMessage2(
           messageSectionId,

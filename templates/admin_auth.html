@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login - AREA RISERVATA</title>
+    <!-- Use Google Fonts for Black Ops One -> standard military font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    
+    <style>
+        body {
+            /* Military theme */
+            background-color: #1a1e1b;
+            background-image: radial-gradient(circle at center, #2c3631 0%, #0d120e 100%);
+            color: #d1d8d1;
+            font-family: 'Roboto', sans-serif;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .auth-container {
+            background: #141815;
+            border: 2px solid #3ca04d;
+            box-shadow: 0 0 20px rgba(60, 160, 77, 0.4), inset 0 0 10px rgba(0,0,0,0.8);
+            border-radius: 4px;
+            padding: 40px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Top left and bottom right corner decorations */
+        .auth-container::before, .auth-container::after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 2px solid #ff4b2b;
+        }
+        .auth-container::before {
+            top: -2px; left: -2px;
+            border-right: none; border-bottom: none;
+        }
+        .auth-container::after {
+            bottom: -2px; right: -2px;
+            border-left: none; border-top: none;
+        }
+
+        h2.military-title {
+            font-family: 'Black Ops One', Impact, sans-serif;
+            color: #ff4b2b;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        p.subtitle {
+            font-family: monospace;
+            color: #3ca04d;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .form-control.military-input {
+            background-color: #0d120e;
+            border: 1px solid #3ca04d;
+            color: #ffffff;
+            font-family: monospace;
+            font-size: 1.2rem;
+            text-align: center;
+            letter-spacing: 4px;
+            padding: 15px;
+            border-radius: 2px;
+        }
+        .form-control.military-input:focus {
+            box-shadow: 0 0 15px rgba(60, 160, 77, 0.6);
+            border-color: #4bce60;
+            outline: none;
+        }
+
+        .btn-military {
+            font-family: 'Black Ops One', Impact, sans-serif;
+            background-color: #3ca04d;
+            border: none;
+            color: #141815;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            padding: 10px 30px;
+            border-radius: 2px;
+            width: 100%;
+            margin-top: 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            transition: all 0.2s;
+        }
+        .btn-military:hover {
+            background-color: #4bce60;
+            box-shadow: 0 0 15px rgba(60, 160, 77, 0.8);
+            transform: scale(1.02);
+            color: #000;
+        }
+
+        /* Keypad Styling */
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .key-btn {
+            background-color: #1c231f;
+            border: 1px solid #3ca04d;
+            color: #ffffff;
+            font-family: 'Black Ops One', Impact, sans-serif;
+            font-size: 1.8rem;
+            padding: 15px 0;
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .key-btn:hover, .key-btn:active {
+            background-color: #3ca04d;
+            color: #000;
+        }
+        .key-action {
+            background-color: #2b1f1a;
+            border-color: #ff4b2b;
+            color: #ff4b2b;
+        }
+        .key-action:hover, .key-action:active {
+            background-color: #ff4b2b;
+            color: #fff;
+        }
+
+        .error-msg {
+            color: #ff4b2b;
+            font-family: monospace;
+            margin-top: 15px;
+            font-weight: bold;
+            display: none;
+        }
+        
+        #step2-container {
+            display: none;
+        }
+        
+        .code-display {
+            background: #0d120e;
+            border: 1px solid #3ca04d;
+            height: 50px;
+            font-family: monospace;
+            font-size: 2rem;
+            color: #fff;
+            letter-spacing: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container" id="step1-container">
+        <h2 class="military-title">RESTRICTED</h2>
+        <p class="subtitle">AUTHORIZED PERSONNEL ONLY</p>
+        
+        <form id="loginForm">
+            <input type="password" id="adminPassword" class="form-control military-input" placeholder="PASSWORD" required autocomplete="off">
+            <button type="submit" class="btn-military">AUTHORIZE</button>
+        </form>
+        <div class="error-msg" id="errorMsg1">ACCESS DENIED</div>
+    </div>
+
+    <div class="auth-container" id="step2-container">
+        <h2 class="military-title">VERIFY</h2>
+        <p class="subtitle">ENTER 6-DIGIT CLEARANCE CODE</p>
+        
+        <div class="code-display" id="pinDisplay"></div>
+        <div class="error-msg" id="errorMsg2">INVALID CLEARANCE</div>
+        
+        <div class="keypad-grid">
+            <button type="button" class="key-btn" onclick="addPin('1')">1</button>
+            <button type="button" class="key-btn" onclick="addPin('2')">2</button>
+            <button type="button" class="key-btn" onclick="addPin('3')">3</button>
+            <button type="button" class="key-btn" onclick="addPin('4')">4</button>
+            <button type="button" class="key-btn" onclick="addPin('5')">5</button>
+            <button type="button" class="key-btn" onclick="addPin('6')">6</button>
+            <button type="button" class="key-btn" onclick="addPin('7')">7</button>
+            <button type="button" class="key-btn" onclick="addPin('8')">8</button>
+            <button type="button" class="key-btn" onclick="addPin('9')">9</button>
+            <button type="button" class="key-btn key-action" onclick="clearPin()">C</button>
+            <button type="button" class="key-btn" onclick="addPin('0')">0</button>
+            <button type="button" class="key-btn key-action" onclick="submitPin()">></button>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js') }}"></script>
+    <script>
+        let currentPin = '';
+
+        // Step 1: Password Check
+        $('#loginForm').submit(function(e) {
+            e.preventDefault();
+            const pwd = $('#adminPassword').val();
+            
+            $.ajax({
+                url: '/admin_login/step1',
+                method: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ password: pwd }),
+                success: function(res) {
+                    if (res.success) {
+                        $('#step1-container').hide();
+                        $('#step2-container').show();
+                    } else {
+                        $('#errorMsg1').show();
+                        setTimeout(() => $('#errorMsg1').hide(), 2000);
+                        $('#adminPassword').val('');
+                    }
+                },
+                error: function() {
+                    $('#errorMsg1').show().text('CONNECTION ERROR');
+                }
+            });
+        });
+
+        // Step 2: PIN Pad Check
+        function updatePinDisplay() {
+            // Show bullet points or the numbers. Let's do asterisks for effect.
+            $('#pinDisplay').text('*'.repeat(currentPin.length));
+        }
+
+        function addPin(num) {
+            if (currentPin.length < 6) {
+                currentPin += num;
+                updatePinDisplay();
+            }
+        }
+
+        function clearPin() {
+            currentPin = '';
+            updatePinDisplay();
+            $('#errorMsg2').hide();
+        }
+
+        function submitPin() {
+            if (currentPin.length === 6) {
+                $.ajax({
+                    url: '/admin_login/step2',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({ pin: currentPin }),
+                    success: function(res) {
+                        if (res.success) {
+                            // Flash effect and redirect
+                            $('body').css('background', '#fff');
+                            setTimeout(() => {
+                                // Important: We look up where to redirect to. 
+                                // The admin route, depending on its actual name in the flask app.
+                                window.location.href = res.redirect_url;
+                            }, 50);
+                        } else {
+                            $('#errorMsg2').show();
+                            currentPin = '';
+                            updatePinDisplay();
+                            setTimeout(() => $('#errorMsg2').hide(), 2000);
+                        }
+                    },
+                    error: function() {
+                        $('#errorMsg2').show().text('CONNECTION ERROR');
+                        currentPin = '';
+                        updatePinDisplay();
+                    }
+                });
+            }
+        }
+        
+        // Listen to keyboard for PIN pad as well
+        $(document).keydown(function(e) {
+            if($('#step2-container').is(':visible')) {
+                if(e.key >= '0' && e.key <= '9') {
+                    addPin(e.key);
+                } else if (e.key === 'Backspace' || e.key === 'c' || e.key === 'C') {
+                    clearPin();
+                } else if (e.key === 'Enter') {
+                    submitPin();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

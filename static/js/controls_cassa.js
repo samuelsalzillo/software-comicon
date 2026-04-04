@@ -11,67 +11,24 @@ $(document).ready(function () {
 });
 
 function fetchLastPlayerIds() {
-  fetch("/simulate")
+  fetch("/get_next_player_ids")
     .then((response) => response.json())
     .then((data) => {
-      let maxCouple = 0,
-        maxSingle = 0,
-        maxCouple2 = 0,
-        maxSingle2 = 0,
-        maxCharlie = 0,
-        maxStatico = 0;
+      // Imposta i counter al numero successivo calcolato dal backend
+      coupleCounter = data.next_couple;
+      singleCounter = data.next_single;
+      coupleCounter2 = data.next_couple2;
+      singleCounter2 = data.next_single2;
+      charlieCounter = data.next_charlie;
+      staticoCounter = data.next_statico;
 
-      if (data.couples.length > 0) {
-        let lastCouple = data.couples[data.couples.length - 1];
-        maxCouple = parseInt(lastCouple.id.split(" ")[1]) || 0;
-      }
-
-      if (data.singles.length > 0) {
-        let lastSingle = data.singles[data.singles.length - 1];
-        maxSingle = parseInt(lastSingle.id.split(" ")[1]) || 0;
-      }
-
-      // Coppie Rosa (NUOVO)
-      if (data.couples2 && data.couples2.length > 0) {
-        const ids = data.couples2
-          .map((p) => parseInt(p.id.split(" ")[1]))
-          .filter((n) => !isNaN(n));
-        if (ids.length > 0) maxCouple2 = Math.max(...ids);
-      }
-
-      // Singoli Bianco (NUOVO)
-      if (data.singles2 && data.singles2.length > 0) {
-        const ids = data.singles2
-          .map((p) => parseInt(p.id.split(" ")[1]))
-          .filter((n) => !isNaN(n));
-        if (ids.length > 0) maxSingle2 = Math.max(...ids);
-      }
-
-      if (data.charlie.length > 0) {
-        let lastCharlie = data.charlie[data.charlie.length - 1];
-        maxCharlie = parseInt(lastCharlie.id.split(" ")[1]) || 0;
-      }
-
-      if (data.statico && data.statico.length > 0) {
-        let lastStatico = data.statico[data.statico.length - 1];
-        maxStatico = parseInt(lastStatico.id.split(" ")[1]) || 0;
-      }
-
-      // Imposta i counter al numero successivo
-      coupleCounter = maxCouple + 1;
-      singleCounter = maxSingle + 1;
-      coupleCounter2 = maxCouple2 + 1; // NUOVO
-      singleCounter2 = maxSingle2 + 1; // NUOVO
-      charlieCounter = maxCharlie + 1;
-      staticoCounter = maxStatico + 1;
-
-      // Aggiorna i pulsanti con il valore corretto
-      document.getElementById("playerId-coppia").value = `${coupleCounter}`;
-      document.getElementById("playerId-singolo").value = `${singleCounter}`;
-      $("#playerId-coppia2").val(coupleCounter2); // NUOVO
-      $("#playerId-singolo2").val(singleCounter2); // NUOVO
-      document.getElementById("playerId-charlie").value = `${charlieCounter}`;
-      document.getElementById("playerId-statico").value = `${staticoCounter}`;
+      // Aggiorna i campi di input con il valore corretto
+      $("#playerId-coppia").val(coupleCounter);
+      $("#playerId-singolo").val(singleCounter);
+      $("#playerId-coppia2").val(coupleCounter2);
+      $("#playerId-singolo2").val(singleCounter2);
+      $("#playerId-charlie").val(charlieCounter);
+      $("#playerId-statico").val(staticoCounter);
     })
     .catch((error) => console.error("Errore nel recupero degli ID:", error));
 }

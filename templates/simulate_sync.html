@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Simula Sincronizzazione Aruba - Caccia al Tesoro</title>
+    <!-- Usa bootstrap limitatamente per styling svelto o CSS normalizzato -->
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0b0f19; color: white; display:flex; justify-content:center; padding-top: 50px; }
+        .card { background: #1a2235; padding: 2rem; border-radius: 12px; width: 450px; box-shadow: 0px 4px 20px rgba(0,0,0,0.5); }
+        h2 { margin-top: 0; color: #4facfe; text-align: center; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: .5rem; font-size: 0.9rem; color: #cbd5e1; }
+        input { width: 100%; padding: 0.75rem; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box;}
+        button { width: 100%; padding: 0.75rem; border-radius: 6px; border: none; background: linear-gradient(to right, #4facfe, #00f2fe); color: black; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px;}
+        button:hover { opacity: 0.8; }
+        #result { margin-top: 1rem; padding: 1rem; border-radius: 6px; display: none; }
+        .success { background: rgba(34, 197, 94, 0.2); color: #4ade80; border: 1px solid #22c55e; }
+        .error { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Simula Invio Aruba</h2>
+        <form id="simulateForm">
+            <div class="form-group">
+                <label>Treasure Code (6 cifre)</label>
+                <input type="text" id="treasureCode" placeholder="Es. 482910" required>
+            </div>
+            <div class="form-group">
+                <label>Nome Giocatore</label>
+                <input type="text" id="nome" placeholder="Mario" required>
+            </div>
+            <div class="form-group">
+                <label>Cognome Giocatore</label>
+                <input type="text" id="cognome" placeholder="Rossi" required>
+            </div>
+            <div class="form-group">
+                <label>Telefono</label>
+                <input type="tel" id="telefono" placeholder="3331234567" required>
+            </div>
+            <div class="form-group">
+                <label>Oggetto Trovato / Mappa (QRCode = 1-6)</label>
+                <input type="number" id="qrcode" min="1" max="6" value="3" required>
+            </div>
+            <div class="form-group">
+                <label>Timestamp Invio (Simula un ritardo rispetto allo stop di Y min)</label>
+                <input type="text" id="timestamp" placeholder="Es. 2025-06-08 15:32:44" required>
+            </div>
+            <button type="submit">Sincronizza Ora</button>
+        </form>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        // Set current time as default, maybe add 5 minutes to simulate a valid sync
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 5); 
+        
+        const pad = n => n.toString().padStart(2, '0');
+        const defaultTime = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        document.getElementById('timestamp').value = defaultTime;
+
+        document.getElementById('simulateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const resDiv = document.getElementById('result');
+            
+            btn.textContent = "Sincronizzazione...";
+            btn.disabled = true;
+
+            const payload = {
+                data: [
+                    {
+                        "id": "1",
+                        "nome": document.getElementById('nome').value,
+                        "cognome": document.getElementById('cognome').value,
+                        "telefono": document.getElementById('telefono').value,
+                        "treasure_code": document.getElementById('treasureCode').value,
+                        "qrcode_scanned": document.getElementById('qrcode').value,
+                        "timestamp_invio": document.getElementById('timestamp').value
+                    }
+                ]
+            };
+
+            try {
+                const response = await fetch('/sync_aruba', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                resDiv.style.display = 'block';
+                if (result.success) {
+                    resDiv.className = 'success';
+                    resDiv.innerHTML = `Sincronizzazione Completata!<br>Elementi sincronizzati: ${result.synced_count}<br>Errori: ${result.errors.length}`;
+                } else {
+                    resDiv.className = 'error';
+                    resDiv.innerHTML = `Errore di Sincronizzazione: ${result.error}`;
+                }
+            } catch (err) {
+                resDiv.style.display = 'block';
+                resDiv.className = 'error';
+                resDiv.innerHTML = "Errore di connessione al server.";
+            }
+
+            btn.textContent = "Sincronizza Ora";
+            btn.disabled = false;
+        });
+    </script>
+</body>
+</html>

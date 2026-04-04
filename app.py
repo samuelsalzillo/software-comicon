@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file
+from flask import Flask, render_template, jsonify, request, redirect, url_for, send_file, session
 from main import GameBackend
 import datetime
 import os
@@ -17,10 +17,14 @@ from threading import Timer
 import glob
 from io import BytesIO
 from threading import Thread
+import random
+import string
+import requests
 from threading import Lock
 import socket # per il print dell'ip
 
 app = Flask(__name__)
+app.secret_key = 'mercenari_super_secret_key_2026'
 backend = GameBackend()
 
 # Impostazioni logging
@@ -89,6 +93,25 @@ def init_scoring_table():
 
 # Chiama la funzione per inizializzare la tabella scoring
 init_scoring_table()
+
+def update_scoring_schema():
+    logging.debug("[SCORING] Updating schema for Treasure Hunt")
+    with sqlite_lock:
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        try:
+            cursor.execute("ALTER TABLE scoring ADD COLUMN treasure_code TEXT")
+            cursor.execute("ALTER TABLE scoring ADD COLUMN gener_map INTEGER")
+            cursor.execute("ALTER TABLE scoring ADD COLUMN treasure_finish TIMESTAMP")
+            cursor.execute("ALTER TABLE scoring ADD COLUMN treasure_time_qualification REAL")
+            cursor.execute("ALTER TABLE scoring ADD COLUMN synked INTEGER DEFAULT 0")
+            conn.commit()
+            logging.info("[SCORING] Colonne Treasure Hunt aggiunte.")
+        except sqlite3.OperationalError as e:
+            logging.debug(f"[SCORING] Alter table skip (colonne esistenti?): {e}")
+        conn.close()
+
+update_scoring_schema()
 
 def init_average_times_table():
     logging.debug("[AVG TIMES DB] Acquisizione lock per init tabella average_times")
@@ -525,38 +548,8 @@ def save_queues_to_db():
                     ('statico', statico['id'], backend.get_player_name(statico['id']), statico['arrival'])
                 )
 
-            # Salva gli score
-            cursor.execute("DELETE FROM scoring")
-            for player_id, score in backend.couple_history_total:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('couple', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.single_history:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('single', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.couple_history_total2:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('couple2', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.single_history2:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('single', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.charlie_history:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('charlie', player_id, backend.get_player_name(player_id), score)
-                )
-            for player_id, score in backend.statico_history:
-                cursor.execute(
-                    "INSERT INTO scoring (player_type, player_id, player_name, score) VALUES (?, ?, ?, ?)",
-                    ('statico', player_id, backend.get_player_name(player_id), score)
-                )
+            # Salva gli score: RIMOSSO per non sovrascrivere `created_at` e dati Treasure Hunt.
+            # Il salvataggio avviene in modo definitivo al momento dello stop dentro submit_combined_score.
 
             logging.debug("[DB SAVE THREAD] Cancellazione vecchi timer Charlie...")
             cursor.execute("DELETE FROM charlie_timer_scores")
@@ -1057,6 +1050,17 @@ def queue():
     return render_template('queue.html')
 
 
+@app.route('/get_next_player_ids', methods=['GET'])
+def get_next_player_ids():
+    return jsonify(
+        next_couple=backend.get_max_id(["GIALLO"]) + 1,
+        next_single=backend.get_max_id(["BLU"]) + 1,
+        next_couple2=backend.get_max_id(["ROSA"]) + 1,
+        next_single2=backend.get_max_id(["BIANCO", "ARANCIO"]) + 1,
+        next_charlie=backend.get_max_id(["VERDE"]) + 1,
+        next_statico=backend.get_max_id(["ROSSO"]) + 1
+    )
+
 @app.route('/simulate', methods=['GET'])
 def simulate():
     couples_board, singles_board, couples2_board, singles2_board, charlie_board, statico_board = backend.get_waiting_board()
@@ -1529,21 +1533,32 @@ def submit_combined_score():
             logging.error(f"[AVG TIME DB SAVE] Failed (General Error) for {player_id}: {e}", exc_info=True)
             # Continuiamo
 
-        # 2. Salva Official Score nel DB per la classifica
+        # 2. Salva Official Score nel DB per la classifica + Dati Treasure Hunt
         try:
             with sqlite_lock:
                 conn = sqlite3.connect(SQLITE_DB_PATH)
                 cursor = conn.cursor()
                 # Determina il player_type corretto per la tabella scoring ('couple' o 'single')
                 scoring_player_type = 'couple' if player_type in ('couple', 'couple2') else 'single'
+                
+                # Genera dati Treasure Hunt univoci
+                while True:
+                    treasure_code = "".join(random.choices(string.digits, k=6))
+                    cursor.execute("SELECT 1 FROM scoring WHERE treasure_code = ?", (treasure_code,))
+                    if not cursor.fetchone():
+                        break
+                        
+                gener_map = random.randint(1, 6)
+                treasure_password = "Mercenari2026"
+                
                 execute_with_retry(
                     cursor,
-                    "INSERT INTO scoring (player_type, player_id, player_name, score, created_at) VALUES (?, ?, ?, ?, ?)",
-                    (scoring_player_type, player_id, player_name, official_score, now)
+                    "INSERT INTO scoring (player_type, player_id, player_name, score, created_at, treasure_code, gener_map, synked) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (scoring_player_type, player_id, player_name, official_score, now, treasure_code, gener_map, 0)
                 )
                 conn.commit()
                 conn.close()
-            logging.info(f"[SCORING DB SAVE] Success for {player_id} ({scoring_player_type}).")
+            logging.info(f"[SCORING DB SAVE] Success for {player_id} ({scoring_player_type}). TreasureCode: {treasure_code}, Map: {gener_map}")
         except sqlite3.Error as db_err:
             logging.error(f"[SCORING DB SAVE] Failed for {player_id}: {db_err}", exc_info=True)
             return jsonify(success=False, qualified=False, reason=None, error=f"Errore DB salvataggio score: {db_err}"), 500
@@ -1573,23 +1588,21 @@ def submit_combined_score():
              # Anche se c'è errore qui, i dati sono salvati, quindi procedi col check qualifica
 
 
-        # 4. Controlla la qualifica usando l'OFFICIAL SCORE
+        # 4. (Qualificazione rinviata alla fine della Treasure Hunt)
         scoring_player_type = 'couple' if player_type in ('couple', 'couple2') else 'single'
-        logging.debug(f"Checking qualification for {player_id} with score={official_score}, type={scoring_player_type}") # Log prima del check
-        is_qualified, reason = backend.check_qualification(official_score, scoring_player_type)
-        logging.info(f"[COMBINED QUAL CHECK] Player: {player_id}, Score: {official_score:.4f}, Qualified: {is_qualified}, Reason: {reason}")
 
-
-        # 5. Ritorna il risultato al frontend
+        # 5. Ritorna il risultato al frontend (Modale Treasure Hunt)
         return jsonify(
             success=True,
-            qualified=is_qualified,
-            reason=reason,
-            # Passa indietro i dati necessari per il modal contatti
+            qualified=False, # Dummy da ignorare nel frontend
+            reason="",
             player_id=player_id,
             player_name=player_name,
-            recorded_score=official_score, # Punteggio ufficiale che ha qualificato
-            player_type=scoring_player_type # Tipo per il modal contatti ('couple' o 'single')
+            recorded_score=official_score,
+            player_type=scoring_player_type,
+            treasure_code=treasure_code,
+            gener_map=gener_map,
+            treasure_password=treasure_password
         )
 
     except ValueError as ve:
@@ -1899,8 +1912,34 @@ def get_status():
     })
 
 
+@app.route('/admin_login', methods=['GET'])
+def admin_login():
+    return render_template('admin_auth.html')
+
+@app.route('/admin_login/step1', methods=['POST'])
+def admin_login_step1():
+    data = request.get_json()
+    if data and data.get('password') == 'mercenari2026':
+        session['admin_step1_passed'] = True
+        return jsonify({'success': True})
+    return jsonify({'success': False}), 401
+
+@app.route('/admin_login/step2', methods=['POST'])
+def admin_login_step2():
+    if not session.get('admin_step1_passed'):
+        return jsonify({'success': False}), 401
+    
+    data = request.get_json()
+    if data and data.get('pin') == '252624':
+        session['admin_logged_in'] = True
+        session.pop('admin_step1_passed', None)
+        return jsonify({'success': True, 'redirect_url': url_for('admin_control')})
+    return jsonify({'success': False}), 401
+
 @app.route('/management')
 def admin_control():
+    if not session.get('admin_logged_in'):
+        return redirect(url_for('admin_login'))
     return render_template('admin_control.html')
 
 @app.route('/admin/reset_day', methods=['POST'])
@@ -1927,9 +1966,10 @@ def reset_day():
             cursor.execute("DELETE FROM queues")
             cursor.execute("DELETE FROM average_times")
             
-            # 3. Cleanup qualified_players (keep only top 3 per type)
-            logging.info("[RESET DAY] Cleaning up qualified_players - keeping top 3 per category.")
+            # 3. Cleanup qualified_players (mantieni Top 3 assoluti + Migliore di ogni singolo giorno)
+            logging.info("[RESET DAY] Cleaning up qualified_players - keeping top 3 and best of each day.")
             for p_type in ['couple', 'single', 'charlie']:
+                # Prendi i Top 3 assoluti
                 cursor.execute("""
                     SELECT id FROM qualified_players 
                     WHERE player_type = ? 
@@ -1937,11 +1977,24 @@ def reset_day():
                     LIMIT 3
                 """, (p_type,))
                 top_ids = [row[0] for row in cursor.fetchall()]
+
+                # Prendi il Migliore di ogni giorno
+                cursor.execute("""
+                    SELECT id FROM qualified_players q1
+                    WHERE player_type = ? AND score_minutes = (
+                        SELECT MIN(score_minutes) FROM qualified_players q2
+                        WHERE q2.player_type = q1.player_type AND DATE(q2.qualification_date) = DATE(q1.qualification_date)
+                    )
+                """, (p_type,))
+                best_daily_ids = [row[0] for row in cursor.fetchall()]
+
+                # Unisci le liste senza duplicati
+                ids_to_keep = list(set(top_ids + best_daily_ids))
                 
-                if top_ids:
-                    placeholders = ','.join(['?'] * len(top_ids))
+                if ids_to_keep:
+                    placeholders = ','.join(['?'] * len(ids_to_keep))
                     query = f"DELETE FROM qualified_players WHERE player_type = ? AND id NOT IN ({placeholders})"
-                    cursor.execute(query, (p_type, *top_ids))
+                    cursor.execute(query, (p_type, *ids_to_keep))
                 else:
                     cursor.execute("DELETE FROM qualified_players WHERE player_type = ?", (p_type,))
             
@@ -1983,6 +2036,117 @@ def execute_with_retry(cursor, query, params=(), retries=5, delay=0.1):
                     raise
             else:
                 raise
+
+
+@app.route('/sync_aruba', methods=['POST'])
+def sync_aruba():
+    data_to_sync = request.json.get('data', []) if request.json else []
+    
+    if not data_to_sync:
+        try:
+            # Placeholder per Aruba GET vera (scommentare per produzione)
+            # response = requests.get('https://example.com/api/aruba_sync', timeout=10)
+            # if response.json().get('success'):
+            #     data_to_sync = response.json().get('data', [])
+            pass
+        except Exception as e:
+            logging.error(f"Errore fetch Aruba: {e}")
+            return jsonify(success=False, error="Errore di connessione ad Aruba")
+
+    synced_count = 0
+    errors = []
+    
+    with sqlite_lock:
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        
+        for item in data_to_sync:
+            try:
+                treasure_code = item.get('treasure_code')
+                qrcode_scanned = item.get('qrcode_scanned')
+                timestamp_invio = item.get('timestamp_invio') # es. "2025-06-08 15:32:44"
+                
+                if not treasure_code:
+                    continue
+                    
+                cursor.execute("SELECT id, created_at, score, synked, player_type, player_id, player_name FROM scoring WHERE treasure_code = ?", (treasure_code,))
+                row = cursor.fetchone()
+                
+                if not row:
+                    errors.append(f"Codice {treasure_code} non trovato in scoring.")
+                    continue
+                    
+                row_id, created_at_str, pista_score, synked, player_type, player_id, player_name = row
+                
+                if synked == 1 or synked == True:
+                    continue
+                    
+                if not created_at_str:
+                    continue
+                
+                # Parsa timestamp (Aruba e Scoring)
+                ts_invio = datetime.datetime.strptime(timestamp_invio, "%Y-%m-%d %H:%M:%S")
+                # Gestisce sia iso format di date sia il formato sqlite "2026-03-31 22:15:31"
+                try:
+                    ts_created = datetime.datetime.strptime(created_at_str[:19], "%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    ts_created = dt.fromisoformat(created_at_str.split('.')[0])
+                    
+                # Rimuove il timezone information se presente per evitare conflitti con ts_invio
+                ts_created = ts_created.replace(tzinfo=None)
+                
+                diff_seconds = (ts_invio - ts_created).total_seconds()
+                if diff_seconds <= 0:
+                    errors.append(f"Timestamp non valido per {treasure_code} (diff={diff_seconds})")
+                    continue
+                    
+                treasure_time_minutes = diff_seconds / 60.0
+                total_time = float(pista_score) + treasure_time_minutes
+                
+                cursor.execute("""
+                    UPDATE scoring 
+                    SET gener_map = ?, treasure_finish = ?, treasure_time_qualification = ?, synked = 1 
+                    WHERE id = ?
+                """, (qrcode_scanned, timestamp_invio, treasure_time_minutes, row_id))
+                
+                # Controllo qualificazione
+                is_qualified, reason = backend.check_qualification(total_time, player_type)
+                
+                if is_qualified:
+                    # Idempotenza checking explicitly using player_id AND DATE(qualification_date)
+                    cursor.execute("SELECT 1 FROM qualified_players WHERE player_id = ? AND DATE(qualification_date) = DATE(?)", (player_id, timestamp_invio))
+                    if not cursor.fetchone():
+                        fn = str(item.get('nome', '')).strip()
+                        ln = str(item.get('cognome', '')).strip()
+                        
+                        # Fallback to the scoring table player_name if both are missing
+                        if not fn and not ln:
+                            parts = str(player_name).split()
+                            fn = parts[0] if parts else "Sconosciuto"
+                            ln = " ".join(parts[1:]) if len(parts) > 1 else ""
+                            
+                        real_player_name = f"{fn} {ln}".strip()
+                        phone = str(item.get('telefono', '0000000000'))
+                        score_formatted = backend.format_time(total_time)
+                        
+                        cursor.execute("""
+                            INSERT INTO qualified_players (player_id, player_name, first_name, last_name, phone_number, score_minutes, score_formatted, player_type, qualification_reason, qualification_date)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (player_id, real_player_name, fn, ln, phone, total_time, score_formatted, player_type, reason, timestamp_invio))
+                
+                synced_count += 1
+            except Exception as e:
+                errors.append(f"Errore processando il codice {item.get('treasure_code')}: {str(e)}")
+                logging.error(f"Errore sync: {e}", exc_info=True)
+                
+        conn.commit()
+        conn.close()
+
+    return jsonify(success=True, synced_count=synced_count, errors=errors)
+
+@app.route('/simulate_sync')
+def simulate_sync():
+    return render_template('simulate_sync.html')
 
 
 if __name__ == '__main__':
