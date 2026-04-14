@@ -158,3 +158,7 @@ Le regole principali sono:
 
 Se vuoi posso anche crearti una versione ancora più teatrale, tipo un "tribunale del codice" con "giudici elettrici" e "pena capitale (solo vibrazioni)"!  
 Vuoi che ti preparo anche una variante ancora più "extra"? 🚀
+
+
+
+ mercenari2026 252624

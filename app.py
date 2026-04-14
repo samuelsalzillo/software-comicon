@@ -724,54 +724,66 @@ initialize_queues()
 @app.route('/leaderboard/top3', methods=['GET'])
 def get_top3_leaderboard():
     """
-    Recupera i primi 3 giocatori qualificati per tipo (couple, single, charlie)
-    basandosi sul tempo più basso registrato nella tabella qualified_players.
-    (Assume che la colonna player_id contenga l'ID CORTO: "COLORE NNN")
+    Recupera i primi 3 giocatori in tempo reale dalla tabella scoring, 
+    sommando il tempo in pista e il tempo della caccia al tesoro.
     """
     top3_data = {
         'couples': [],
         'singles': [],
         'charlie': []
     }
-    player_types = ['couple', 'single', 'charlie'] # Tipi da cercare
+    player_types = ['couple', 'single', 'charlie'] 
 
     try:
-        with sqlite_lock: # Usa il lock per l'accesso al DB
+        with sqlite_lock: 
             conn = sqlite3.connect(SQLITE_DB_PATH, timeout=10)
             cursor = conn.cursor()
 
             for p_type in player_types:
-                logging.debug(f"Querying top 3 for type: {p_type} (using short ID from DB)")
-                # --- Query che assume player_id è l'ID CORTO ---
-                cursor.execute("""
-                    SELECT player_id, first_name, last_name, score_formatted, score_minutes
-                    FROM qualified_players
-                    WHERE player_type = ?
-                    ORDER BY score_minutes ASC
-                    LIMIT 3
-                """, (p_type,))
+                if p_type == 'charlie':
+                    cursor.execute("""
+                        SELECT player_id, first_name, last_name, score_minutes
+                        FROM qualified_players
+                        WHERE player_type = ? AND score_minutes IS NOT NULL
+                        ORDER BY score_minutes ASC
+                        LIMIT 3
+                    """, (p_type,))
+                else:
+                    cursor.execute("""
+                        SELECT player_id, player_name, score_minutes
+                        FROM qualified_players
+                        WHERE player_type = ? AND score_minutes IS NOT NULL
+                        ORDER BY score_minutes ASC
+                        LIMIT 3
+                    """, (p_type,))
                 rows = cursor.fetchall()
-                logging.debug(f"Found {len(rows)} results for {p_type}")
-
+                
+                
                 rank = 1
                 for row in rows:
-                    # Legge direttamente l'ID corto dal DB
-                    short_player_id, first_name, last_name, score_formatted, score_minutes = row
+                    if p_type == 'charlie':
+                        short_player_id, first_name, last_name, total_mins = row
+                        full_name = f"{first_name} {last_name}"
+                    else:
+                        short_player_id, full_name, total_mins = row
+                    
+                    m = int(total_mins)
+                    s = int(round((total_mins - m) * 60))
+                    score_formatted = f"{m}m {s}s"
+                    
                     player_entry = {
                         "rank": rank,
-                        "id": short_player_id, # Usa direttamente l'ID letto
-                        "name": f"{first_name} {last_name}", # Nome del contatto
-                        "score": score_formatted,
-                        # "score_minutes": score_minutes # Opzionale: se serve al frontend
+                        "id": short_player_id, 
+                        "name": full_name, 
+                        "score": score_formatted
                     }
-                    # Aggiunge alla lista corretta (couples, singles, charlies)
                     if p_type in top3_data:
                         top3_data[p_type].append(player_entry)
-                    elif p_type + 's' in top3_data: # Gestisce plurale automatico
+                    elif p_type + 's' in top3_data: 
                          top3_data[p_type + 's'].append(player_entry)
                     rank += 1
 
-            conn.close() # Chiudi connessione dopo tutte le query
+            conn.close() 
 
         return jsonify(top3_data)
 
@@ -933,12 +945,135 @@ def get_scores():
     leaderboard = backend.get_leaderboard()
     return jsonify(leaderboard)
 
+@app.route('/get_advanced_scores', methods=['GET'])
+def get_advanced_scores():
+    advanced_leaderboard = {
+        'couples': [],
+        'singles': [],
+        'charlie': []
+    }
+    try:
+        with sqlite_lock:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            player_types = ['couple', 'single', 'charlie']
+            
+            for p_type in player_types:
+                cursor.execute("""
+                    SELECT player_id, player_name, score, treasure_time_qualification
+                    FROM scoring
+                    WHERE player_type = ? AND score IS NOT NULL
+                    ORDER BY score ASC
+                """, (p_type,))
+                rows = cursor.fetchall()
+                
+                for row in rows:
+                    p_id, p_name, score_mins, treasure_mins = row
+                    
+                    total_mins = None
+                    if p_type == 'charlie':
+                        total_mins = score_mins
+                        status = 'none'
+                    else:
+                        if treasure_mins is not None:
+                            total_mins = score_mins + treasure_mins
+                        status = 'completed' if treasure_mins is not None else 'in_mission'
+                        
+                    def format_time(mins):
+                        if mins is None: return "--"
+                        m = int(mins)
+                        s = int(round((mins - m) * 60))
+                        return f"{m}m {s}s"
+                        
+                    advanced_leaderboard[p_type + 's' if p_type != 'charlie' else p_type].append({
+                        'id': p_id,
+                        'name': p_name,
+                        'track_score_raw': score_mins,
+                        'track_score_fmt': format_time(score_mins),
+                        'final_score_raw': total_mins,
+                        'final_score_fmt': format_time(total_mins),
+                        'treasure_status': status
+                    })
+            conn.close()
+    except Exception as e:
+        logging.error(f"Errore get_advanced_scores: {e}")
+    return jsonify(advanced_leaderboard)
 
 @app.route('/scoring')
 def scoring():
     leaderboard = backend.get_leaderboard()
     return render_template('scoring.html', leaderboard=leaderboard)
 
+@app.route('/podium')
+def podium():
+    return render_template('podium.html')
+
+
+@app.route('/get_latest_scores', methods=['GET'])
+def get_latest_scores():
+    latest_data = {
+        'couples_track': [], 'couples_treasure': [],
+        'singles_track': [], 'singles_treasure': [],
+        'charlie_track': [], 'charlie_treasure': []
+    }
+    
+    try:
+        with sqlite_lock:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            player_types = ['couple', 'single', 'charlie']
+            
+            def format_time(mins):
+                if mins is None: return "--"
+                m = int(mins)
+                s = int(round((mins - m) * 60))
+                return f"{m}m {s}s"
+            
+            for p_type in player_types:
+                prefix = p_type + 's' if p_type != 'charlie' else p_type
+                
+                # Ultime 10 giocate in pista
+                cursor.execute("""
+                    SELECT player_id, player_name, score
+                    FROM scoring
+                    WHERE player_type = ? AND score IS NOT NULL
+                    ORDER BY id DESC
+                    LIMIT 10
+                """, (p_type,))
+                for row in cursor.fetchall():
+                    latest_data[f"{prefix}_track"].append({
+                        'id': row[0],
+                        'name': row[1],
+                        'track_score': format_time(row[2])
+                    })
+                    
+                # Ultime 10 giocate concluse (con caccia al tesoro)
+                # Ordina per id DESC (oppure per treasure_finish DESC se disponibile in futuro, ma id funziona se l'update segue un flusso lineare/logico)
+                cursor.execute("""
+                    SELECT player_id, player_name, score, treasure_time_qualification
+                    FROM scoring
+                    WHERE player_type = ? AND score IS NOT NULL AND treasure_time_qualification IS NOT NULL
+                    ORDER BY id DESC
+                    LIMIT 10
+                """, (p_type,))
+                for row in cursor.fetchall():
+                    total_m = row[2] + row[3]
+                    latest_data[f"{prefix}_treasure"].append({
+                        'id': row[0],
+                        'name': row[1],
+                        'treasure_hunt_score': format_time(row[3]),
+                        'total_score': format_time(total_m)
+                    })
+                    
+            conn.close()
+    except Exception as e:
+        logging.error(f"Errore get_latest_scores: {e}")
+        
+    return jsonify(latest_data)
+
+@app.route('/latest')
+def latest():
+    return render_template('latest_plays.html')
 
 @app.route('/keypad')
 def keypad():
@@ -2044,11 +2179,16 @@ def sync_aruba():
     
     if not data_to_sync:
         try:
-            # Placeholder per Aruba GET vera (scommentare per produzione)
-            # response = requests.get('https://example.com/api/aruba_sync', timeout=10)
-            # if response.json().get('success'):
-            #     data_to_sync = response.json().get('data', [])
-            pass
+            # Fetch data from Aruba
+            response = requests.get('https://www.mercenarisocs.it/k1Nwe3ALeyoe53fj/comicon26/api.php', timeout=10)
+            response.raise_for_status()
+            resp_json = response.json()
+            
+            if isinstance(resp_json, list):
+                data_to_sync = resp_json
+            elif isinstance(resp_json, dict):
+                data_to_sync = resp_json.get('data', [])
+                
         except Exception as e:
             logging.error(f"Errore fetch Aruba: {e}")
             return jsonify(success=False, error="Errore di connessione ad Aruba")
@@ -2063,8 +2203,8 @@ def sync_aruba():
         for item in data_to_sync:
             try:
                 treasure_code = item.get('treasure_code')
-                qrcode_scanned = item.get('qrcode_scanned')
-                timestamp_invio = item.get('timestamp_invio') # es. "2025-06-08 15:32:44"
+                qrcode_scanned = item.get('qrcode')
+                timestamp_invio = item.get('timestamp_fine') # es. "2025-06-08 15:32:44"
                 
                 if not treasure_code:
                     continue
@@ -2082,6 +2222,10 @@ def sync_aruba():
                     continue
                     
                 if not created_at_str:
+                    continue
+                
+                if not timestamp_invio:
+                    errors.append(f"Manca timestamp_invio per il codice {treasure_code}.")
                     continue
                 
                 # Parsa timestamp (Aruba e Scoring)
@@ -2113,26 +2257,26 @@ def sync_aruba():
                 is_qualified, reason = backend.check_qualification(total_time, player_type)
                 
                 if is_qualified:
-                    # Idempotenza checking explicitly using player_id AND DATE(qualification_date)
-                    cursor.execute("SELECT 1 FROM qualified_players WHERE player_id = ? AND DATE(qualification_date) = DATE(?)", (player_id, timestamp_invio))
-                    if not cursor.fetchone():
-                        fn = str(item.get('nome', '')).strip()
-                        ln = str(item.get('cognome', '')).strip()
+                    # Rimosso il controllo di idempotenza basato sul player_id poiché lo stesso ID 
+                    # può essere riutilizzato da persone diverse o nello stesso giorno/giorni diversi.
+                    # La duplicazione è già evitata dal campo 'synked' nella tabella 'scoring'.
+                    fn = str(item.get('nome', '')).strip()
+                    ln = str(item.get('cognome', '')).strip()
                         
-                        # Fallback to the scoring table player_name if both are missing
-                        if not fn and not ln:
-                            parts = str(player_name).split()
-                            fn = parts[0] if parts else "Sconosciuto"
-                            ln = " ".join(parts[1:]) if len(parts) > 1 else ""
-                            
-                        real_player_name = f"{fn} {ln}".strip()
-                        phone = str(item.get('telefono', '0000000000'))
-                        score_formatted = backend.format_time(total_time)
+                    # Fallback to the scoring table player_name if both are missing
+                    if not fn and not ln:
+                        parts = str(player_name).split()
+                        fn = parts[0] if parts else "Sconosciuto"
+                        ln = " ".join(parts[1:]) if len(parts) > 1 else ""
                         
-                        cursor.execute("""
-                            INSERT INTO qualified_players (player_id, player_name, first_name, last_name, phone_number, score_minutes, score_formatted, player_type, qualification_reason, qualification_date)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """, (player_id, real_player_name, fn, ln, phone, total_time, score_formatted, player_type, reason, timestamp_invio))
+                    real_player_name = f"{fn} {ln}".strip()
+                    phone = str(item.get('telefono', '0000000000'))
+                    score_formatted = backend.format_time(total_time)
+                    
+                    cursor.execute("""
+                        INSERT INTO qualified_players (player_id, player_name, first_name, last_name, phone_number, score_minutes, score_formatted, player_type, qualification_reason, qualification_date)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (player_id, real_player_name, fn, ln, phone, total_time, score_formatted, player_type, reason, ts_invio.date()))
                 
                 synced_count += 1
             except Exception as e:

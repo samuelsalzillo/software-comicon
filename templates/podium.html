@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MERCENARI SOCS - HALL OF FAME</title>
+    <!-- Use Google Fonts for Black Ops One -> standard military font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <style>
+        body {
+            background-color: #0b0f19;
+            background-image: repeating-linear-gradient(45deg, #111 25%, transparent 25%, transparent 75%, #111 75%, #111), repeating-linear-gradient(45deg, #111 25%, #0b0f19 25%, #0b0f19 75%, #111 75%, #111);
+            background-position: 0 0, 10px 10px;
+            background-size: 20px 20px;
+            color: white;
+            font-family: 'Roboto', sans-serif;
+            text-align: center;
+            overflow-x: hidden;
+            margin: 0;
+            padding-top: 30px;
+        }
+
+        h1.title {
+            font-family: 'Black Ops One', Impact, sans-serif;
+            font-size: 4rem;
+            color: #F29F05;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 0 0 20px #F29F05;
+            letter-spacing: 5px;
+            margin-bottom: 5px;
+        }
+
+        h2.subtitle {
+            font-family: monospace;
+            color: #3ca04d;
+            letter-spacing: 3px;
+            margin-bottom: 50px;
+        }
+
+        .category-tabs {
+            margin-bottom: 40px;
+        }
+        .category-tabs button {
+            background: #2a8b9e;
+            border: 2px solid #3ca04d;
+            font-family: 'Black Ops One', Impact, sans-serif;
+            font-size: 1.5rem;
+            color: white;
+            padding: 10px 30px;
+            margin: 0 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: 0.3s;
+        }
+        .category-tabs button:hover, .category-tabs button.active {
+            background: #ff4b2b;
+            border-color: #ff4b2b;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px #ff4b2b;
+        }
+
+        .podium-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 400px;
+            margin-top: 50px;
+        }
+
+        .podium-col {
+            width: 250px;
+            margin: 0 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transform: translateY(50px);
+        }
+
+        .podium-col.reveal {
+            animation: revealPodium 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes revealPodium {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .player-card {
+            background: rgba(20, 24, 21, 0.9);
+            border: 2px solid white;
+            padding: 20px;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: relative;
+        }
+
+        .player-card h3 {
+            font-family: 'Black Ops One', Impact, sans-serif;
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-card .id-badge {
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            background: #444; /* dynamic set via code */
+            color: white;
+            border: 1px solid white;
+        }
+
+        .player-card .score {
+            font-size: 2rem;
+            font-family: monospace;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        .podium-base {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Black Ops One', Impact, sans-serif;
+            font-size: 4rem;
+            color: rgba(0,0,0,0.5);
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.2);
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+            box-shadow: inset 0 5px 15px rgba(255,255,255,0.2);
+        }
+
+        /* 1st Place - Gold */
+        .col-1st .player-card { border-color: #ffd700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.6); }
+        .col-1st .player-card h3 { color: #ffd700; }
+        .col-1st .podium-base { height: 250px; background: linear-gradient(to bottom, #d4af37, #8a7323); }
+
+        /* 2nd Place - Silver */
+        .col-2nd .player-card { border-color: #c0c0c0; box-shadow: 0 0 20px rgba(192, 192, 192, 0.4); }
+        .col-2nd .player-card h3 { color: #c0c0c0; }
+        .col-2nd .podium-base { height: 180px; background: linear-gradient(to bottom, #b0b0b0, #696969); }
+
+        /* 3rd Place - Bronze */
+        .col-3rd .player-card { border-color: #cd7f32; box-shadow: 0 0 15px rgba(205, 127, 50, 0.4); }
+        .col-3rd .player-card h3 { color: #cd7f32; }
+        .col-3rd .podium-base { height: 120px; background: linear-gradient(to bottom, #a0522d, #5c2f16); }
+
+    </style>
+</head>
+<body>
+    <h1 class="title">HALL OF FAME</h1>
+    <h2 class="subtitle">TOP OPERATORS - FINAL MISSION TIMES</h2>
+
+    <div class="category-tabs">
+        <button class="active" onclick="switchCategory('couples')">COPPIE</button>
+        <button onclick="switchCategory('singles')">SINGOLI</button>
+        <button onclick="switchCategory('charlie')">CHARLIE</button>
+    </div>
+
+    <!-- Podium is displayed here -->
+    <div class="podium-container" id="podiumDisplay">
+        <!-- Javascript injects HTML here -->
+    </div>
+
+    <script>
+        let currentCategory = 'couples';
+        const categories = ['couples', 'singles', 'charlie'];
+        let categoryIndex = 0;
+        let allPodiumData = {};
+
+        function getPlayerColorStyle(playerId) {
+            if (playerId.startsWith("ROSSO")) return "background-color: red; color: white;";
+            if (playerId.startsWith("GIALLO")) return "background-color: #F29F05; color: white;";
+            if (playerId.startsWith("BLU")) return "background-color: #1F598C; color: white;";
+            if (playerId.startsWith("VERDE")) return "background-color: #8FBF60; color: white;";
+            if (playerId.startsWith("ROSA")) return "background-color: #D95276; color: white;";
+            if (playerId.startsWith("BIANCO")) return "background-color: white; color: black;";
+            return "background-color: gray; color: white;";
+        }
+
+        // We can pass the button directly or just find it by index
+        function switchCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.category-tabs button').forEach(b => b.classList.remove('active'));
+            
+            // Find the correct button to make active
+            const buttons = document.querySelectorAll('.category-tabs button');
+            if (cat === 'couples') buttons[0].classList.add('active');
+            if (cat === 'singles') buttons[1].classList.add('active');
+            if (cat === 'charlie') buttons[2].classList.add('active');
+            
+            renderPodium();
+        }
+
+        function autoCycleCategories() {
+            categoryIndex = (categoryIndex + 1) % categories.length;
+            switchCategory(categories[categoryIndex]);
+        }
+
+        function renderPodium() {
+            const container = document.getElementById('podiumDisplay');
+            container.innerHTML = '';
+            
+            const players = allPodiumData[currentCategory] || [];
+            if (players.length === 0) {
+                container.innerHTML = `<h3 style="margin-top: 50px;">Nessun operatore in categoria ${currentCategory.toUpperCase()}.</h3>`;
+                return;
+            }
+
+            const p1 = players[0];
+            const p2 = players[1];
+            const p3 = players[2];
+
+            const layout = [
+                { p: p2, place: '2nd', num: '2' },
+                { p: p1, place: '1st', num: '1' },
+                { p: p3, place: '3rd', num: '3' }
+            ];
+
+            layout.forEach((item) => {
+                if (!item.p) return;
+                
+                const col = document.createElement('div');
+                col.className = `podium-col col-${item.place}`;
+                col.innerHTML = `
+                    <div class="player-card">
+                        <h3>${item.p.name}</h3>
+                        <div class="id-badge" style="${getPlayerColorStyle(item.p.id)}">${item.p.id}</div>
+                        <div class="score">${item.p.score}</div>
+                    </div>
+                    <div class="podium-base">${item.num}</div>
+                `;
+                container.appendChild(col);
+
+                let delay = 0;
+                if (item.place === '3rd') delay = 100;
+                if (item.place === '2nd') delay = 400;
+                if (item.place === '1st') delay = 800;
+
+                setTimeout(() => {
+                    col.classList.add('reveal');
+                }, delay);
+            });
+        }
+
+        function fetchPodiumData() {
+            fetch('/leaderboard/top3')
+                .then(res => res.json())
+                .then(data => {
+                    allPodiumData = data;
+                    renderPodium(); // Re-render the current category if data updates
+                })
+                .catch(err => console.error("Error fetching podium:", err));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchPodiumData();
+            // Fetch updates every 15 seconds
+            setInterval(fetchPodiumData, 15000);
+            
+            // Auto-cycle categories every 10 seconds to allow animation to play
+            setInterval(autoCycleCategories, 10000);
+        });
+
+    </script>
+</body>
+</html>

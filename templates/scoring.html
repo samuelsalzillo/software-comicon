@@ -31,170 +31,245 @@
   }
 </style>
 {% endblock %} {% block content %}
+<style>
+  .tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+
+  .tab-btn {
+    background: #3ab1c8;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: 0.3s;
+    margin: 0 10px;
+    border-radius: 4px;
+  }
+
+  .tab-btn.active {
+    background: #1F598C;
+    border: 2px solid #ff4b2b;
+  }
+
+  .tab-btn:hover {
+    background: #2a8b9e;
+  }
+
+  .badge-mission {
+    background: #F29F05;
+    color: black;
+    font-size: 0.8em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 10px;
+    animation: pulse 2s infinite;
+  }
+
+  .badge-done {
+    background: #8FBF60;
+    color: white;
+    font-size: 0.8em;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-left: 10px;
+  }
+
+  @keyframes pulse {
+    0% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.5;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .leaderboard {
+    display: none;
+  }
+
+  .leaderboard.active {
+    display: block;
+  }
+
+  .player-color {
+    padding: 5px;
+    border-radius: 5px;
+    color: white;
+  }
+</style>
+
 <h1>Classifiche</h1>
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('track')">⏱️ TEMPI IN PISTA</button>
+  <button class="tab-btn" onclick="switchTab('total')">🏆 CLASSIFICA FINALE (CON CACCIA)</button>
+</div>
 
 <div class="row" style="align-items: baseline; row-gap: 20px">
-  <div class="col-3">
-    <div class="top-players leaderboard">
-      <h2>Migliori 3 Giocatori per Classifica</h2>
-      <div id="top-players-container"></div>
-    </div>
+  <div class="col-12" style="text-align: center; margin-bottom: 20px;">
+    <a href="{{ url_for('podium') }}" target="_blank" class="btn btn-warning"
+      style="font-weight: bold; font-size: 1.2rem; border-color: #ff4b2b;">🥇 APRI SCHERMO PODIO TOP 3</a>
   </div>
-  <div class="col-3">
-    <div class="leaderboard">
-      <h2>Classifica Coppie</h2>
-      <ul id="couples-leaderboard"></ul>
+
+  <div class="col-4">
+    <div class="leaderboard active" id="lb-track-couples"
+      style="background:#00000080; border-radius:10px; padding:20px;">
+      <h2 style="color:white; text-align:center;">Coppie (Pista)</h2>
+      <ul id="track-couples-list" style="list-style:none; padding:0; color:white;"></ul>
+    </div>
+    <div class="leaderboard" id="lb-total-couples" style="background:#00000080; border-radius:10px; padding:20px;">
+      <h2 style="color:white; text-align:center;">Coppie (Totale)</h2>
+      <ul id="total-couples-list" style="list-style:none; padding:0; color:white;"></ul>
     </div>
   </div>
 
-  <div class="col-3">
-    <div class="leaderboard">
-      <h2>Classifica Singoli</h2>
-      <ul id="singles-leaderboard"></ul>
+  <div class="col-4">
+    <div class="leaderboard active" id="lb-track-singles"
+      style="background:#00000080; border-radius:10px; padding:20px;">
+      <h2 style="color:white; text-align:center;">Singoli (Pista)</h2>
+      <ul id="track-singles-list" style="list-style:none; padding:0; color:white;"></ul>
+    </div>
+    <div class="leaderboard" id="lb-total-singles" style="background:#00000080; border-radius:10px; padding:20px;">
+      <h2 style="color:white; text-align:center;">Singoli (Totale)</h2>
+      <ul id="total-singles-list" style="list-style:none; padding:0; color:white;"></ul>
     </div>
   </div>
-  <div class="col-3">
-    <div class="leaderboard">
-      <h2>Classifica Charlie</h2>
-      <ul id="charlie-leaderboard"></ul>
+
+  <div class="col-4">
+    <div class="leaderboard active" id="lb-track-charlie"
+      style="background:#00000080; border-radius:10px; padding:20px;">
+      <h2 style="color:white; text-align:center;">Charlie</h2>
+      <ul id="track-charlie-list" style="list-style:none; padding:0; color:white;"></ul>
+    </div>
+    <div class="leaderboard" id="lb-total-charlie" style="background:#00000080; border-radius:10px; padding:20px;">
+      <h2 style="color:white; text-align:center;">Charlie</h2>
+      <ul id="total-charlie-list" style="list-style:none; padding:0; color:white;"></ul>
     </div>
   </div>
 
   {% endblock %} {% block scripts %}
   <script>
-    function updateLeaderboard() {
-      fetch("/get_scores")
-        .then((response) => response.json())
-        .then((data) => {
-          const couplesLeaderboard = document.getElementById(
-            "couples-leaderboard"
-          );
-          const singlesLeaderboard = document.getElementById(
-            "singles-leaderboard"
-          );
-          const charlieLeaderboard = document.getElementById(
-            "charlie-leaderboard"
-          );
+    let currentTab = 'track';
 
-          const topPlayersContainer = document.getElementById(
-            "top-players-container"
-          );
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.leaderboard').forEach(l => l.classList.remove('active'));
 
-          function createPlayerDiv(player, index) {
-            const div = document.createElement("div");
-            div.style.display = "flex";
-            div.style.alignItems = "center";
+      const buttons = document.querySelectorAll('.tab-btn');
+      if (tab === 'track') buttons[0].classList.add('active');
+      if (tab === 'total') buttons[1].classList.add('active');
 
-            const rank = document.createElement("h3");
-            rank.textContent = `${index + 1}.`;
-            rank.style.marginRight = "10px";
+      document.getElementById(`lb-${tab}-couples`).classList.add('active');
+      document.getElementById(`lb-${tab}-singles`).classList.add('active');
+      document.getElementById(`lb-${tab}-charlie`).classList.add('active');
 
-            if (index < 3) {
-              rank.style.color = "gold";
-            } else {
-              rank.style.color = "white";
-            }
-
-            const playerInfo = document.createElement("b");
-            playerInfo.textContent = `${player[0]} - ${player[1]}`;
-            if (player[0].startsWith("ROSSO")) {
-              playerInfo.style.backgroundColor = "red";
-            } else if (player[0].startsWith("GIALLO")) {
-              playerInfo.style.backgroundColor = "#F29F05";
-            } else if (player[0].startsWith("BLU")) {
-              playerInfo.style.backgroundColor = "#1F598C";
-            } else if (player[0].startsWith("VERDE")) {
-              playerInfo.style.backgroundColor = "#8FBF60";
-            } else if (player[0].startsWith("ROSA")) {
-              playerInfo.style.backgroundColor = "#D95276";
-            } else if (player[0].startsWith("BIANCO")) {
-              playerInfo.style.backgroundColor = "white";
-            } else {
-              playerInfo.style.backgroundColor = "gray"; // Default color
-            }
-            // style color black if player[o].startsWith("BIANCO") or startsWith("ROSA")
-            playerInfo.style.color = player[0].startsWith("BIANCO")
-              ? "black"
-              : "white";
-            playerInfo.style.padding = "5px";
-            playerInfo.style.borderRadius = "5px";
-
-            div.appendChild(rank);
-            div.appendChild(playerInfo);
-            div.style.marginBottom = "5px";
-            return div;
-          }
-
-          const couplesFragment = document.createDocumentFragment();
-          data.couples.forEach((player, index) => {
-            couplesFragment.appendChild(createPlayerDiv(player, index));
-          });
-          
-          const singlesFragment = document.createDocumentFragment();
-          data.singles.forEach((player, index) => {
-            singlesFragment.appendChild(createPlayerDiv(player, index));
-          });
-
-          const charlieFragment = document.createDocumentFragment();
-          data.charlie.forEach((player, index) => {
-            charlieFragment.appendChild(createPlayerDiv(player, index));
-          });
-
-          couplesLeaderboard.innerHTML = "";
-          couplesLeaderboard.appendChild(couplesFragment);
-
-          singlesLeaderboard.innerHTML = "";
-          singlesLeaderboard.appendChild(singlesFragment);
-
-          charlieLeaderboard.innerHTML = "";
-          charlieLeaderboard.appendChild(charlieFragment);
-
-          // Aggiungi i migliori 3 giocatori per ogni classifica
-          fetch("/leaderboard/top3")
-            .then((response) => response.json())
-            .then((top3Data) => {
-              const top3Fragment = document.createDocumentFragment();
-              const categories = ["couples", "singles", "charlie"];
-              categories.forEach((category) => {
-                const topPlayers = top3Data[category];
-                if (topPlayers && topPlayers.length > 0) {
-                  const categoryDiv = document.createElement("div");
-                  categoryDiv.innerHTML = `<h4>${category.toUpperCase()}</h4>`;
-                  const ul = document.createElement("ul");
-                  topPlayers.forEach((player, index) => {
-                    const li = document.createElement("li");
-                    li.textContent = `${index + 1}. ${player.name} (${
-                      player.score
-                    })`;
-                    ul.appendChild(li);
-                  });
-                  categoryDiv.appendChild(ul);
-                  categoryDiv.style.color = "white";
-                  top3Fragment.appendChild(categoryDiv);
-                }
-              });
-              topPlayersContainer.innerHTML = "";
-              topPlayersContainer.appendChild(top3Fragment);
-            })
-            .catch((error) =>
-              console.error(
-                "Errore durante il caricamento dei migliori 3 giocatori:",
-                error
-              )
-            );
-        })
-        .catch((error) =>
-          console.error(
-            "Errore durante l'aggiornamento della classifica:",
-            error
-          )
-        );
+      updateLeaderboard(); // force re-render visual
     }
 
-    // Aggiorna la classifica ogni secondo
-    setInterval(updateLeaderboard, 3000);
+    function autoCycleTabs() {
+      const nextTab = currentTab === 'track' ? 'total' : 'track';
+      switchTab(nextTab);
+    }
 
-    // Aggiorna la classifica all'avvio della pagina
+    function getPlayerColorStyle(playerId) {
+      if (playerId.startsWith("ROSSO")) return "background-color: red; color: white;";
+      if (playerId.startsWith("GIALLO")) return "background-color: #F29F05; color: white;";
+      if (playerId.startsWith("BLU")) return "background-color: #1F598C; color: white;";
+      if (playerId.startsWith("VERDE")) return "background-color: #8FBF60; color: white;";
+      if (playerId.startsWith("ROSA")) return "background-color: #D95276; color: white;";
+      if (playerId.startsWith("BIANCO")) return "background-color: white; color: black;";
+      return "background-color: gray; color: white;";
+    }
+
+    function createPlayerItem(player, index, mode) {
+      const li = document.createElement("li");
+      li.style.cssText = "padding: 10px; border-bottom: 1px solid #444; font-size: 1.1em; display:flex; align-items:center; justify-content:space-between;";
+
+      const rankColor = index < 3 ? "gold" : "white";
+
+      const leftDiv = document.createElement("div");
+      leftDiv.innerHTML = `<span style="color:${rankColor}; margin-right:10px; font-weight:bold;">${index + 1}.</span>` +
+        `<span class="player-color" style="${getPlayerColorStyle(player.id)}">` +
+        `<b>${player.id}</b> - ${player.name}</span>`;
+
+      if (mode === 'track') {
+        if (player.treasure_status === 'in_mission') {
+          leftDiv.innerHTML += `<span class="badge-mission">⏳ IN MISSIONE</span>`;
+        } else if (player.treasure_status === 'completed') {
+          leftDiv.innerHTML += `<span class="badge-done">✔️ FATTO</span>`;
+        }
+        // If status is 'none', do nothing (Charlie)
+      }
+
+      const rightDiv = document.createElement("div");
+      if (mode === 'track') {
+        rightDiv.innerHTML = `<strong>${player.track_score_fmt}</strong>`;
+      } else {
+        if (player.treasure_status === 'none') {
+          rightDiv.innerHTML = `<strong>${player.final_score_fmt}</strong>`;
+        } else if (player.treasure_status === 'in_mission') {
+          rightDiv.innerHTML = `<span style="color:gray; font-size:0.9em; font-style:italic;">Attendendo Caccia...</span>`;
+        } else {
+          rightDiv.innerHTML = `<strong>${player.final_score_fmt}</strong><br>` +
+            `<span style="font-size:0.75em; color:#ccc;">(Pista: ${player.track_score_fmt})</span>`;
+        }
+      }
+
+      li.appendChild(leftDiv);
+      li.appendChild(rightDiv);
+      return li;
+    }
+
+    function renderList(elementId, playersArray, mode) {
+      const ul = document.getElementById(elementId);
+      ul.innerHTML = "";
+
+      let filteredPlayers = playersArray;
+      if (mode === 'total') {
+        filteredPlayers = playersArray.slice().sort((a, b) => {
+          if (a.final_score_raw === null && b.final_score_raw === null) return 0;
+          if (a.final_score_raw === null) return 1;
+          if (b.final_score_raw === null) return -1;
+          return a.final_score_raw - b.final_score_raw;
+        });
+      }
+
+      filteredPlayers.forEach((p, idx) => {
+        ul.appendChild(createPlayerItem(p, idx, mode));
+      });
+    }
+
+    function updateLeaderboard() {
+      fetch("/get_advanced_scores")
+        .then((response) => response.json())
+        .then((data) => {
+          if (currentTab === 'track') {
+            renderList('track-couples-list', data.couples, 'track');
+            renderList('track-singles-list', data.singles, 'track');
+            renderList('track-charlie-list', data.charlie, 'track');
+          } else {
+            renderList('total-couples-list', data.couples, 'total');
+            renderList('total-singles-list', data.singles, 'total');
+            renderList('total-charlie-list', data.charlie, 'total');
+          }
+        })
+        .catch(error => console.error("Errore aggiornamento:", error));
+    }
+
+    // Refresh data every 3s
+    setInterval(updateLeaderboard, 3000);
+    // Auto-cycle tabs every 15s
+    setInterval(autoCycleTabs, 15000);
+
     document.addEventListener("DOMContentLoaded", updateLeaderboard);
   </script>
   {% endblock %}

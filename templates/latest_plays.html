@@ -1,0 +1,197 @@
+{% extends "layout.html" %} 
+{% block extra_css %}
+<style>
+  .latest-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .leaderboard {
+    background: #000000A0; /* slightly darker for better contrast */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    padding: 15px;
+    height: 100%;
+  }
+
+  .leaderboard h3 {
+    color: #F29F05;
+    margin-bottom: 15px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-family: "Roboto", sans-serif;
+    font-weight: bold;
+    border-bottom: 2px solid #555;
+    padding-bottom: 10px;
+  }
+
+  .leaderboard ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .leaderboard li {
+    padding: 8px;
+    border-bottom: 1px solid #444;
+    font-size: 0.95em;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .player-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+  }
+  
+  .player-color { 
+      padding: 3px 6px; 
+      border-radius: 3px; 
+      color: white; 
+      font-size: 0.9em;
+  }
+  
+  .score-primary {
+      font-weight: bold;
+      color: #fff;
+      font-size: 1.1em;
+  }
+
+  .score-secondary {
+      font-size: 0.85em;
+      color: #aaa;
+      text-align: right;
+  }
+
+</style>
+{% endblock %} 
+
+{% block content %}
+<h1 style="margin-bottom: 30px;">Ultime Giocate</h1>
+
+<div class="row" style="margin: 0;">
+  <!-- Coppie -->
+  <div class="col-2" style="padding: 0 5px;">
+    <div class="leaderboard">
+      <h3>Coppie (Pista)</h3>
+      <ul id="list-couples-track"></ul>
+    </div>
+  </div>
+  <div class="col-2" style="padding: 0 5px;">
+    <div class="leaderboard">
+      <h3>Coppie (Caccia)</h3>
+      <ul id="list-couples-treasure"></ul>
+    </div>
+  </div>
+
+  <!-- Singoli -->
+  <div class="col-2" style="padding: 0 5px;">
+    <div class="leaderboard">
+      <h3>Singoli (Pista)</h3>
+      <ul id="list-singles-track"></ul>
+    </div>
+  </div>
+  <div class="col-2" style="padding: 0 5px;">
+    <div class="leaderboard">
+      <h3>Singoli (Caccia)</h3>
+      <ul id="list-singles-treasure"></ul>
+    </div>
+  </div>
+
+  <!-- Charlie -->
+  <div class="col-2" style="padding: 0 5px;">
+    <div class="leaderboard">
+      <h3>Charlie (Pista)</h3>
+      <ul id="list-charlie-track"></ul>
+    </div>
+  </div>
+  <div class="col-2" style="padding: 0 5px;">
+    <div class="leaderboard">
+      <h3>Charlie (Caccia)</h3>
+      <ul id="list-charlie-treasure"></ul>
+    </div>
+  </div>
+</div>
+
+{% endblock %} 
+
+{% block scripts %}
+<script>
+    function getPlayerColorStyle(playerId) {
+        if (!playerId) return "background-color: gray; color: white;";
+        const id = playerId.toUpperCase();
+        if (id.startsWith("ROSSO")) return "background-color: red; color: white;";
+        if (id.startsWith("GIALLO")) return "background-color: #F29F05; color: white;";
+        if (id.startsWith("BLU")) return "background-color: #1F598C; color: white;";
+        if (id.startsWith("VERDE")) return "background-color: #8FBF60; color: white;";
+        if (id.startsWith("ROSA")) return "background-color: #D95276; color: white;";
+        if (id.startsWith("BIANCO")) return "background-color: white; color: black;";
+        return "background-color: gray; color: white;";
+    }
+
+    function createPlayerItem(player, mode) {
+        const li = document.createElement("li");
+        
+        let html = `
+            <div class="player-header">
+                <span class="player-color" style="${getPlayerColorStyle(player.id)}">
+                    <b>${player.id}</b> - ${player.name}
+                </span>
+            </div>
+        `;
+        
+        if (mode === 'track') {
+            html += `<div style="text-align: right;"><span class="score-primary">${player.track_score}</span></div>`;
+        } else if (mode === 'treasure') {
+            html += `
+                <div style="text-align: right;">
+                    <span class="score-primary" style="color: #8FBF60;">Caccia: ${player.treasure_hunt_score}</span><br>
+                    <span class="score-secondary">Totale: ${player.total_score}</span>
+                </div>
+            `;
+        }
+        
+        li.innerHTML = html;
+        return li;
+    }
+
+    function renderList(elementId, playersArray, mode) {
+        const ul = document.getElementById(elementId);
+        ul.innerHTML = "";
+        
+        if (!playersArray || playersArray.length === 0) {
+            ul.innerHTML = "<li style='text-align:center; color:#777; border:none;'>Nessun dato</li>";
+            return;
+        }
+
+        playersArray.forEach((p) => {
+            ul.appendChild(createPlayerItem(p, mode));
+        });
+    }
+
+    function updateLatestPlays() {
+      fetch("/get_latest_scores")
+        .then((response) => response.json())
+        .then((data) => {
+            renderList('list-couples-track', data.couples_track, 'track');
+            renderList('list-couples-treasure', data.couples_treasure, 'treasure');
+            
+            renderList('list-singles-track', data.singles_track, 'track');
+            renderList('list-singles-treasure', data.singles_treasure, 'treasure');
+            
+            renderList('list-charlie-track', data.charlie_track, 'track');
+            renderList('list-charlie-treasure', data.charlie_treasure, 'treasure');
+        })
+        .catch(error => console.error("Errore aggiornamento:", error));
+    }
+
+    // Refresh data every 3 seconds
+    setInterval(updateLatestPlays, 3000);
+    document.addEventListener("DOMContentLoaded", updateLatestPlays);
+</script>
+{% endblock %}
