@@ -176,7 +176,24 @@
       </div>
     </div>
   </div>
-  <div class="col-3"></div>
+  <div class="col-2">
+    <div class="status-container">
+      <div class="status-box" id="figt-status">
+        <img
+          class="player-icon"
+          style="margin-bottom: 5px"
+          src="/static/icons/G&G.svg"
+        />
+        <h3 style="text-align: center">FIGT</h3>
+        <p>Tempo rimanente: <span id="figt-remaining">-</span></p>
+        <p style="text-align: center">
+          Giocatore attuale: <span id="current-player-figt">-</span>
+        </p>
+        <p>Durata: <span id="figt-duration">-</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="col-1"></div>
   <div class="col-2">
     <div class="status-container">
       <div class="status-box" id="delta-status">
@@ -212,7 +229,7 @@
       </div>
     </div>
   </div>
-  <div class="col-6">
+  <div class="col-4">
     <div class="next-players-container">
       <div class="next-player-card">
         <div class="next-player-title">Prossimo Giocatore G&G:</div>
@@ -228,7 +245,23 @@
       </div>
     </div>
   </div>
-  <div class="col-6">
+  <div class="col-4">
+    <div class="next-players-container">
+      <div class="next-player-card">
+        <div class="next-player-title">Prossimo Giocatore FIGT:</div>
+        <div class="next-player-charlie" id="next-figt-text">
+          Nessun Giocatore In Coda
+        </div>
+        <button
+          class="btn btn-primary skip-button"
+          onclick="skipNextPlayerFigt()"
+        >
+          SKIP <span class="skip-icon">>></span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
     <div class="next-players-container">
       <div class="next-player-card">
         <div class="next-player-title">Prossimo Giocatore Statico:</div>
@@ -244,7 +277,7 @@
       </div>
     </div>
   </div>
-  <div class="col-6">
+  <div class="col-4">
     <div class="boards-container">
       <div class="board">
         <h2>Coda G&G</h2>
@@ -252,7 +285,15 @@
       </div>
     </div>
   </div>
-  <div class="col-6">
+  <div class="col-4">
+    <div class="boards-container">
+      <div class="board">
+        <h2>Coda FIGT</h2>
+        <ul id="figt-board"></ul>
+      </div>
+    </div>
+  </div>
+  <div class="col-4">
     <div class="boards-container">
       <div class="board">
         <h2>Coda STATICO</h2>
@@ -270,6 +311,7 @@
           <div id="skipped-couples2-buttons"></div>
           <div id="skipped-singles2-buttons"></div>
           <div id="skipped-charlie-buttons"></div>
+          <div id="skipped-figt-buttons"></div>
           <div id="skipped-statico-buttons"></div>
         </div>
       </div>

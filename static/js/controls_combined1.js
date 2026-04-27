@@ -456,20 +456,35 @@ function submitPenaltyForm(typeSuffix) {
         closeInlineForm(typeSuffix, "penalty");
         // Mostra il popup della caccia al tesoro
         const overlay = document.createElement('div');
-        overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;display:flex;justify-content:center;align-items:center;";
+        overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;justify-content:center;align-items:center;padding:20px;";
         const popup = document.createElement('div');
-        popup.style = "background:#1e293b;padding:30px;border-radius:15px;color:white;text-align:center;box-shadow:0 0 20px rgba(79,172,254,0.5);max-width:400px;width:90%;font-family:sans-serif;";
+        popup.style = "background:#0f172a;padding:25px;border-radius:20px;color:white;text-align:center;box-shadow:0 0 40px rgba(79,172,254,0.6);max-width:650px;width:100%;font-family:sans-serif;border:1px solid #334155;";
+        
+        const mapImagePath = `/static/qrcodes_mappe/qr_map_${response.gener_map}.png`;
+        
         popup.innerHTML = `
-            <h2 style="color:#00f2fe; margin-top:0;">Pista Completata!</h2>
-            <p style="font-size:1.1rem; margin-bottom: 20px;">Il Giocatore può passare alla fase Caccia al Tesoro.</p>
-            <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:10px; margin-bottom:20px;">
-                <p><strong>ASSEGNA MAPPA NUMERO:</strong> <br><span style="color:#ffd700; font-size:2.5em; font-weight:bold;">${response.gener_map}</span></p>
-                <hr style="border-color:#334155; margin:15px 0;">
-                <p><strong>CODICE SQUADRA:</strong> <br><span style="font-family:monospace; font-size:2em; letter-spacing:3px; background:#475569; padding:5px 15px; border-radius:8px;">${response.treasure_code}</span></p>
-                <hr style="border-color:#334155; margin:15px 0;">
-                <p style="margin-top:15px; font-size:1rem; color:#cbd5e1;">Password Finale Forziere: <br/><strong style="color:white; font-size:1.3em;">${response.treasure_password}</strong></p>
+            <h2 style="color:#00f2fe; margin-top:0; font-size:2rem; text-transform:uppercase;">Pista Completata!</h2>
+            <p style="font-size:1.2rem; margin-bottom: 20px; color:#cbd5e1;">Consegna al giocatore la mappa corrispondente al QR Code:</p>
+            
+            <div style="background:white; padding:15px; border-radius:15px; display:inline-block; margin-bottom:20px;">
+                <img src="${mapImagePath}" alt="MAPPA ${response.gener_map}" style="max-height:300px; max-width:100%; display:block; margin:0 auto;">
+                <p style="color:black; margin:10px 0 0; font-weight:bold; font-size:1.2rem;">MAPPA NUMERO ${response.gener_map}</p>
             </div>
-            <button id="closePopupBtn-${typeSuffix}" style="background:linear-gradient(to right, #4facfe, #00f2fe); border:none; padding:12px 30px; border-radius:25px; font-weight:bold; color:black; cursor:pointer; font-size:1.1rem;">CHIUDI E PROCEDI</button>
+
+            <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.1);">
+                <div style="display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:20px;">
+                    <div>
+                        <p style="margin:0; color:#94a3b8; font-size:0.9rem; text-transform:uppercase;">Codice Squadra</p>
+                        <p style="font-family:monospace; font-size:2.2rem; letter-spacing:4px; font-weight:bold; color:#ffd700; margin:5px 0;">${response.treasure_code}</p>
+                    </div>
+                    <div>
+                        <p style="margin:0; color:#94a3b8; font-size:0.9rem; text-transform:uppercase;">Password Finale</p>
+                        <p style="font-size:1.8rem; font-weight:bold; color:#00ff00; margin:5px 0;">${response.treasure_password}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <button id="closePopupBtn-${typeSuffix}" style="background:linear-gradient(135deg, #4facfe, #00f2fe); border:none; padding:15px 50px; border-radius:50px; font-weight:bold; color:#0f172a; cursor:pointer; font-size:1.3rem; text-transform:uppercase; box-shadow:0 4px 15px rgba(0,242,254,0.3); transition:0.3s;">CHIUDI E PROCEDI</button>
         `;
         overlay.appendChild(popup);
         document.body.appendChild(overlay);

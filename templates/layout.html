@@ -40,7 +40,8 @@
       width: 100%;
       background: #3ab1c8;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      padding-top: 60px; /* Space for the hamburger icon to sit inside the blue bar */
+      padding-top: 60px;
+      /* Space for the hamburger icon to sit inside the blue bar */
     }
 
     .nav-links.active {
@@ -113,6 +114,14 @@
       background: linear-gradient(90deg, #2a8b9e 0%, #d93d3d 100%);
     }
 
+    .dropdown-content a.statico-viola {
+      background: linear-gradient(90deg, #2a8b9e 0%, #8a2be2 100%);
+    }
+
+    .dropdown-content a.statico-gray {
+      background: linear-gradient(90deg, #2a8b9e 0%, #64748b 100%);
+    }
+
     .dropdown-content a:hover {
       filter: brightness(1.1);
       color: white;
@@ -131,7 +140,8 @@
       position: absolute;
       top: 0;
       right: 0;
-      z-index: 1001; /* Ensure hamburger is always on top of the blue menu background */
+      z-index: 1001;
+      /* Ensure hamburger is always on top of the blue menu background */
     }
 
     .hamburger svg {
@@ -143,7 +153,8 @@
       max-width: 1200px;
       margin: 0 auto;
       padding: 20px;
-      padding-top: 70px; /* Add padding to content area since navbar is absolute */
+      padding-top: 70px;
+      /* Add padding to content area since navbar is absolute */
     }
 
     h1 {
@@ -161,8 +172,10 @@
         flex-direction: row;
         justify-content: center;
         align-items: center;
-        padding-top: 0; /* Clear the extra top padding used for mobile hamburger */
-        padding-right: 60px; /* Make sure the links do not overlap with the floating hamburger on the right */
+        padding-top: 0;
+        /* Clear the extra top padding used for mobile hamburger */
+        padding-right: 60px;
+        /* Make sure the links do not overlap with the floating hamburger on the right */
       }
 
       .nav-links.active {
@@ -205,6 +218,7 @@
         border-bottom: none;
       }
     }
+
     .content-wrapper {
       padding: 20px;
     }
@@ -239,6 +253,7 @@
         <div class="nav-item dropdown-toggle">Statiche</div>
         <div class="dropdown-content">
           <a href="{{ url_for('controls_charlie') }}" class="statico-verde">Controllo G&G (Verde)</a>
+          <a href="{{ url_for('controls_figt') }}" class="statico-viola">Controllo FIGT (Viola)</a>
           <a href="{{ url_for('controls_statico') }}" class="statico-rosso">Controllo Statico (Rosso)</a>
         </div>
       </div>
@@ -250,28 +265,41 @@
           <a href="{{ url_for('keypad2') }}">Tastierino 2</a>
           <a href="{{ url_for('provaE1') }}">Prova E1</a>
           <a href="{{ url_for('provaE2') }}">Prova E2</a>
+          <a href="{{ url_for('track_alfa_tablet') }}" class="statico-gray">Tablet Pista 1</a>
+          <a href="{{ url_for('track_alfa2_tablet') }}" class="statico-gray">Tablet Pista 2</a>
         </div>
       </div>
 
       <a href="{{ url_for('controls_cassa') }}" class="nav-item">Cassa</a>
-      <a href="{{ url_for('scoring') }}" class="nav-item">Scoring</a>
+
+      <div class="nav-dropdown" id="dropdown-scoring">
+        <div class="nav-item dropdown-toggle">Scoring</div>
+        <div class="dropdown-content">
+          <a href="{{ url_for('scoring') }}">Classifica Standard</a>
+          <a href="{{ url_for('scoring_figt') }}">Classifica FIGT</a>
+          <a href="{{ url_for('podium') }}" target="_blank">🥇 Hall of Fame</a>
+        </div>
+      </div>
+
+      <a href="{{ url_for('tv_view') }}" target="_blank" class="nav-item">TV View</a>
       <a href="{{ url_for('latest') }}" class="nav-item" style="color: #F29F05; font-weight: bold;">Ultime Giocate</a>
       <a href="{{ url_for('admin_login') }}" class="nav-item" style="color: #ff4b2b; font-weight: bold;">Admin</a>
     </div>
   </nav>
   {% endif %}
 
-  <div class="content-wrapper {% if not request.args.get('tablet') %}with-nav{% endif %}">{% block content %}{% endblock %}</div>
+  <div class="content-wrapper {% if not request.args.get('tablet') %}with-nav{% endif %}">{% block content %}{% endblock
+    %}</div>
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 
   <script>
     $(document).ready(function () {
       $("#hamburger").click(function () {
         $("#navLinks").toggleClass("active");
-        
+
         // Se il menu è attivo, cambia il colore dell'hamburger o di elementi se necessario 
         // (il background del menu nav-links coprirà già l'area dietro l'icona)
-        
+
         $(this).find("i").toggleClass("fa-bars fa-times");
       });
 

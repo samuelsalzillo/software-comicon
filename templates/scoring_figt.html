@@ -1,0 +1,153 @@
+{% extends "layout.html" %} 
+
+{% block extra_css %}
+<style>
+  .leaderboard-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 50px;
+  }
+
+  .leaderboard {
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 20px;
+    box-shadow: 0 0 30px rgba(138, 43, 226, 0.3);
+    padding: 40px;
+    width: 100%;
+    max-width: 800px;
+    border: 2px solid #8a2be2;
+  }
+
+  .leaderboard h1 {
+    color: #8a2be2;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 3rem;
+    text-transform: uppercase;
+    letter-spacing: 5px;
+    text-shadow: 2px 2px 10px rgba(138, 43, 226, 0.8);
+  }
+
+  .leaderboard ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .leaderboard li {
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    transition: 0.3s;
+  }
+
+  .leaderboard li:hover {
+    background: rgba(138, 43, 226, 0.1);
+  }
+
+  .rank {
+    font-weight: bold;
+    margin-right: 20px;
+    width: 40px;
+    text-align: center;
+  }
+
+  .rank-1 { color: #ffd700; font-size: 2rem; }
+  .rank-2 { color: #c0c0c0; font-size: 1.8rem; }
+  .rank-3 { color: #cd7f32; font-size: 1.6rem; }
+
+  .player-info {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+  }
+
+  .player-id {
+    background: #8a2be2;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    margin-right: 15px;
+  }
+
+  .score {
+    font-family: 'Courier New', Courier, monospace;
+    font-weight: bold;
+    color: #00ff00;
+    font-size: 1.6rem;
+  }
+
+  .no-data {
+    text-align: center;
+    color: rgba(255,255,255,0.5);
+    font-style: italic;
+    padding: 40px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="leaderboard-container">
+  <div class="leaderboard">
+    <h1>TOP 6 FIGT</h1>
+    <ul id="figt-list">
+      <!-- Caricato via JS -->
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function formatTime(scoreMinutes) {
+    const totalSeconds = scoreMinutes * 60;
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = Math.floor(totalSeconds % 60);
+    const ms = Math.floor((totalSeconds % 1) * 1000);
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}.${ms.toString().padStart(3, '0')}`;
+  }
+
+  function updateLeaderboard() {
+    $.get("/get_figt_leaderboard", function(data) {
+      const list = $("#figt-list");
+      list.empty();
+      
+      if (data.length === 0) {
+        list.append('<div class="no-data">Nessun punteggio registrato</div>');
+        return;
+      }
+
+      data.forEach((entry, index) => {
+        const rankClass = index < 3 ? `rank-${index + 1}` : "";
+        const scoreFmt = formatTime(entry.score);
+        
+        // Se ci sono nome e cognome, li mostriamo, altrimenti usiamo player_name (VIOLA 001 etc)
+        const displayName = (entry.first_name && entry.last_name) 
+          ? `${entry.first_name} ${entry.last_name}` 
+          : entry.player_name;
+
+        const li = `
+          <li>
+            <div class="player-info">
+              <span class="rank ${rankClass}">${index + 1}</span>
+              <span class="player-id">${entry.player_id}</span>
+              <span class="player-name">${displayName}</span>
+            </div>
+            <div class="score">${scoreFmt}</div>
+          </li>
+        `;
+        list.append(li);
+      });
+    });
+  }
+
+  $(document).ready(function() {
+    updateLeaderboard();
+    setInterval(updateLeaderboard, 5000);
+  });
+</script>
+{% endblock %}

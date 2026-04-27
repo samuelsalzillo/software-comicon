@@ -3,6 +3,7 @@ let singleCounter = 1;
 let coupleCounter2 = 1;
 let singleCounter2 = 1;
 let charlieCounter = 1;
+let figtCounter = 1;
 let staticoCounter = 1;
 $(document).ready(function () {
   fetchLastPlayerIds(); // Imposta i counter basati sugli ID attuali
@@ -20,6 +21,7 @@ function fetchLastPlayerIds() {
       coupleCounter2 = data.next_couple2;
       singleCounter2 = data.next_single2;
       charlieCounter = data.next_charlie;
+      figtCounter = data.next_figt;
       staticoCounter = data.next_statico;
 
       // Aggiorna i campi di input con il valore corretto
@@ -28,6 +30,7 @@ function fetchLastPlayerIds() {
       $("#playerId-coppia2").val(coupleCounter2);
       $("#playerId-singolo2").val(singleCounter2);
       $("#playerId-charlie").val(charlieCounter);
+      $("#playerId-figt").val(figtCounter);
       $("#playerId-statico").val(staticoCounter);
     })
     .catch((error) => console.error("Errore nel recupero degli ID:", error));
@@ -49,6 +52,10 @@ function handleSkip(playerType) {
     case "charlie":
       elementId = "next-charlie-text";
       endpoint = "/skip_charlie_player";
+      break;
+    case "figt":
+      elementId = "next-figt-text";
+      endpoint = "/skip_figt_player";
       break;
     case "statico":
       elementId = "next-statico-text";
@@ -100,6 +107,10 @@ function skipNextPlayerCharlie() {
   handleSkip("charlie");
 }
 
+function skipNextPlayerFigt() {
+  handleSkip("figt");
+}
+
 function skipNextPlayerStatico() {
   handleSkip("statico");
 }
@@ -143,6 +154,13 @@ $("#queueForm-charlie").on("submit", function (event) {
   event.preventDefault();
   const playerId = $("#playerId-charlie").val();
   addPlayer("charlie", playerId, "VERDE", "/add_charlie", "#playerId-charlie");
+});
+
+// FIGT (Viola)
+$("#queueForm-figt").on("submit", function (event) {
+  event.preventDefault();
+  const playerId = $("#playerId-figt").val();
+  addPlayer("figt", playerId, "VIOLA", "/add_figt", "#playerId-figt");
 });
 
 // Statico (Rosso)
@@ -233,6 +251,10 @@ function addPlayer(type, id, name, endpoint, inputSelector) {
           case "charlie":
             charlieCounter = numericId + 1;
             $(inputSelector).addClass("next-player charlie");
+            break;
+          case "figt":
+            figtCounter = numericId + 1;
+            $(inputSelector).addClass("next-player figt");
             break;
           case "statico":
             staticoCounter = numericId + 1;

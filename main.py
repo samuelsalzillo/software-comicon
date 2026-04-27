@@ -24,6 +24,7 @@ class GameBackend:
         self.queue_couples2: List[Queue] = []  # Es. [{'id': 'ROSA-01', 'arrival': datetime}, ...]
         self.queue_singles2: List[Queue] = []  # Es. [{'id': 'ARANCIO-01', 'arrival': datetime}, ...]
         self.queue_charlie: List[Queue] = []  # Es. [{'id': 'VERDE-01', 'arrival': datetime}, ...]
+        self.queue_figt: List[Queue] = []     # Es. [{'id': 'VIOLA-01', 'arrival': datetime}, ...]
         self.queue_statico: List[Queue] = []
 
         self.couples= []
@@ -39,12 +40,15 @@ class GameBackend:
         self.statico_history: List[Tuple[str, float]] = []       # [(player_id, score), ...]
 
         self.charlie_timer_history: List[float] = []
+        self.figt_timer_history: List[float] = []
+        self.figt_history: List[Tuple[str, float]] = []
 
         # Valori indicativi (default) iniziali (in minuti)
         self.default_T_mid = 2.0
         self.default_T_total = 5.0
         self.default_T_single = 2.0
         self.default_T_charlie = 3.0
+        self.default_T_figt = 3.0
         self.default_T_statico = 5.0
 
         # NUOVE Liste per le durate dei TIMER (usate per le medie)
@@ -58,6 +62,7 @@ class GameBackend:
         self.T_total = self.default_T_total
         self.T_single = self.default_T_single
         self.T_charlie = self.default_T_charlie
+        self.T_figt = self.default_T_figt
         self.T_statico = self.default_T_statico
 
         # Giocatori attuali in pista
@@ -66,6 +71,7 @@ class GameBackend:
         self.current_player_alfa2: Optional[Queue] = None
         self.current_player_bravo2: Optional[Queue] = None
         self.current_player_charlie: Optional[Queue] = None
+        self.current_player_figt: Optional[Queue] = None
         self.current_player_delta: Optional[Queue] = None
         self.current_player_echo: Optional[Queue] = None
 
@@ -77,6 +83,7 @@ class GameBackend:
         self.ALFA_next_available2 = now
         self.BRAVO_next_available2 = now
         self.CHARLIE_next_available = now
+        self.FIGT_next_available = now
         self.DELTA_next_available = now
         self.ECHO_next_available = now
 
@@ -90,9 +97,13 @@ class GameBackend:
         self.next_player_charlie_id: Optional[str] = None
         self.next_player_charlie_locked: bool = False
         self.next_player_charlie_name: Optional[str] = None
+        self.next_player_figt_id: Optional[str] = None
+        self.next_player_figt_locked: bool = False
+        self.next_player_figt_name: Optional[str] = None
         self.current_player_couple: Optional[Queue] = None
         self.current_player_couple2: Optional[Queue] = None
         self.player_in_charlie: bool = False
+        self.player_in_figt: bool = False
         self.next_player_statico_id: Optional[str] = None
         self.next_player_statico_locked: bool = False
         self.next_player_statico_name: Optional[str] = None
@@ -115,6 +126,7 @@ class GameBackend:
         self.skipped_couples2: List[Queue] = []
         self.skipped_singles2: List[Queue] = []
         self.skipped_charlie: List[Queue] = []
+        self.skipped_figt: List[Queue] = []
         self.skipped_statico: List[Queue] = []
 
         # Dizionario per memorizzare i nomi dei giocatori
@@ -160,7 +172,7 @@ class GameBackend:
         all_queues = [
             self.queue_couples, self.queue_singles, 
             self.queue_couples2, self.queue_singles2, 
-            self.queue_charlie, self.queue_statico
+            self.queue_charlie, self.queue_figt, self.queue_statico
         ]
         for q in all_queues:
             for p in q:
@@ -170,7 +182,7 @@ class GameBackend:
         current_players = [
             self.current_player_alfa, self.current_player_bravo, 
             self.current_player_alfa2, self.current_player_bravo2, 
-            self.current_player_charlie, self.current_player_delta, self.current_player_echo
+            self.current_player_charlie, self.current_player_figt, self.current_player_delta, self.current_player_echo
         ]
         for p in current_players:
             if p and 'id' in p and any(p['id'].startswith(pref) for pref in prefixes):
@@ -179,7 +191,7 @@ class GameBackend:
         all_histories = [
             self.couple_history_total, self.single_history, 
             self.couple_history_total2, self.single_history2, 
-            self.charlie_history, self.statico_history
+            self.charlie_history, self.figt_history, self.statico_history
         ]
         for hist in all_histories:
             for pid, _ in hist:
@@ -202,6 +214,20 @@ class GameBackend:
                 self.next_player_charlie_id = player_id
                 self.next_player_charlie_name = name
                 self.next_player_charlie_locked = True
+
+    def add_figt_player(self, player_id, name) -> None:
+        """Aggiunge un giocatore alla coda FIGT"""
+        if not any(p['id'] == player_id for p in self.queue_figt):
+            self.queue_figt.append({
+                'id': player_id,
+                'arrival': self.get_current_time(),
+                'name': name
+            })
+            self.player_names[player_id] = name
+            if not self.next_player_figt_id and not self.next_player_figt_locked:
+                self.next_player_figt_id = player_id
+                self.next_player_figt_name = name
+                self.next_player_figt_locked = True
 
     def add_statico_player(self, player_id: str, name: str) -> None:
         """Aggiunge un giocatore alla coda Statico"""
@@ -459,6 +485,7 @@ class GameBackend:
 
             # Aggiungi la durata del timer alla NUOVA history specifica
             self.charlie_timer_history.append(timer_duration)
+            self.charlie_history.append((player_id_stopped, timer_duration))
 
             # Pulisci lo stato del giocatore corrente e della pista
             self.current_player_charlie = None
@@ -479,6 +506,28 @@ class GameBackend:
         else:
             logging.warning("[CHARLIE TIMER RECORD] Called record_charlie_game but no player was active.")
 
+    def record_figt_game(self, timer_duration: float) -> None:
+        """
+        Registra la DURATA DEL TIMER (in minuti) per un game FIGT.
+        Libera la pista FIGT e aggiorna le medie.
+        """
+        player_id_stopped = None
+        if self.current_player_figt:
+            player_id_stopped = self.current_player_figt.get('id')
+            logging.info(f"[FIGT TIMER RECORD] Player {player_id_stopped} stopped. Timer duration: {timer_duration:.4f} minutes.")
+            self.figt_timer_history.append(timer_duration)
+            self.figt_history.append((player_id_stopped, timer_duration))
+            self.current_player_figt = None
+            self.player_in_figt = False
+            if player_id_stopped in self.player_start_times:
+                del self.player_start_times[player_id_stopped]
+            if player_id_stopped in self.player_durations:
+                del self.player_durations[player_id_stopped]
+            self.update_averages()
+            self.update_next_figt_player()
+        else:
+            logging.warning("[FIGT TIMER RECORD] Called record_figt_game but no player was active.")
+
     def update_next_charlie_player(self):
         if self.queue_charlie:
             self.next_player_charlie_id = self.queue_charlie[0]['id']
@@ -488,6 +537,16 @@ class GameBackend:
             self.next_player_charlie_id = None
             self.next_player_charlie_name = None
             self.next_player_charlie_locked = False
+
+    def update_next_figt_player(self):
+        if self.queue_figt:
+            self.next_player_figt_id = self.queue_figt[0]['id']
+            self.next_player_figt_name = self.get_player_name(self.next_player_figt_id)
+            self.next_player_figt_locked = True
+        else:
+            self.next_player_figt_id = None
+            self.next_player_figt_name = None
+            self.next_player_figt_locked = False
 
     
 
@@ -636,6 +695,14 @@ class GameBackend:
             self.T_charlie = self.default_T_charlie
             logging.debug(f"Using default T_charlie: {self.T_charlie:.4f} (timer records: {len(self.charlie_timer_history)})")
 
+        # Media T_figt - Basata sui timer registrati per FIGT
+        if len(self.figt_timer_history) >= min_games_for_avg:
+            self.T_figt = sum(self.figt_timer_history) / len(self.figt_timer_history)
+            logging.debug(f"Calculated T_figt from {len(self.figt_timer_history)} timer records: {self.T_figt:.4f}")
+        else:
+            self.T_figt = self.default_T_figt
+            logging.debug(f"Using default T_figt: {self.T_figt:.4f} (timer records: {len(self.figt_timer_history)})")
+
         # Media T_statico - Basata sui tempi registrati per Statico (statico_history)
         if len(self.statico_history) >= min_games_for_avg:
             statico_times = [time for _, time in self.statico_history]  # Extract only the game_time values
@@ -645,7 +712,7 @@ class GameBackend:
             self.T_statico = self.default_T_statico
             logging.debug(f"Using default T_statico: {self.T_statico:.4f} (records: {len(self.statico_history)})")
 
-        logging.info(f"Averages Updated: T_mid={self.T_mid:.2f}, T_total(timer)={self.T_total:.2f}, T_single(timer)={self.T_single:.2f}, T_mid2={self.T_mid2:.2f}, T_charlie={self.T_charlie:.2f}, T_statico={self.T_statico:.2f}")
+        logging.info(f"Averages Updated: T_mid={self.T_mid:.2f}, T_total(timer)={self.T_total:.2f}, T_single(timer)={self.T_single:.2f}, T_mid2={self.T_mid2:.2f}, T_charlie={self.T_charlie:.2f}, T_figt={self.T_figt:.2f}, T_statico={self.T_statico:.2f}")
     def get_player_name(self, player_id: Optional[str]) -> str:
         if player_id is None:
             return "N/D"
@@ -1025,7 +1092,8 @@ class GameBackend:
         List[Tuple[int, str, Union[datetime.datetime, str]]],
         List[Tuple[int, str, Union[datetime.datetime, str]]],
         List[Tuple[int, str, Union[datetime.datetime, str]]],
-        List[Tuple[int, str, Union[datetime.datetime, str]]]  # Aggiungiamo la board statico
+        List[Tuple[int, str, Union[datetime.datetime, str]]], # FIGT
+        List[Tuple[int, str, Union[datetime.datetime, str]]]  # Statico
     ]:
         now = self.get_current_time()
         # Calcola i tempi stimati di ingresso
@@ -1137,6 +1205,19 @@ class GameBackend:
             # Il prossimo può iniziare solo dopo che questo finisce
             charlie_sim_time = start_time + datetime.timedelta(minutes=self.T_charlie)
 
+        # Ricalcolo FIGT (identico a Charlie)
+        figt_board: List[Tuple[int, str, Union[datetime.datetime, str]]] = []
+        figt_sim_time = max(now, self.localize_time(self.FIGT_next_available))
+        for idx, item in enumerate(self.queue_figt):
+            start_time = figt_sim_time
+            if item['id'] == self.next_player_figt_id:
+                display_time = "PROSSIMO INGRESSO"
+            else:
+                display_time = start_time
+
+            figt_board.append((idx + 1, item['id'], display_time))
+            figt_sim_time = start_time + datetime.timedelta(minutes=self.T_figt)
+
 
         # Esempio ricalcolo Statico
         statico_board: List[Tuple[int, str, Union[datetime.datetime, str]]] = []
@@ -1161,7 +1242,7 @@ class GameBackend:
                 echo_avail = start_time + datetime.timedelta(minutes=self.T_statico)
             
 
-        return couples_board, singles_board, couples_board2, singles_board2, charlie_board, statico_board
+        return couples_board, singles_board, couples_board2, singles_board2, charlie_board, figt_board, statico_board
 
     def button_third_pressed(self) -> None:
         """
@@ -1413,6 +1494,19 @@ class GameBackend:
                 self.next_player_charlie_name = None
                 self.next_player_charlie_locked = False
 
+    def skip_figt_player(self, player_id: str) -> None:
+        """Sposta un giocatore nella lista degli skippati (FIGT)"""
+        player = next((p for p in self.queue_figt if p['id'] == player_id), None)
+        if player:
+            self.queue_figt.remove(player)
+            self.skipped_figt.append(player)
+            if self.queue_figt:
+                self.next_player_figt_id = self.queue_figt[0]['id']
+                self.next_player_figt_name = self.queue_figt[0]['name']
+            else:
+                self.next_player_figt_id = None
+                self.next_player_figt_name = None
+
     def skip_statico_player(self, player_id: str) -> None:
         """Sposta un giocatore nella lista degli skippati (Statico)"""
         player = next((p for p in self.queue_statico if p['id'] == player_id), None)
@@ -1501,6 +1595,15 @@ class GameBackend:
             self.next_player_statico_locked = True
             return
         
+        player = next((p for p in self.skipped_figt if p['id'] == player_id), None)
+        if player:
+            self.skipped_figt.remove(player)
+            self.queue_figt.insert(0, player)
+            self.next_player_figt_id = player_id
+            self.next_player_figt_name = self.get_player_name(player_id)
+            self.next_player_figt_locked = True
+            return
+        
         raise ValueError(f"Player {player_id} not found in any skipped list")
 
     def start_charlie_game(self) -> None:
@@ -1513,14 +1616,19 @@ class GameBackend:
             # Rimuovi il giocatore dalla coda
             self.queue_charlie = [p for p in self.queue_charlie if p['id'] != self.next_player_charlie_id]
             # Imposta il prossimo giocatore
-            if self.queue_charlie:
-                self.next_player_charlie_id = self.queue_charlie[0]['id']
-                self.next_player_charlie_name = self.get_player_name(self.next_player_charlie_id)
-                self.next_player_charlie_locked = True
-            else:
-                self.next_player_charlie_id = None
-                self.next_player_charlie_name = None
-                self.next_player_charlie_locked = False
+            self.update_next_charlie_player()
+
+    def start_figt_game(self) -> None:
+        """Avvia un gioco sulla pista FIGT"""
+        if self.next_player_figt_id:
+            self.current_player_figt = {'id': self.next_player_figt_id, 'arrival': self.get_current_time()}
+            self.FIGT_next_available = self.get_current_time() + datetime.timedelta(minutes=self.T_figt)
+            self.player_start_times[self.current_player_figt['id']] = self.get_current_time()
+            self.player_in_figt = True
+            # Rimuovi il giocatore dalla coda
+            self.queue_figt = [p for p in self.queue_figt if p['id'] != self.next_player_figt_id]
+            # Imposta il prossimo giocatore
+            self.update_next_figt_player()
 
     def get_durations(self) -> Dict[str, str]:
         """Restituisce le durate dei giocatori attuali in pista formattate in minuti:secondi"""
@@ -1569,6 +1677,14 @@ class GameBackend:
                 minutes = int(duration_seconds // 60)
                 seconds = int(duration_seconds % 60)
                 durations['charlie'] = f"{minutes:02}:{seconds:02}"
+        if self.current_player_figt:
+            player_id = self.current_player_figt['id']
+            start_time = self.player_start_times.get(player_id)
+            if start_time:
+                duration_seconds = (now - start_time).total_seconds()
+                minutes = int(duration_seconds // 60)
+                seconds = int(duration_seconds % 60)
+                durations['figt'] = f"{minutes:02}:{seconds:02}"
         if self.current_player_delta:
             player_id = self.current_player_delta['id']
             start_time = self.player_start_times.get(player_id)
@@ -1712,6 +1828,7 @@ class GameBackend:
         self.queue_couples2.clear()
         self.queue_singles2.clear()
         self.queue_charlie.clear()
+        self.queue_figt.clear()
         self.queue_statico.clear()
 
         self.couple_history_mid.clear()
@@ -1724,6 +1841,8 @@ class GameBackend:
         self.statico_history.clear()
 
         self.charlie_timer_history.clear()
+        self.figt_timer_history.clear()
+        self.figt_history.clear()
         self.couple_timer_history.clear()
         self.single_timer_history.clear()
         self.single_timer_history2.clear()
@@ -1786,7 +1905,7 @@ if __name__ == '__main__':
     backend.ALFA2_next_available = now
     backend.BRAVO2_next_available = now
     # Otteniamo il tabellone d'attesa
-    couples_board, singles_board, charlie_board, statico_board, couples2_board, singles2_board = backend.get_waiting_board()
+    couples_board, singles_board, couples2_board, singles2_board, charlie_board, figt_board, statico_board = backend.get_waiting_board()
     print("Tabellone Coppie (Gialli):")
     for pos, cid, time_est in couples_board:
       time_str = time_est.strftime('%H:%M:%S') if isinstance(time_est, datetime.datetime) else time_est if time_est else 'N/D'

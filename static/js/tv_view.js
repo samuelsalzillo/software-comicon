@@ -47,7 +47,7 @@ function updateListContent(listId, players) {
 
       const timeDisplay =
         player.estimated_time === "PROSSIMO INGRESSO"
-          ? "PROSSIMO INGRESSO"
+          ? "PROS. INGR."
           : formatTimeRome(player.estimated_time);
       const li = document.createElement("li");
       li.textContent = `${player.id} - ${timeDisplay}`;
@@ -60,6 +60,7 @@ function updateListContent(listId, players) {
       else if (playerIdStr.includes("BIANCO")) li.classList.add("bg-white");
       else if (playerIdStr.includes("VERDE")) li.classList.add("bg-green");
       else if (playerIdStr.includes("ROSSO")) li.classList.add("bg-red");
+      else if (playerIdStr.includes("VIOLA")) li.classList.add("bg-purple");
 
       // Add blinking effect for "PROSSIMO INGRESSO"
       if (player.estimated_time === "PROSSIMO INGRESSO") {
@@ -94,6 +95,7 @@ function updateAllLists() {
       const couples2 = Array.isArray(data.couples2) ? data.couples2 : [];
       const singles2 = Array.isArray(data.singles2) ? data.singles2 : [];
       const charlie = Array.isArray(data.charlie) ? data.charlie : [];
+      const figt = Array.isArray(data.figt) ? data.figt : [];
       const statico = Array.isArray(data.statico) ? data.statico : [];
 
       // Update each specific list using the fetched (and validated) data
@@ -102,6 +104,7 @@ function updateAllLists() {
       updateListContent("tv-couples2-list", couples2);
       updateListContent("tv-singles2-list", singles2);
       updateListContent("tv-charlie-list", charlie);
+      updateListContent("tv-figt-list", figt);
       updateListContent("tv-statico-list", statico);
 
       // Clear any previous general error messages if fetch was successful

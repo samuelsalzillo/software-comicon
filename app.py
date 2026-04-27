@@ -48,7 +48,7 @@ def init_sqlite():
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS queues (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_type TEXT CHECK(player_type IN ('couple', 'single', 'couple2', 'single2', 'charlie', 'statico')) NOT NULL,
+                player_type TEXT CHECK(player_type IN ('couple', 'single', 'couple2', 'single2', 'charlie', 'figt', 'statico')) NOT NULL,
                 player_id TEXT NOT NULL,
                 player_name TEXT NOT NULL,
                 arrival_time DATETIME NOT NULL,
@@ -78,7 +78,7 @@ def init_scoring_table():
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS scoring (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_type TEXT CHECK(player_type IN ('couple', 'single','single2','couple2' , 'charlie', 'statico')) NOT NULL,
+                player_type TEXT CHECK(player_type IN ('couple', 'single','single2','couple2' , 'charlie', 'figt', 'statico')) NOT NULL,
                 player_id TEXT NOT NULL,
                 player_name TEXT NOT NULL,
                 score REAL NOT NULL,
@@ -93,6 +93,28 @@ def init_scoring_table():
 
 # Chiama la funzione per inizializzare la tabella scoring
 init_scoring_table()
+
+def init_figt_table():
+    logging.debug("[FIGT] Acquisizione del lock per SQLite")
+    with sqlite_lock:
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute(''' 
+            CREATE TABLE IF NOT EXISTS figt_scoring (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                player_id TEXT NOT NULL,
+                player_name TEXT NOT NULL,
+                score REAL NOT NULL,
+                first_name TEXT,
+                last_name TEXT,
+                phone_number TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+        conn.close()
+
+init_figt_table()
 
 def update_scoring_schema():
     logging.debug("[SCORING] Updating schema for Treasure Hunt")
@@ -112,6 +134,91 @@ def update_scoring_schema():
         conn.close()
 
 update_scoring_schema()
+
+def migrate_player_type_constraints():
+    logging.debug("[MIGRATION] Checking player_type constraints for FIGT")
+    with sqlite_lock:
+        conn = sqlite3.connect(SQLITE_DB_PATH)
+        cursor = conn.cursor()
+        
+        # New schemas
+        new_schemas = {
+            'queues': '''
+                CREATE TABLE queues (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    player_type TEXT CHECK(player_type IN ('couple', 'single', 'couple2', 'single2', 'charlie', 'figt', 'statico')) NOT NULL,
+                    player_id TEXT NOT NULL,
+                    player_name TEXT NOT NULL,
+                    arrival_time DATETIME NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''',
+            'skipped_players': '''
+                CREATE TABLE skipped_players (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    player_type TEXT CHECK(player_type IN ('couple', 'single', 'couple2', 'single2', 'charlie', 'figt', 'statico')) NOT NULL,
+                    player_id TEXT NOT NULL,
+                    player_name TEXT NOT NULL,
+                    skipped_at DATETIME NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''',
+            'scoring': '''
+                CREATE TABLE scoring (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    player_type TEXT CHECK(player_type IN ('couple', 'single','single2','couple2' , 'charlie', 'figt', 'statico')) NOT NULL,
+                    player_id TEXT NOT NULL,
+                    player_name TEXT NOT NULL,
+                    score REAL NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    treasure_code TEXT,
+                    gener_map INTEGER,
+                    treasure_finish TIMESTAMP,
+                    treasure_time_qualification REAL,
+                    synked INTEGER DEFAULT 0
+                )
+            '''
+        }
+        
+        for table, new_sql in new_schemas.items():
+            try:
+                # Test insert
+                try:
+                    conn.execute("BEGIN")
+                    if table == 'queues':
+                        cursor.execute(f"INSERT INTO {table} (player_type, player_id, player_name, arrival_time) VALUES ('figt', 'TEST', 'TEST', '2026-01-01')")
+                    elif table == 'skipped_players':
+                        cursor.execute(f"INSERT INTO {table} (player_type, player_id, player_name, skipped_at) VALUES ('figt', 'TEST', 'TEST', '2026-01-01')")
+                    elif table == 'scoring':
+                        cursor.execute(f"INSERT INTO {table} (player_type, player_id, player_name, score) VALUES ('figt', 'TEST', 'TEST', 0.0)")
+                    conn.rollback()
+                    logging.info(f"[MIGRATION] Table {table} already supports 'figt'")
+                except sqlite3.IntegrityError:
+                    conn.rollback()
+                    logging.info(f"[MIGRATION] Updating {table} to support 'figt' via table recreation")
+                    
+                    cursor.execute(f"ALTER TABLE {table} RENAME TO {table}_old")
+                    cursor.execute(new_sql)
+                    
+                    # Get common columns
+                    cursor.execute(f"PRAGMA table_info({table}_old)")
+                    old_cols = {c[1] for c in cursor.fetchall()}
+                    cursor.execute(f"PRAGMA table_info({table})")
+                    new_cols = {c[1] for c in cursor.fetchall()}
+                    
+                    common_cols = list(old_cols.intersection(new_cols))
+                    col_list = ", ".join(common_cols)
+                    
+                    cursor.execute(f"INSERT INTO {table} ({col_list}) SELECT {col_list} FROM {table}_old")
+                    cursor.execute(f"DROP TABLE {table}_old")
+                    conn.commit()
+                    logging.info(f"[MIGRATION] Table {table} upgraded successfully")
+            except Exception as e:
+                logging.error(f"[MIGRATION] Error migrating {table}: {e}")
+        
+        conn.close()
+
+migrate_player_type_constraints()
 
 def init_average_times_table():
     logging.debug("[AVG TIMES DB] Acquisizione lock per init tabella average_times")
@@ -143,6 +250,25 @@ def init_average_times_table():
 
 # Chiamare la funzione all'avvio
 init_average_times_table()
+
+def init_figt_timer_table():
+    logging.debug("[FIGT TIMER DB] Acquisizione lock per init tabella figt_timer_scores")
+    with sqlite_lock:
+        try:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS figt_timer_scores (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timer_duration_minutes REAL NOT NULL,
+                    recorded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            ''')
+            conn.commit()
+        finally:
+            if conn: conn.close()
+
+init_figt_timer_table()
 
 def init_mid_times_table():
     logging.debug("[MID TIMES DB] Acquisizione lock per init tabella mid_times")
@@ -303,7 +429,7 @@ def init_skipped_table():
         cursor.execute(''' 
             CREATE TABLE IF NOT EXISTS skipped_players (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                player_type TEXT CHECK(player_type IN ('couple', 'single', 'couple2', 'single2', 'charlie', 'statico')) NOT NULL,
+                player_type TEXT CHECK(player_type IN ('couple', 'single', 'couple2', 'single2', 'charlie', 'figt', 'statico')) NOT NULL,
                 player_id TEXT NOT NULL,
                 player_name TEXT NOT NULL,
                 skipped_at DATETIME NOT NULL,
@@ -333,6 +459,7 @@ def load_skipped_from_db():
         backend.skipped_couples2.clear()
         backend.skipped_singles2.clear()
         backend.skipped_charlie.clear()
+        backend.skipped_figt.clear()
         backend.skipped_statico.clear()
 
         for row in rows:
@@ -349,6 +476,8 @@ def load_skipped_from_db():
                 backend.skipped_singles2.append(player_data)
             elif player_type == 'charlie':
                 backend.skipped_charlie.append(player_data)
+            elif player_type == 'figt':
+                backend.skipped_figt.append(player_data)
             elif player_type == 'statico':
                 backend.skipped_statico.append(player_data)
 
@@ -448,6 +577,7 @@ def load_queues_from_db():
         backend.queue_couples2.clear()
         backend.queue_singles2.clear()
         backend.queue_charlie.clear()
+        backend.queue_figt.clear()
         backend.queue_statico.clear()
 
         for row in rows:
@@ -462,6 +592,8 @@ def load_queues_from_db():
                 backend.queue_singles2.append({'id': player_id, 'arrival': arrival_time})
             elif player_type == 'charlie':
                 backend.queue_charlie.append({'id': player_id, 'arrival': arrival_time})
+            elif player_type == 'figt':
+                backend.queue_figt.append({'id': player_id, 'arrival': arrival_time})
             elif player_type == 'statico':
                 backend.queue_statico.append({'id': player_id, 'arrival': arrival_time})
 
@@ -476,6 +608,15 @@ def load_queues_from_db():
             backend.next_player_charlie_id = None
             backend.next_player_charlie_name = None
             backend.next_player_charlie_locked = False
+
+        if backend.queue_figt:
+            backend.next_player_figt_id = backend.queue_figt[0]['id']
+            backend.next_player_figt_name = backend.get_player_name(backend.next_player_figt_id)
+            backend.next_player_figt_locked = True
+        else:
+            backend.next_player_figt_id = None
+            backend.next_player_figt_name = None
+            backend.next_player_figt_locked = False
 
         if backend.queue_statico:
             backend.next_player_statico_id = backend.queue_statico[0]['id']
@@ -520,6 +661,13 @@ def save_queues_to_db():
                     ('single', single['id'], backend.get_player_name(single['id']), single['arrival'])
                 )
 
+            # Salva le code di FIGT
+            for figt in backend.queue_figt:
+                cursor.execute(
+                    "INSERT INTO queues (player_type, player_id, player_name, arrival_time) VALUES (?, ?, ?, ?)",
+                    ('figt', figt['id'], backend.get_player_name(figt['id']), figt['arrival'])
+                )
+
             # Salva le code delle coppie2
             for couple2 in backend.queue_couples2:
                 cursor.execute(
@@ -561,6 +709,16 @@ def save_queues_to_db():
                     )
             logging.debug("[DB SAVE THREAD] Timer Charlie salvati.")
 
+            logging.debug("[DB SAVE THREAD] Cancellazione vecchi timer FIGT...")
+            cursor.execute("DELETE FROM figt_timer_scores")
+            logging.debug(f"[DB SAVE THREAD] Salvataggio {len(backend.figt_timer_history)} record timer FIGT...")
+            for duration in backend.figt_timer_history:
+                    cursor.execute(
+                        "INSERT INTO figt_timer_scores (timer_duration_minutes) VALUES (?)",
+                        (duration,)
+                    )
+            logging.debug("[DB SAVE THREAD] Timer FIGT salvati.")
+
             # Salva gli skippati
             cursor.execute("DELETE FROM skipped_players")
             for player in backend.skipped_couples:
@@ -588,6 +746,11 @@ def save_queues_to_db():
                 cursor.execute(
                     "INSERT INTO skipped_players (player_type, player_id, player_name, skipped_at) VALUES (?, ?, ?, ?)",
                     ('charlie', player['id'], backend.get_player_name(player['id']), datetime.datetime.now())
+                )
+            for player in backend.skipped_figt:
+                cursor.execute(
+                    "INSERT INTO skipped_players (player_type, player_id, player_name, skipped_at) VALUES (?, ?, ?, ?)",
+                    ('figt', player['id'], backend.get_player_name(player['id']), datetime.datetime.now())
                 )
             for player in backend.skipped_statico:
                 cursor.execute(
@@ -703,6 +866,24 @@ def load_charlie_timer_history_from_db():
 
 
 load_charlie_timer_history_from_db()
+
+def load_figt_timer_history_from_db():
+    logging.debug("[LOAD FIGT TIMERS] Tentativo caricamento storico timer FIGT da DB.")
+    try:
+        with sqlite_lock:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("SELECT timer_duration_minutes FROM figt_timer_scores ORDER BY recorded_at ASC")
+            rows = cursor.fetchall()
+            conn.close()
+        backend.figt_timer_history.clear()
+        for row in rows:
+            backend.figt_timer_history.append(float(row[0]))
+        backend.update_averages()
+    except Exception as e:
+        logging.error(f"[LOAD FIGT TIMERS] Errore: {e}")
+
+load_figt_timer_history_from_db()
 
 # Avvia il thread per il salvataggio periodico
 save_thread = Thread(target=save_queues_to_db, daemon=True)
@@ -939,6 +1120,108 @@ def controls_single():
 def controls_charlie():
     return render_template('controls_charlie.html')
 
+@app.route('/controls/figt')
+def controls_figt():
+    return render_template('controls_figt.html')
+
+@app.route('/add_figt', methods=['POST'])
+def add_figt():
+    id = request.json.get('id')
+    name = request.json.get('name')
+    if not id or not name:
+        return jsonify(success=False, error="ID Giocatore mancante")
+    
+    figt_id = f"{name.upper()} {int(id):03d}"
+    backend.add_figt_player(figt_id, name)
+    return jsonify(success=True)
+
+@app.route('/submit_figt_score', methods=['POST'])
+def submit_figt_score():
+    data = request.json
+    player_id = data.get('player_id')
+    player_name = data.get('player_name')
+    minutes = int(data.get('minutes', 0))
+    seconds = int(data.get('seconds', 0))
+    milliseconds = int(data.get('milliseconds', 0))
+    
+    score_minutes = minutes + (seconds / 60.0) + (milliseconds / 60000.0)
+    
+    try:
+        with sqlite_lock:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute(
+                "INSERT INTO figt_scoring (player_id, player_name, score) VALUES (?, ?, ?)",
+                (player_id, player_name, score_minutes)
+            )
+            last_id = cursor.lastrowid
+            
+            # Check if Top 6
+            cursor.execute("SELECT score FROM figt_scoring ORDER BY score ASC LIMIT 6")
+            top_6_scores = [r[0] for r in cursor.fetchall()]
+            conn.commit()
+            conn.close()
+            
+        is_top_6 = len(top_6_scores) < 6 or score_minutes <= max(top_6_scores)
+        
+        return jsonify(success=True, is_top_6=is_top_6, entry_id=last_id)
+    except Exception as e:
+        logging.error(f"Error in submit_figt_score: {e}")
+        return jsonify(success=False, error=str(e)), 500
+
+@app.route('/save_figt_contact', methods=['POST'])
+def save_figt_contact():
+    data = request.json
+    entry_id = data.get('entry_id')
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    phone = data.get('phone')
+    
+    try:
+        with sqlite_lock:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE figt_scoring SET first_name = ?, last_name = ?, phone_number = ? WHERE id = ?",
+                (first_name, last_name, phone, entry_id)
+            )
+            conn.commit()
+            conn.close()
+        return jsonify(success=True)
+    except Exception as e:
+        logging.error(f"Error in save_figt_contact: {e}")
+        return jsonify(success=False, error=str(e)), 500
+
+@app.route('/get_figt_leaderboard')
+def get_figt_leaderboard():
+    try:
+        with sqlite_lock:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT player_id, player_name, score, first_name, last_name, phone_number 
+                FROM figt_scoring 
+                ORDER BY score ASC 
+                LIMIT 6
+            """)
+            rows = cursor.fetchall()
+            conn.close()
+        
+        leaderboard = []
+        for r in rows:
+            leaderboard.append({
+                'player_id': r[0],
+                'player_name': r[1],
+                'score': r[2],
+                'first_name': r[3],
+                'last_name': r[4],
+                'phone': r[5]
+            })
+        return jsonify(leaderboard)
+    except Exception as e:
+        logging.error(f"Error in get_figt_leaderboard: {e}")
+        return jsonify([]), 500
+
 
 @app.route('/get_scores', methods=['GET'])
 def get_scores():
@@ -982,8 +1265,16 @@ def get_advanced_scores():
                     def format_time(mins):
                         if mins is None: return "--"
                         m = int(mins)
-                        s = int(round((mins - m) * 60))
-                        return f"{m}m {s}s"
+                        total_secs = (mins - m) * 60
+                        s = int(total_secs)
+                        ms = int(round((total_secs - s) * 1000))
+                        if ms == 1000: # Handle rounding up to next second
+                            s += 1
+                            ms = 0
+                            if s == 60:
+                                m += 1
+                                s = 0
+                        return f"{m:02d}:{s:02d}.{ms:03d}"
                         
                     advanced_leaderboard[p_type + 's' if p_type != 'charlie' else p_type].append({
                         'id': p_id,
@@ -1004,10 +1295,22 @@ def scoring():
     leaderboard = backend.get_leaderboard()
     return render_template('scoring.html', leaderboard=leaderboard)
 
+@app.route('/scoring_figt')
+def scoring_figt():
+    return render_template('scoring_figt.html')
+
 @app.route('/podium')
 def podium():
     return render_template('podium.html')
 
+
+@app.route('/skip_figt_player', methods=['POST'])
+def skip_figt_player():
+    player_id = request.json.get('id')
+    if player_id:
+        backend.skip_figt_player(player_id)
+        return jsonify(success=True)
+    return jsonify(success=False, error="ID Giocatore mancante")
 
 @app.route('/get_latest_scores', methods=['GET'])
 def get_latest_scores():
@@ -1226,25 +1529,69 @@ def add_charlie_player():
 def queue():
     return render_template('queue.html')
 
+def get_overall_max_id(prefixes):
+    # Partiamo dal max in memoria (backend)
+    max_id = backend.get_max_id(prefixes)
+    
+    # Ora controlliamo il DB
+    try:
+        with sqlite_lock:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            
+            # Controlliamo 'scoring'
+            for pref in prefixes:
+                cursor.execute("SELECT player_id FROM scoring WHERE player_id LIKE ?", (f"{pref}%",))
+                rows = cursor.fetchall()
+                for row in rows:
+                    pid = row[0]
+                    import re
+                    nums = re.findall(r'\d+', pid)
+                    if nums:
+                        val = int(nums[-1])
+                        if val > max_id:
+                            max_id = val
+                            
+            # Controlliamo 'figt_scoring' se tra i prefissi c'è VIOLA
+            if "VIOLA" in [p.upper() for p in prefixes]:
+                cursor.execute("SELECT player_id FROM figt_scoring WHERE player_id LIKE 'VIOLA%'")
+                rows = cursor.fetchall()
+                for row in rows:
+                    pid = row[0]
+                    import re
+                    nums = re.findall(r'\d+', pid)
+                    if nums:
+                        val = int(nums[-1])
+                        if val > max_id:
+                            max_id = val
+            
+            conn.close()
+    except Exception as e:
+        logging.error(f"Error in get_overall_max_id: {e}")
+        
+    return max_id
 
 @app.route('/get_next_player_ids', methods=['GET'])
 def get_next_player_ids():
     return jsonify(
-        next_couple=backend.get_max_id(["GIALLO"]) + 1,
-        next_single=backend.get_max_id(["BLU"]) + 1,
-        next_couple2=backend.get_max_id(["ROSA"]) + 1,
-        next_single2=backend.get_max_id(["BIANCO", "ARANCIO"]) + 1,
-        next_charlie=backend.get_max_id(["VERDE"]) + 1,
-        next_statico=backend.get_max_id(["ROSSO"]) + 1
+        next_couple=get_overall_max_id(["GIALLO"]) + 1,
+        next_single=get_overall_max_id(["BLU"]) + 1,
+        next_couple2=get_overall_max_id(["ROSA"]) + 1,
+        next_single2=get_overall_max_id(["BIANCO", "ARANCIO"]) + 1,
+        next_charlie=get_overall_max_id(["VERDE"]) + 1,
+        next_figt=get_overall_max_id(["VIOLA"]) + 1,
+        next_statico=get_overall_max_id(["ROSSO"]) + 1
     )
 
 @app.route('/simulate', methods=['GET'])
 def simulate():
-    couples_board, singles_board, couples2_board, singles2_board, charlie_board, statico_board = backend.get_waiting_board()
+    couples_board, singles_board, couples2_board, singles2_board, charlie_board, figt_board, statico_board = backend.get_waiting_board()
     next_player_alfa_bravo_id = backend.next_player_alfa_bravo_id
     next_player_alfa_bravo_id2 = backend.next_player_alfa_bravo_id2
     next_player_charlie_id = backend.next_player_charlie_id
     next_player_charlie_name = backend.next_player_charlie_name
+    next_player_figt_id = backend.next_player_figt_id
+    next_player_figt_name = backend.next_player_figt_name
     now = backend.get_current_time()
 
     alfa_remaining = max(0, (backend.localize_time(backend.ALFA_next_available) - now).total_seconds() / 60)
@@ -1255,6 +1602,14 @@ def simulate():
     formatted_charlie_board = []
     for pos, player_id, time_est in charlie_board:
         formatted_charlie_board.append({
+            'id': player_id,
+            'name': backend.get_player_name(player_id),
+            'estimated_time': time_est
+        })
+
+    formatted_figt_board = []
+    for pos, player_id, time_est in figt_board:
+        formatted_figt_board.append({
             'id': player_id,
             'name': backend.get_player_name(player_id),
             'estimated_time': time_est
@@ -1311,6 +1666,7 @@ def simulate():
     current_player_alfa2 = backend.current_player_alfa2
     current_player_bravo2 = backend.current_player_bravo2
     current_player_charlie = backend.current_player_charlie
+    current_player_figt = backend.current_player_figt
 
     single_in_alfa = (
             isinstance(backend.current_player_alfa, dict) and
@@ -1358,6 +1714,7 @@ def simulate():
     alfa2_remaining = max(0, (backend.ALFA_next_available2 - now).total_seconds() / 60)
     bravo2_remaining = max(0, (backend.BRAVO_next_available2 - now).total_seconds() / 60)
     charlie_remaining = max(0, (backend.CHARLIE_next_available - now).total_seconds() / 60)
+    figt_remaining = max(0, (backend.FIGT_next_available - now).total_seconds() / 60)
     delta_remaining = max(0, (backend.DELTA_next_available - now).total_seconds() / 60)
     echo_remaining = max(0, (backend.ECHO_next_available - now).total_seconds() / 60)
 
@@ -1373,6 +1730,7 @@ def simulate():
         couples2=formatted_couples2_board,
         singles2=formatted_singles2_board,
         charlie=formatted_charlie_board,
+        figt=formatted_figt_board,
         statico=formatted_statico_board,
         next_player_alfa_bravo_id=next_player_alfa_bravo_id,
         next_player_alfa_bravo_name=next_player_alfa_bravo_name,
@@ -1380,35 +1738,41 @@ def simulate():
         next_player_alfa_bravo_name2=next_player_alfa_bravo_name2,
         next_player_charlie_id=next_player_charlie_id,
         next_player_charlie_name=next_player_charlie_name,
-        next_player_statico_id=backend.next_player_statico_id,  # Aggiungiamo
-        next_player_statico_name=backend.next_player_statico_name,  # Aggiungiamo
+        next_player_figt_id=next_player_figt_id,
+        next_player_figt_name=next_player_figt_name,
+        next_player_statico_id=backend.next_player_statico_id,
+        next_player_statico_name=backend.next_player_statico_name,
         current_player_alfa=current_player_alfa,
         current_player_bravo=current_player_bravo,
         current_player_alfa2=current_player_alfa2,
         current_player_bravo2=current_player_bravo2,
-        current_player_charlie=current_player_charlie,
-        current_player_delta=backend.current_player_delta,  # Aggiungiamo
-        current_player_echo=backend.current_player_echo,  # Aggiungiamo
+        current_player_charlie=current_player_charlie['id'] if current_player_charlie else None,
+        current_player_figt=current_player_figt['id'] if current_player_figt else None,
+        current_player_delta=backend.current_player_delta,
+        current_player_echo=backend.current_player_echo,
         player_icon_url=url_for('static', filename='icons/Vector.svg'),
         alfa_status='Occupata' if backend.current_player_alfa else 'Libera',
         bravo_status='Occupata' if backend.current_player_bravo else 'Libera',
         alfa2_status='Occupata' if backend.current_player_alfa2 else 'Libera',
         bravo2_status='Occupata' if backend.current_player_bravo2 else 'Libera',
         charlie_status='Occupata' if backend.current_player_charlie else 'Libera',
-        delta_status='Occupata' if backend.current_player_delta else 'Libera',  # Aggiungiamo
-        echo_status='Occupata' if backend.current_player_echo else 'Libera',  # Aggiungiamo
+        figt_status='Occupata' if backend.current_player_figt else 'Libera',
+        delta_status='Occupata' if backend.current_player_delta else 'Libera',
+        echo_status='Occupata' if backend.current_player_echo else 'Libera',
         alfa_remaining=f"{int(alfa_remaining)}min" if alfa_remaining > 0 else "0min",
         bravo_remaining=f"{int(bravo_remaining)}min" if bravo_remaining > 0 else "0min",
         alfa2_remaining=f"{int(alfa2_remaining)}min" if alfa2_remaining > 0 else "0min",
         bravo2_remaining=f"{int(bravo2_remaining)}min" if bravo2_remaining > 0 else "0min",
-        charlie_remaining=f"{int(charlie_remaining)}min" if charlie_remaining > 0 else "0min",
-        delta_remaining=f"{int(delta_remaining)}min" if delta_remaining > 0 else "0min",  # Aggiungiamo
-        echo_remaining=f"{int(echo_remaining)}min" if echo_remaining > 0 else "0min",  # Aggiungiamo
+        charlie_remaining=f"{int(charlie_remaining)}min",
+        figt_remaining=f"{int(figt_remaining)}min",
+        delta_remaining=f"{int(delta_remaining)}min" if delta_remaining > 0 else "0min",
+        echo_remaining=f"{int(echo_remaining)}min" if echo_remaining > 0 else "0min",
         alfa_duration=durations.get('alfa', "N/D"), 
         bravo_duration=durations.get('bravo', "N/D"),
         alfa2_duration=durations.get('alfa2', "N/D"),
         bravo2_duration=durations.get('bravo2', "N/D"),
         charlie_duration=durations.get('charlie', "N/D"),
+        figt_duration=durations.get('figt', "N/D"),
         delta_duration=durations.get('delta', "N/D"),  # Aggiungiamo
         echo_duration=durations.get('echo', "N/D"),  # Aggiungiamo
         can_stop_couple1=can_stop_couple1,
@@ -1427,6 +1791,7 @@ def button_press():
     if button in ['first_start', 'second_start', 'first_start2', 'second_start2',
                   'third', 'third2',
                   'charlie_start', 'charlie_stop', # charlie_stop verrà modificato dopo
+                  'figt_start', 'figt_stop',
                   'statico_start_delta', 'statico_start_echo',
                   'statico_stop_delta', 'statico_stop_echo']:
 
@@ -1590,6 +1955,38 @@ def button_press():
                 else:
                     return jsonify(success=False, error="Errore nel recupero del tempo di inizio del giocatore Statico (ECHO).")
             return jsonify(success=False, error="Nessun giocatore Statico in pista ECHO.")
+
+        elif button == 'figt_start':
+            if not backend.queue_figt:
+                return jsonify(success=False, error="La coda FIGT è vuota.")
+            try:
+                backend.start_figt_game()
+                return jsonify(success=True, current_player_figt=backend.current_player_figt)
+            except Exception as e:
+                logging.error(f"Error during figt_start: {e}")
+                return jsonify(success=False, error=str(e))
+
+        elif button == 'figt_stop':
+            player_info = backend.current_player_figt
+            if player_info and player_info.get('id'):
+                player_id = player_info['id']
+                start_time = backend.player_start_times.get(player_id)
+                if start_time:
+                    timer_duration_minutes = (now - start_time).total_seconds() / 60.0
+                    try:
+                        backend.record_figt_game(timer_duration_minutes)
+                        return jsonify(
+                            success=True,
+                            player_id=player_id,
+                            player_name=backend.get_player_name(player_id)
+                        )
+                    except Exception as e:
+                        logging.error(f"Error during record_figt_game: {e}")
+                        return jsonify(success=False, error=str(e))
+                else:
+                    return jsonify(success=False, error="Orario inizio non trovato.")
+            else:
+                return jsonify(success=False, error="Nessun giocatore FIGT attivo.")
 
     elif button in ['first_stop', 'second_stop', 'first_stop2', 'second_stop2']:
         player_id = None
@@ -2005,6 +2402,7 @@ def get_skipped():
         'couples2': [{'id': c2['id']} for c2 in backend.skipped_couples2],
         'singles2': [{'id': s2['id']} for s2 in backend.skipped_singles2],
         'charlie': [{'id': p['id']} for p in backend.skipped_charlie],
+        'figt': [{'id': p['id']} for p in backend.skipped_figt],
         'statico': [{'id': p['id']} for p in backend.skipped_statico]
     })
 

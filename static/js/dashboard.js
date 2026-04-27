@@ -38,6 +38,7 @@ function updateDashboard() {
         "next-player-alfa-bravo-text",
         "next-player-alfa-bravo2-text",
         "next-charlie-text",
+        "next-figt-text",
         "next-statico-text",
       ];
 
@@ -216,7 +217,6 @@ function updateDashboard() {
         }
       }
 
-      // Aggiorna la coda Charlie
       const charlieBoard = document.getElementById("charlie-board");
       if (charlieBoard) {
         charlieBoard.innerHTML = "";
@@ -228,6 +228,21 @@ function updateDashboard() {
           const li = document.createElement("li");
           li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
           charlieBoard.appendChild(li);
+        });
+      }
+
+      // Aggiorna la coda FIGT
+      const figtBoard = document.getElementById("figt-board");
+      if (figtBoard) {
+        figtBoard.innerHTML = "";
+        data.figt.forEach((player) => {
+          const timeDisplay =
+            player.estimated_time === "PROSSIMO INGRESSO"
+              ? "PROSSIMO INGRESSO"
+              : formatTimeRome(player.estimated_time);
+          const li = document.createElement("li");
+          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button class="trash-button" onclick="deletePlayer('${player.id}')"><img class="trash-icon" src="/static/icons/trash.svg" alt="Delete"></button>`;
+          figtBoard.appendChild(li);
         });
       }
 
@@ -295,6 +310,19 @@ function updateDashboard() {
         }
       }
 
+      const nextFigtText = document.getElementById("next-figt-text");
+      if (
+        nextFigtText &&
+        data.next_player_figt_id &&
+        data.next_player_figt_name
+      ) {
+        nextFigtText.textContent =
+          `${data.next_player_figt_id}` || "nessun giocatore in coda";
+        if (data.next_player_figt_id.includes("VIOLA")) {
+          nextFigtText.className = "next-player figt";
+        }
+      }
+
       const nextCharliePlayer = document.getElementById("next-charlie-player");
       if (nextCharliePlayer) {
         nextCharliePlayer.textContent = data.next_charlie_player || "-";
@@ -340,6 +368,19 @@ function updateDashboard() {
         } else {
           currentPlayerCharlie.textContent = "Nessun giocatore";
           charlieDuration.textContent = "-";
+        }
+      }
+
+      // Aggiorna il giocatore corrente in FIGT
+      const currentPlayerFigt = document.getElementById("current-player-figt");
+      const figtDuration = document.getElementById("figt-duration");
+      if (currentPlayerFigt && figtDuration) {
+        if (data.current_player_figt) {
+          currentPlayerFigt.textContent = data.current_player_figt_id;
+          figtDuration.textContent = data.figt_duration;
+        } else {
+          currentPlayerFigt.textContent = "Nessun giocatore";
+          figtDuration.textContent = "-";
         }
       }
 
@@ -404,6 +445,18 @@ function updateDashboard() {
         charlieStatus
           .removeClass("occupied free")
           .addClass(data.charlie_status === "Occupata" ? "occupied" : "free");
+      }
+
+      // Aggiorna lo stato e il colore della card FIGT
+      const figtState = $("#figt-state");
+      const figtRemaining = $("#figt-remaining");
+      const figtStatus = $("#figt-status");
+      if (figtState && figtRemaining && figtStatus) {
+        figtState.text(data.figt_status);
+        figtRemaining.text(data.figt_remaining);
+        figtStatus
+          .removeClass("occupied free")
+          .addClass(data.figt_status === "Occupata" ? "occupied" : "free");
       }
 
       // Aggiorna lo stato delle piste statico
@@ -547,6 +600,27 @@ function skipNextPlayerCharlie() {
   }
 }
 
+function skipNextPlayerFigt() {
+  const nextPlayer = document.getElementById("next-figt-text").textContent;
+  if (
+    nextPlayer &&
+    nextPlayer !== "Nessun Giocatore In Coda" &&
+    nextPlayer !== "-"
+  ) {
+    fetch("/skip_figt_player", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: nextPlayer }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        updateSkipped();
+        updateDashboard();
+      })
+      .catch((e) => console.error(e));
+  }
+}
+
 // Aggiungi la funzione per lo skip statico
 function skipNextPlayerStatico() {
   const nextPlayer = document.getElementById("next-statico-text").textContent;
@@ -672,6 +746,7 @@ function updateSkipped() {
         "single2"
       ); // NUOVO
       createSkippedButtons("skipped-charlie-buttons", data.charlie, "charlie");
+      createSkippedButtons("skipped-figt-buttons", data.figt, "figt");
       createSkippedButtons("skipped-statico-buttons", data.statico, "statico");
     })
     .catch((error) => {
@@ -744,7 +819,6 @@ function updateBoards() {
         }
       }
 
-      // Aggiorna la coda Charlie
       const charlieBoard = document.getElementById("charlie-board");
       if (charlieBoard) {
         charlieBoard.innerHTML = "";
@@ -756,6 +830,21 @@ function updateBoards() {
           const li = document.createElement("li");
           li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button onclick="deletePlayer('${player.id}')"><img src="/static/icons/trash.svg" alt="Delete"></button>`;
           charlieBoard.appendChild(li);
+        });
+      }
+
+      // Aggiorna la coda FIGT
+      const figtBoard = document.getElementById("figt-board");
+      if (figtBoard) {
+        figtBoard.innerHTML = "";
+        data.figt.forEach((player) => {
+          const timeDisplay =
+            player.estimated_time === "PROSSIMO INGRESSO"
+              ? "PROSSIMO INGRESSO"
+              : formatTimeRome(player.estimated_time);
+          const li = document.createElement("li");
+          li.innerHTML = `${player.id} - Ingresso: ${timeDisplay} <button onclick="deletePlayer('${player.id}')"><img src="/static/icons/trash.svg" alt="Delete"></button>`;
+          figtBoard.appendChild(li);
         });
       }
 

@@ -130,6 +130,11 @@ body {
   color: white;
 }
 
+.bg-purple {
+  background-color: #8a2be2; /* FIGT (Viola) */
+  color: white;
+}
+
 /* Optional: Add padding and border-radius for better appearance */
 .scrolling-list li {
   padding: 10px;

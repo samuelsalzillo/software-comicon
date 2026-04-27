@@ -36,9 +36,6 @@ body,
   row-gap: 20px;
 }
 
-#main-box1 {
-}
-
 #main-box2 {
   height: 260px;
 }
@@ -405,6 +402,12 @@ body,
   color: white;
 }
 
+.skipped-button.figt {
+  background-color: #8a2be2;
+  /* Viola */
+  color: white;
+}
+
 .player-icon {
   width: 30px;
   height: 30px;
@@ -473,6 +476,11 @@ body,
   background-color: #ff0000; /* Rosso */
   color: white;
 }
+
+.next-player.figt {
+  background-color: #8a2be2; /* Viola */
+  color: white;
+}
 /* Stili per i pulsanti di aggiunta */
 .btn-yellow {
   background: #f29f05;
@@ -506,6 +514,12 @@ body,
 
 .btn-red {
   background: #ff0000;
+  color: white;
+  width: 100%;
+}
+
+.btn-purple {
+  background: #8a2be2;
   color: white;
   width: 100%;
 }
