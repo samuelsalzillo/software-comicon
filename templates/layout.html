@@ -205,11 +205,19 @@
         border-bottom: none;
       }
     }
+    .content-wrapper {
+      padding: 20px;
+    }
+
+    .content-wrapper.with-nav {
+      margin-top: 60px;
+    }
   </style>
   {% block extra_css %}{% endblock %}
 </head>
 
 <body>
+  {% if not request.args.get('tablet') %}
   <nav class="navbar">
     <div class="hamburger" id="hamburger">
       <svg>
@@ -251,8 +259,9 @@
       <a href="{{ url_for('admin_login') }}" class="nav-item" style="color: #ff4b2b; font-weight: bold;">Admin</a>
     </div>
   </nav>
+  {% endif %}
 
-  <div class="content-wrapper" style="padding: 20px; margin-top: 60px;">{% block content %}{% endblock %}</div>
+  <div class="content-wrapper {% if not request.args.get('tablet') %}with-nav{% endif %}">{% block content %}{% endblock %}</div>
   <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
 
   <script>

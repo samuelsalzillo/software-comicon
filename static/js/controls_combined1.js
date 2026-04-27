@@ -131,6 +131,13 @@ function updateUIState() {
           !isGameActiveSingle ||
           !data.can_stop_single1
       );
+
+      // Gestione visibilità bottone "Sblocca Tastierino"
+      const yellowInAlfa =
+        data.current_player_alfa &&
+        data.current_player_alfa.id &&
+        data.current_player_alfa.id.startsWith("GIALLO");
+      $("#unlock-keypad-btn-couple").toggle(!!yellowInAlfa);
     })
     .catch((error) => {
       console.error("Error fetching simulation data for UI state 1:", error);

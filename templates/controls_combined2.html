@@ -207,6 +207,20 @@
     clip: rect(0, 0, 0, 0);
     border: 0;
   }
+
+  /* Stile per il bottone Sblocca Tastierino */
+  .btn-unlock {
+    background-color: #ff9800; /* Arancione */
+    color: white !important;
+    font-weight: bold;
+    margin-top: 10px;
+    width: 100%;
+    display: none; /* Nascosto di default */
+  }
+  .btn-unlock:hover:not(:disabled) {
+    background-color: #f57c00;
+  }
+
   .standard-controls .game-info {
     margin-bottom: 10px;
   }
@@ -266,6 +280,13 @@
         <div class="status">
           Stato: <span id="status-couple2">ALFA2: - BRAVO2: -</span>
         </div>
+        <button
+          id="unlock-keypad-btn-couple2"
+          class="btn btn-unlock"
+          onclick="pressButton2('third2', 'couple2')"
+        >
+          SBLOCCA TASTIERINO
+        </button>
       </div>
     </div>
     <div

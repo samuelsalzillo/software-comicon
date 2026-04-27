@@ -1095,6 +1095,14 @@ def provaE2():
 def dashboard():
     return render_template('dashboard.html')
 
+@app.route('/track_alfa')
+def track_alfa_tablet():
+    return render_template('tablet_track.html', track_id='alfa', track_name='Alfa')
+
+@app.route('/track_alfa2')
+def track_alfa2_tablet():
+    return render_template('tablet_track.html', track_id='alfa2', track_name='Alfa2')
+
 
 @app.route('/add_couple', methods=['POST'])
 def add_couple():

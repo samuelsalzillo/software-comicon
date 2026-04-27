@@ -137,6 +137,13 @@ function updateUIState2() {
         "disabled",
         !stdControlsSingle2Visible || !isGameActiveSingle2
       );
+
+      // Gestione visibilità bottone "Sblocca Tastierino"
+      const rosaInAlfa2 =
+        data.current_player_alfa2 &&
+        data.current_player_alfa2.id &&
+        data.current_player_alfa2.id.startsWith("ROSA");
+      $("#unlock-keypad-btn-couple2").toggle(!!rosaInAlfa2);
     })
     .catch((e) => {
       console.error("Error fetching simulation data for UI state 2:", e);
