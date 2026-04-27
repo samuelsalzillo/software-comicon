@@ -8,6 +8,133 @@
   rel="stylesheet"
   href="{{ url_for('static', filename='css/dashboard.css') }}"
 />
+<style>
+  /* Floating Widget Styles */
+  .history-widget {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  #history-button {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3ca04d, #1a4d2e);
+    border: 2px solid #edffed;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+
+  #history-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+
+  #history-button.active {
+    background: #ff4b2b;
+    transform: rotate(90deg);
+  }
+
+  .history-panel {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: 450px;
+    max-height: 500px;
+    background: #141815;
+    border: 2px solid #3ca04d;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    animation: slideUp 0.3s ease-out;
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .history-header {
+    background: #3ca04d;
+    color: #141815;
+    padding: 12px 20px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'Black Ops One', sans-serif;
+    letter-spacing: 1px;
+  }
+
+  .history-content {
+    padding: 15px;
+    overflow-y: auto;
+    flex-grow: 1;
+    background: #0d120e;
+  }
+
+  .history-table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #d1d8d1;
+    font-size: 0.85rem;
+  }
+
+  .history-table th {
+    text-align: left;
+    color: #3ca04d;
+    padding: 8px;
+    border-bottom: 1px solid #1a4d2e;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    font-family: monospace;
+  }
+
+  .history-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(60, 160, 77, 0.1);
+    font-family: monospace;
+  }
+
+  .history-table tr:hover {
+    background: rgba(60, 160, 77, 0.05);
+  }
+
+  .badge-player {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.75rem;
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+  }
+
+  .badge-giallo { background: #eab308; color: black; }
+  .badge-blu { background: #3b82f6; color: white; }
+  .badge-rosa { background: #ec4899; color: white; }
+  .badge-bianco { background: #f8fafc; color: black; }
+
+  .empty-msg {
+    text-align: center;
+    padding: 30px;
+    color: #4b5563;
+    font-style: italic;
+  }
+</style>
 {% endblock %} {% block content %}
 <h1>Cassa</h1>
 
@@ -433,6 +560,37 @@
       </div>
     </div>
   </div>
+  </div>
+</div>
+
+<!-- History Overlay Widget -->
+<div class="history-widget">
+  <div id="history-panel" class="history-panel">
+    <div class="history-header">
+      <span>ULTIME GIOCATE</span>
+      <button onclick="toggleHistory()" style="background:none; border:none; color:inherit; cursor:pointer; font-size: 1.2rem;">&times;</button>
+    </div>
+    <div class="history-content">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th style="width: 25%;">GIOCATORE</th>
+            <th style="width: 25%;">ID</th>
+            <th style="width: 25%;">CODICE</th>
+            <th style="width: 25%;">MAPPA</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr>
+            <td colspan="4" class="empty-msg">Caricamento in corso...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <button id="history-button" onclick="toggleHistory()" title="Visualizza cronologia">
+    <span id="history-icon" style="margin-top: 5px;">📜</span>
+  </button>
 </div>
 
 {% endblock %} {% block scripts %}
@@ -466,4 +624,69 @@
 <!-- Carica prima dashboard.js perché controls_cassa.js potrebbe dipendere da funzioni definite lì -->
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script src="{{ url_for('static', filename='js/controls_cassa.js') }}"></script>
+<script>
+  function toggleHistory() {
+    const panel = document.getElementById('history-panel');
+    const button = document.getElementById('history-button');
+    const icon = document.getElementById('history-icon');
+    
+    if (panel.style.display === 'flex') {
+      panel.style.display = 'none';
+      button.classList.remove('active');
+      icon.textContent = '📜';
+    } else {
+      panel.style.display = 'flex';
+      button.classList.add('active');
+      icon.textContent = '✕';
+      fetchRecentHistory();
+    }
+  }
+
+  function fetchRecentHistory() {
+    const tbody = document.getElementById('history-body');
+    fetch('/controls/recent_players')
+      .then(response => response.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        
+        if (data.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty-msg">Nessuna giocata registrata oggi.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        data.forEach(player => {
+          const row = document.createElement('tr');
+          
+          let badgeClass = '';
+          const name = player.name ? player.name.toUpperCase() : '';
+          if (name.includes('GIALLO')) badgeClass = 'badge-giallo';
+          else if (name.includes('BLU')) badgeClass = 'badge-blu';
+          else if (name.includes('ROSA')) badgeClass = 'badge-rosa';
+          else if (name.includes('BIANCO') || name.includes('ARANCIO')) badgeClass = 'badge-bianco';
+
+          row.innerHTML = `
+            <td><span class="badge-player ${badgeClass}">${player.name || '-'}</span></td>
+            <td>${player.id || '-'}</td>
+            <td style="color: #3ca04d;">${player.treasure_code || '-'}</td>
+            <td style="text-align: center;">${player.map_num || '-'}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      })
+      .catch(error => {
+        console.error('Errore cronologia:', error);
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-msg" style="color: #f87171;">Errore nel caricamento.</td></tr>';
+      });
+  }
+
+  // Chiudi se si clicca fuori
+  document.addEventListener('click', function(event) {
+    const widget = document.querySelector('.history-widget');
+    const panel = document.getElementById('history-panel');
+    if (!widget.contains(event.target) && panel.style.display === 'flex') {
+      toggleHistory();
+    }
+  });
+</script>
 {% endblock %}

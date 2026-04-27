@@ -1071,6 +1071,40 @@ def get_latest_scores():
         
     return jsonify(latest_data)
 
+@app.route('/controls/recent_players', methods=['GET'])
+def get_recent_players():
+    """
+    Recupera gli ultimi 30 giocatori per la cassa con dettagli caccia al tesoro.
+    """
+    try:
+        with sqlite_lock:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT player_type, player_id, player_name, treasure_code, gener_map, created_at
+                FROM scoring
+                WHERE player_type IN ('couple', 'single', 'couple2', 'single2')
+                ORDER BY created_at DESC
+                LIMIT 30
+            """)
+            rows = cursor.fetchall()
+            conn.close()
+        
+        recent = []
+        for row in rows:
+            recent.append({
+                'type': row[0],
+                'id': row[1],
+                'name': row[2],
+                'treasure_code': row[3] if row[3] else '-',
+                'map_num': row[4] if row[4] else '-',
+                'time': row[5]
+            })
+        return jsonify(recent)
+    except Exception as e:
+        logging.error(f"Errore /controls/recent_players: {e}")
+        return jsonify(error="Errore server"), 500
+
 @app.route('/latest')
 def latest():
     return render_template('latest_plays.html')
