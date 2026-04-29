@@ -23,7 +23,7 @@ function updateNextPlayer() {
 
       // Aggiorna giocatore corrente FIGT
       if (data.current_player_figt) {
-        $("#current-player").text(`${data.current_player_figt_name || ""} - ${data.current_player_figt}`);
+        $("#current-player").text(`${data.current_player_figt.name || ""} - ${data.current_player_figt.id}`);
       } else if (!isGameActive) {
         $("#current-player").text("-");
       }
@@ -132,7 +132,7 @@ function pressButton(button) {
           localStorage.setItem("startTimeFigt", startTime.toISOString());
           isGameActive = true;
           timerInterval = setInterval(updateTimer, 1000);
-          $("#current-player").text(response.current_player_figt);
+          $("#current-player").text(response.current_player_figt.id);
           updateNextPlayer();
         } else {
           alert(response.error);

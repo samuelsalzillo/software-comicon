@@ -376,7 +376,7 @@ function updateDashboard() {
       const figtDuration = document.getElementById("figt-duration");
       if (currentPlayerFigt && figtDuration) {
         if (data.current_player_figt) {
-          currentPlayerFigt.textContent = data.current_player_figt_id;
+          currentPlayerFigt.textContent = data.current_player_figt.id;
           figtDuration.textContent = data.figt_duration;
         } else {
           currentPlayerFigt.textContent = "Nessun giocatore";

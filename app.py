@@ -1746,8 +1746,8 @@ def simulate():
         current_player_bravo=current_player_bravo,
         current_player_alfa2=current_player_alfa2,
         current_player_bravo2=current_player_bravo2,
-        current_player_charlie=current_player_charlie['id'] if current_player_charlie else None,
-        current_player_figt=current_player_figt['id'] if current_player_figt else None,
+        current_player_charlie=current_player_charlie,
+        current_player_figt=current_player_figt,
         current_player_delta=backend.current_player_delta,
         current_player_echo=backend.current_player_echo,
         player_icon_url=url_for('static', filename='icons/Vector.svg'),
@@ -2122,7 +2122,7 @@ def submit_combined_score():
                     if not cursor.fetchone():
                         break
                         
-                gener_map = random.randint(1, 6)
+                gener_map = random.choice([1, 2, 3, 5])
                 treasure_password = "Mercenari2026"
                 
                 execute_with_retry(

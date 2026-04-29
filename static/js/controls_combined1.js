@@ -112,8 +112,8 @@ function updateUIState() {
       $("#start-btn-couple").prop(
         "disabled",
         !stdControlsCoupleVisible ||
-          isGameActiveCouple ||
-          !(alfa_free && bravo_free)
+        isGameActiveCouple ||
+        !(alfa_free && bravo_free)
       );
       $("#start-btn-single").prop(
         "disabled",
@@ -122,14 +122,14 @@ function updateUIState() {
       $("#stop-btn-couple").prop(
         "disabled",
         !stdControlsCoupleVisible ||
-          !isGameActiveCouple ||
-          !data.can_stop_couple1
+        !isGameActiveCouple ||
+        !data.can_stop_couple1
       );
       $("#stop-btn-single").prop(
         "disabled",
         !stdControlsSingleVisible ||
-          !isGameActiveSingle ||
-          !data.can_stop_single1
+        !isGameActiveSingle ||
+        !data.can_stop_single1
       );
 
       // Gestione visibilità bottone "Sblocca Tastierino"
@@ -459,9 +459,9 @@ function submitPenaltyForm(typeSuffix) {
         overlay.style = "position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.9);z-index:9999;display:flex;justify-content:center;align-items:center;padding:20px;";
         const popup = document.createElement('div');
         popup.style = "background:#0f172a;padding:25px;border-radius:20px;color:white;text-align:center;box-shadow:0 0 40px rgba(79,172,254,0.6);max-width:650px;width:100%;font-family:sans-serif;border:1px solid #334155;";
-        
+
         const mapImagePath = `/static/qrcodes_mappe/qr_map_${response.gener_map}.png`;
-        
+
         popup.innerHTML = `
             <h2 style="color:#00f2fe; margin-top:0; font-size:2rem; text-transform:uppercase;">Pista Completata!</h2>
             <p style="font-size:1.2rem; margin-bottom: 20px; color:#cbd5e1;">Consegna al giocatore la mappa corrispondente al QR Code:</p>
@@ -474,7 +474,7 @@ function submitPenaltyForm(typeSuffix) {
             <div style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; margin-bottom:25px; border:1px solid rgba(255,255,255,0.1);">
                 <div style="display:flex; justify-content:space-around; align-items:center; flex-wrap:wrap; gap:20px;">
                     <div>
-                        <p style="margin:0; color:#94a3b8; font-size:0.9rem; text-transform:uppercase;">Codice Squadra</p>
+                        <p style="margin:0; color:#94a3b8; font-size:0.9rem; text-transform:uppercase;">Codice Segreto</p>
                         <p style="font-family:monospace; font-size:2.2rem; letter-spacing:4px; font-weight:bold; color:#ffd700; margin:5px 0;">${response.treasure_code}</p>
                     </div>
                     <div>
@@ -489,9 +489,9 @@ function submitPenaltyForm(typeSuffix) {
         overlay.appendChild(popup);
         document.body.appendChild(overlay);
         document.getElementById(`closePopupBtn-${typeSuffix}`).addEventListener('click', () => {
-            document.body.removeChild(overlay);
-            updateNextPlayer();
-            updateUIState();
+          document.body.removeChild(overlay);
+          updateNextPlayer();
+          updateUIState();
         });
       } else {
         showInlineMessage(
