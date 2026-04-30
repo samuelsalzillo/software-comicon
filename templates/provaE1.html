@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-2">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
@@ -10,7 +10,7 @@
                 </div>
                 <div class="card-body">
                     <!-- Binary Codes Display -->
-                    <div class="binary-display mb-4">
+                    <div class="binary-display mb-2">
                         <h4 class="text-center">Codici Binari:</h4>
                         <div class="d-flex justify-content-center">
                             <div id="binaryCodes" class="display-4 text-center">
@@ -43,10 +43,10 @@
                     </div>
 
                     <!-- Switches Grid -->
-                    <div class="switches-grid mb-4">
-                        <div class="row justify-content-center">
+                    <div class="switches-grid mb-2">
+                        <div class="switches-flex-container">
                             {% for i in range(10) %}
-                            <div class="col-2 mb-3">
+                            <div class="switch-item mb-3">
                                 <div class="switch-container">
                                     <label class="switch">
                                         <input type="checkbox" class="switch-input" data-value="{{ i }}">
@@ -233,16 +233,58 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* Aggressive tablet layout overrides to enforce full-screen usage with absolutely no scrolling */
+body {
+    overflow: hidden !important;
+}
+.content-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.container {
+    max-width: 100% !important;
+    padding: 0 2px !important;
+    margin: 2px auto !important;
+}
+.card-body {
+    padding: 5px !important;
+}
+.card-header {
+    padding: 5px 10px !important;
+}
+h3 {
+    font-size: 1.2rem;
+    margin: 0 !important;
+}
+h4 {
+    font-size: 1.1rem;
+    margin: 5px 0 !important;
+}
+.switches-flex-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px; /* Spacing between switches */
+}
+
+.switch-item {
+    flex: 0 0 calc(20% - 15px); /* 5 items per row max */
+    min-width: 60px; /* Ensure they don't get too small */
+    display: flex;
+    justify-content: center;
+}
+
 .switch-container {
     text-align: center;
-    padding: 10px;
+    padding: 2px;
+    margin-top: 5px;
 }
 
 .switch {
     position: relative;
     display: inline-block;
-    width: 40px;
-    height: 80px;
+    width: 45px;
+    height: 70px;
     cursor: pointer;
 }
 
@@ -262,7 +304,7 @@ document.addEventListener('DOMContentLoaded', function() {
     bottom: 0;
     background-color: #34495e;
     transition: .4s;
-    border-radius: 4px;
+    border-radius: 6px;
     border: 2px solid #2c3e50;
     box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
 }
@@ -270,13 +312,13 @@ document.addEventListener('DOMContentLoaded', function() {
 .switch-handle:before {
     position: absolute;
     content: "";
-    height: 32px;
-    width: 32px;
-    left: 2px;
+    height: 30px;
+    width: 30px;
+    left: 4px;
     bottom: 4px;
     background-color: #e74c3c;
     transition: .4s;
-    border-radius: 2px;
+    border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
@@ -285,35 +327,39 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 
 .switch-input:checked + .switch-handle:before {
-    transform: translateY(-40px);
+    transform: translateY(-34px);
     background-color: #2ecc71;
 }
 
 .switch-label {
     position: absolute;
-    top: -25px;
+    top: -30px;
     left: 50%;
     transform: translateX(-50%);
     font-weight: bold;
+    font-size: 1.4rem;
     pointer-events: none;
+    color: #ecf0f1;
 }
 
 .binary-digit {
     display: inline-block;
     width: 40px;
-    height: 60px;
-    line-height: 60px;
+    height: 45px;
+    line-height: 45px;
     text-align: center;
     background-color: #417f4e;
     border: 2px solid #dee2e6;
     border-radius: 5px;
-    margin: 0 5px;
+    margin: 0 2px;
     font-family: monospace;
+    font-size: 1.5rem;
+    font-weight: bold;
 }
 
 .binary-code-group {
-    margin-bottom: 20px;
-    padding: 10px;
+    margin-bottom: 5px;
+    padding: 5px;
     background-color: #f8f9fa;
     border-radius: 5px;
 }
@@ -321,10 +367,15 @@ document.addEventListener('DOMContentLoaded', function() {
 #submitBtn {
     background-color: #2c3e50;
     border: none;
-    padding: 12px 30px;
-    font-size: 1.2em;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    padding: 8px 30px;
+    font-size: 1.4em;
+    font-weight: bold;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     transition: all 0.3s ease;
+    width: 80%;
+    max-width: 300px;
+    margin-bottom: 5px;
 }
 
 #submitBtn:hover {

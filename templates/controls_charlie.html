@@ -267,14 +267,15 @@
         </div>
       </div>
 
-      <div
-        id="manual-score-message"
-        class="modal-message"
-        style="display: none"
-      ></div>
-      <button type="submit" class="btn btn-submit" id="submit-manual-score-btn">
-        Salva Tempo e Verifica
-      </button>
+      <div id="manual-score-message" class="modal-message" style="display: none"></div>
+      <div style="display: flex; gap: 10px;">
+        <button type="button" class="btn btn-danger" onclick="closeManualScoreModal()" style="flex: 1; margin-top: 15px; padding: 14px 25px; border-radius: 8px; font-weight: bold; font-size: 1.15em; border: none; background-color: #d9534f; color: white;">
+          Non Terminato
+        </button>
+        <button type="submit" class="btn btn-submit" id="submit-manual-score-btn" style="flex: 1; margin-top: 15px;">
+          Salva Tempo e Verifica
+        </button>
+      </div>
     </form>
   </div>
 </div>

@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container mt-2">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card bomb-container">
@@ -10,7 +10,7 @@
                 </div>
                 <div class="card-body">
                     <!-- Timer Display -->
-                    <div class="timer-display mb-4">
+                    <div class="timer-display mb-3">
                         <div class="lcd-screen">
                             <div id="bombTimer" class="display-4 text-center">
                                 10:00
@@ -19,7 +19,7 @@
                     </div>
 
                     <!-- Morse Code Display -->
-                    <div class="morse-display mb-4">
+                    <div class="morse-display mb-3">
                         <div class="morse-grid">
                             {% for i in range(4) %}
                             <div class="morse-digit">
@@ -33,7 +33,7 @@
                     </div>
 
                     <!-- Numeric Keypad -->
-                    <div class="keypad-grid mb-4">
+                    <div class="keypad-grid mb-3">
                         {% for i in range(1, 10) %}
                         <button class="keypad-btn" data-value="{{i}}">{{i}}</button>
                         {% endfor %}
@@ -43,7 +43,7 @@
                     </div>
 
                     <!-- Input Display -->
-                    <div class="input-display mb-4">
+                    <div class="input-display mb-2">
                         <div class="input-grid">
                             {% for i in range(4) %}
                             <div class="input-container">
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Funzione per aggiornare il timer
     function updateTimer() {
-        if (isResetting || isGameCompleted) return;
+        if (isResetting || isGameCompleted || !isGameActive) return;
         
         const now = Date.now();
         const elapsed = Math.floor((now - lastUpdateTime) / 1000);
@@ -315,9 +315,9 @@ document.addEventListener('DOMContentLoaded', function() {
             input.disabled = false;
         });
         currentInputPosition = 0;
-        isGameActive = true;
+        isGameActive = false;
         // Aggiorna il display del timer all'inizializzazione
-        updateTimer();
+        resetTimerToDefault();
     }
 
     // Funzione per controllare se il codice inserito è 0000
@@ -448,7 +448,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inizializza il gioco
     initGame();
-    updateTimer();
 
     // Cleanup quando la pagina viene chiusa
     window.addEventListener('beforeunload', function() {
@@ -463,6 +462,33 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <style>
+/* Aggressive tablet layout overrides to enforce full-screen usage with absolutely no scrolling */
+body {
+    overflow: hidden !important;
+}
+.content-wrapper {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+.container {
+    max-width: 100% !important;
+    padding: 0 2px !important;
+    margin: 2px auto !important;
+}
+.card-body {
+    padding: 5px !important;
+}
+.card-header {
+    padding: 5px 10px !important;
+}
+h3 {
+    font-size: 1.2rem;
+    margin: 0 !important;
+}
+h5 {
+    font-size: 1rem;
+    margin: 0 !important;
+}
 .bomb-container {
     background-color: #2c3e50;
     border: none;
@@ -471,40 +497,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .timer-display {
     background-color: #1a1a1a;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
+    padding: 5px;
+    border-radius: 8px;
+    margin-bottom: 5px !important;
 }
 
 .lcd-screen {
     background-color: #000;
-    padding: 15px;
-    border-radius: 5px;
-    border: 2px solid #333;
+    padding: 2px;
+    border-radius: 8px;
+    border: 3px solid #333;
 }
 
 #bombTimer {
     color: #ff0000;
     font-family: 'Digital', monospace;
-    text-shadow: 0 0 5px #ff0000;
+    text-shadow: 0 0 10px #ff0000;
+    font-size: 3.5rem;
+    font-weight: bold;
+    line-height: 1;
 }
 
 .morse-display {
     background-color: #1a1a1a;
-    padding: 20px;
-    border-radius: 10px;
-    margin-bottom: 20px;
+    padding: 5px;
+    border-radius: 8px;
+    margin-bottom: 5px !important;
 }
 
 .morse-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: 5px;
 }
 
 .morse-digit {
     background-color: #2c3e50;
-    padding: 15px;
+    padding: 5px;
     border-radius: 5px;
     text-align: center;
 }
@@ -512,27 +541,31 @@ document.addEventListener('DOMContentLoaded', function() {
 .morse-code {
     color: #00ff00;
     font-family: monospace;
-    font-size: 1.2em;
-    margin-top: 10px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-top: 2px;
+    letter-spacing: 2px;
 }
 
 .keypad-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
-    max-width: 300px;
-    margin: 0 auto;
+    gap: 5px;
+    max-width: 350px;
+    margin: 0 auto 5px auto;
 }
 
 .keypad-btn {
     background-color: #34495e;
     color: white;
     border: none;
-    padding: 15px;
-    font-size: 1.2em;
-    border-radius: 5px;
+    padding: 8px;
+    font-size: 1.8rem;
+    font-weight: bold;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
 }
 
 .keypad-btn:hover {
@@ -542,15 +575,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 .input-display {
     background-color: #1a1a1a;
-    padding: 20px;
+    padding: 5px;
     border-radius: 10px;
+    margin-bottom: 2px !important;
 }
 
 .input-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    max-width: 400px;
+    gap: 5px;
+    max-width: 350px;
     margin: 0 auto;
 }
 
@@ -558,9 +592,11 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: #2c3e50;
     color: white;
     text-align: center;
-    font-size: 1.5em;
-    height: 50px;
-    border: 2px solid #34495e;
+    font-size: 1.8rem;
+    font-weight: bold;
+    height: 45px;
+    border: 3px solid #34495e;
+    border-radius: 8px;
 }
 
 .card-header {

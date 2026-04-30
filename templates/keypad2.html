@@ -1,11 +1,8 @@
 {% extends "layout.html" %} {% block title %}Keypad Metà Percorso 2{% endblock
 %} {# Titolo modificato #} {% block extra_css %}
-<link
-  rel="stylesheet"
-  href="{{ url_for('static', filename='css/keypad.css') }}"
-/>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/keypad.css') }}" />
 {# Riutilizziamo lo stesso CSS #} {% endblock %} {% block content %}
-<h1>Tastierino Metà Percorso 2</h1>
+<h1 style="font-size: 1.5em; margin-bottom: 15px;">Tastierino Metà Percorso 2</h1>
 {# Titolo modificato #}
 
 <div class="keypad-container">
@@ -38,11 +35,8 @@
     Chiama checkCode2 #}
   </div>
   {# Aggiungiamo un elemento per le notifiche specifiche di questo keypad #}
-  <div
-    id="notification-keypad2"
-    class="notification"
-    style="margin-top: 1rem; text-align: center; color: #8fbf60; display: none"
-  ></div>
+  <div id="notification-keypad2" class="notification"
+    style="margin-top: 1rem; text-align: center; color: #8fbf60; display: none"></div>
 </div>
 {% endblock %} {% block scripts %}
 <script src="{{ url_for('static', filename='js/keypad2.js') }}"></script>

@@ -1069,8 +1069,10 @@ def backup_database_auto():
     except Exception as e:
         logging.error(f"Errore durante il backup automatico: {e}")
     finally:
-        # Programma il prossimo backup
-        Timer(BACKUP_INTERVAL, backup_database_auto).start()
+        # Programma il prossimo backup, impostandolo come Demone (daemon=True) così Python può chiudersi col CTRL+C
+        t = Timer(BACKUP_INTERVAL, backup_database_auto)
+        t.daemon = True
+        t.start()
 
 @app.route('/backup_database', methods=['GET'])
 def backup_database():
@@ -2739,8 +2741,24 @@ if __name__ == '__main__':
     log = logging.getLogger('werkzeug')
     # log.setLevel(logging.ERROR)
     # Esegui Flask con il riavvio automatico disabilitato
-    app.run(host='0.0.0.0', port=2000, debug=True, use_reloader=False)
-    print('localost:2000')
-    hostname = socket.gethostname()
-    ip_address = socket.gethostbyname(hostname)
-    print(f"Indirizzo IP: http://{ip_address}")
+
+        
+    # Stampa IP Server
+    try:
+        hostname = socket.gethostname()
+        ip_address = socket.gethostbyname(hostname)
+        print(f"Indirizzo IP per i tablet: http://{ip_address}:2000")
+        print("Indirizzo locale: http://localhost:2000")
+    except Exception as e:
+        print("http://localhost:2000")
+
+    # Esegui Flask con server di produzione (Waitress) ad alta concorrenza
+    from waitress import serve
+    print("Avvio server in modalità produzione (Waitress) con 30 thread... Pronti!")
+    serve(app, host='0.0.0.0', port=2000, threads=30)
+
+    #app.run(host='0.0.0.0', port=2000, debug=True, use_reloader=False)
+    #print('localost:2000')
+    #hostname = socket.gethostname()
+    #ip_address = socket.gethostbyname(hostname)
+    #print(f"Indirizzo IP: http://{ip_address}")

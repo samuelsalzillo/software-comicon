@@ -38,8 +38,6 @@
         font-size: 0.9rem;
         border-bottom: 1px solid #1e293b;
         backdrop-filter: blur(10px);
-        position: fixed;
-        top: 0;
         width: 100%;
         z-index: 1000;
     }
@@ -115,10 +113,21 @@
     }
 
     /* Override layout padding for full screen tablet */
-    main {
+    .navbar {
+        display: none !important;
+    }
+
+    .hamburger {
+        display: none !important;
+    }
+
+    .content-wrapper, .content-wrapper.with-nav {
         padding: 0 !important;
         margin: 0 !important;
         max-width: none !important;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
     }
 </style>
 {% endblock %}
